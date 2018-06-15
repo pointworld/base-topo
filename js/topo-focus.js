@@ -274,7 +274,7 @@ define(
       }
 
 
-//存储拓扑图数据 TODO
+//存储拓扑图数据 TODO: --
       dataManager.saveTopoData = function (data) {
         console.log('save data: ')
         console.log(data)
@@ -926,7 +926,6 @@ define(
         }
       }
 
-
       /*********其他开发者自定义拓展*****************************************************************/
 //右键删除
       $('.contextmenu li').click(function () {
@@ -997,10 +996,9 @@ define(
       }
 //控制层
       let setDragIcon = function () {
-        const data = getDragData();
-        const html = showDragIcon(data);
+        const data = getDragData()
+        const html = showDragIcon(data)
         $('.iconContainer .basicIconTag').html(html)
-
       }
       /************执行*************/
       setDragIcon()
@@ -1013,9 +1011,3 @@ define(
     return init
   }
 )
-
-
-
-
-
-

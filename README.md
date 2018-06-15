@@ -1,4 +1,13 @@
+---
+   - source: https://www.jianshu.com/p/3ebed224948c
+   - modified by point on 20180615
+---
+
 # focusTopo
+## 使用到的技术和框架
+   - jQuery
+   - jtopo-0.4.8.js // 拓扑
+
 ## 代码文件介绍
    插件主要由三个js文件构成: 
    1. 源码文件:[jtopo-0.4.8.js](http://www.jtopo.com/) 
