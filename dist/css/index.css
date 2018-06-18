@@ -1,0 +1,452 @@
+main.main-content section.breadcrumbs .breadcrumb {
+  border-bottom: 1px solid #e6e6e6;
+  margin-bottom: 5px;
+  background-color: #fff;
+}
+main.main-content section.app-main {
+  border-left: none !important;
+  z-index: 0 !important;
+}
+main.main-content section.app-main .custom-wraper .jtp-main {
+  position: relative;
+  top: 0;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: transparent;
+  font-family: Arial, sans-serif;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel {
+  position: relative;
+  border-radius: 5px;
+  min-height: 650px;
+  /* border: solid 1px #DDD; */
+  /*overflow: hidden;*/
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container {
+  position: relative;
+  height: 100%;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  z-index: 0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel {
+  float: left;
+  width: 240px;
+  height: 100%;
+  border-right: 6px solid #fff;
+  transform: translateZ(0px);
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #treeArea {
+  min-height: 215px;
+  margin-bottom: 10px;
+  box-shadow: 0 0 7px #dedede;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #treeArea > .title {
+  height: 35px;
+  padding-left: 20px;
+  border-bottom: 1px solid #d5e0e6;
+  background: #f0f4f9;
+  line-height: 35px;
+  color: #333;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #treeArea > .treeContainer {
+  height: 200px;
+  padding: 5px;
+  overflow-y: auto;
+  background: #f8f8f8;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #treeArea > .treeContainer > .AreaSearch {
+  height: 22px;
+  border-radius: 2px;
+  text-indent: 0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #treeArea > .treeContainer > .AreaSearch.form-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 24px;
+  padding: 0 5px;
+  border: 1px solid #dcdcdc;
+  border-radius: 3px;
+  transition: 0.42s;
+  font-size: 14px;
+  color: #617083;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #treeArea > .treeContainer > .AreaSearch.form-input:hover {
+  box-shadow: rgba(0, 0, 0, 0.0745098) 0 1px 1px inset;
+  border-color: #bfbfbf;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #treeArea > .treeContainer > .AreaSearch.form-input:focus {
+  border-color: #37a8e0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea {
+  box-shadow: 0 0 7px #dedede;
+  background: #f8f8f8;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .title {
+  height: 35px;
+  border-bottom: 1px solid #d5e0e6;
+  text-align: center;
+  line-height: 35px;
+  background: #f0f4f9;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .title > .iconTitle {
+  float: left;
+  width: 80%;
+  height: 100%;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .title > .iconTitle > li {
+  float: left;
+  text-align: center;
+  width: 50%;
+  cursor: pointer;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .title > .iconTitle > li.active {
+  border-bottom: 2px solid #51a4da;
+  color: #51a4da;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .iconContainer {
+  width: 100%;
+  max-height: 680px;
+  overflow-y: auto;
+  background: #f8f8f8;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .iconContainer > .basicIconTag {
+  display: block;
+  min-height: 280px;
+  overflow: auto;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .iconContainer > .basicIconTag .dragTag {
+  position: relative;
+  float: left;
+  width: 50px;
+  height: 50px;
+  margin: 10px;
+  margin-bottom: 15px;
+  background-position: right center !important;
+  background-size: 100% 100% !important;
+  z-index: 10;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .iconContainer > .basicIconTag .dragTag.android {
+  background: url("../images/android.png") no-repeat;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .iconContainer > .basicIconTag .dragTag.android .dragNodeName {
+  padding-top: 50px;
+  text-align: center;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .iconContainer > .basicIconTag .dragTag.apple {
+  background: url("../images/apple.png") no-repeat;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #equipmentArea.q-panel > #iconArea > .iconContainer > .basicIconTag .dragTag.apple .dragNodeName {
+  padding-top: 50px;
+  text-align: center;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .topoChooseArea {
+  height: 35px;
+  position: fixed;
+  background: #f8f8f8;
+  width: 100%;
+  border-bottom: 1px solid #dad9d9;
+  margin-left: 240px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .topoChooseArea .topoChooseAreaUlBox {
+  display: inline-block;
+  height: 35px;
+  max-width: 71%;
+  overflow: hidden;
+  position: relative;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .topoChooseArea .topoChooseAreaUlBox ul {
+  position: relative;
+  width: 3000%;
+  height: 35px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .topoChooseArea .topoChooseAreaUlBox ul li {
+  float: left;
+  height: 35px;
+  position: relative;
+  line-height: 45px;
+  font-size: 12px;
+  padding-left: 22px;
+  padding-right: 38px;
+  cursor: pointer;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .topoChooseArea .topoChooseAreaUlBox ul li a {
+  text-decoration: none;
+  color: #555555;
+  width: 60px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .topoChooseArea .topoChooseAreaUlBox ul li i {
+  font-size: 20px;
+  color: #9e9d9d;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  right: 23px;
+  margin-left: 5px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .topoChooseArea .topoChooseAreaUlBox ul li.active {
+  padding-left: 22px;
+  padding-right: 38px;
+  background: url('../images/p.png') no-repeat -10px 7px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .topoChooseArea .topuAdd-tab {
+  background: url('../images/smallpng.png') no-repeat -2px 8px;
+  display: inline-block;
+  margin-left: 10px;
+  width: 25px;
+  cursor: pointer;
+  height: 35px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar {
+  position: fixed;
+  top: 91px;
+  width: 100%;
+  height: 40px;
+  border-bottom: 1px solid #E7E7E7;
+  border-radius: 4px 4px 0 0;
+  margin-left: 240px;
+  background-color: #ffffff;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar {
+  float: left;
+  height: 30px;
+  margin-top: 5px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div {
+  float: left;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-default {
+  background-position: -28px -5px;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .q-icon {
+  background-image: url('../images/smallpng.png');
+  background-repeat: no-repeat no-repeat;
+  margin: 1px 0;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-setBorder {
+  background-position: -247px -59px;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-select {
+  background-position: -56px -3px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-pan {
+  background-position: -222px -60px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-zoomin {
+  background-position: -79px -3px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-zoomout {
+  background-position: -104px -5px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-zoomreset {
+  background-position: -136px -5px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-center {
+  background-position: -161px -2px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-overview {
+  background-position: -188px 0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-solid {
+  background-position: -215px -2px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-dashed {
+  background-position: -243px 0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-curve {
+  background-position: -195px -59px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-arrow {
+  background-position: -163px -62px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-dArrow {
+  background-position: -127px -62px;
+  width: 20px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-flexional {
+  background-position: -98px -62px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-flow {
+  background-position: -67px -62px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-userDefine {
+  background-position: -67px -62px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-eyes {
+  background-position: -31px -62px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-backOff {
+  background-position: -1px -60px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-forward {
+  background-position: -246px -27px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-save {
+  background-position: -216px -28px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-edge_VH {
+  background-position: -111px 0;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-polygon {
+  background-position: -277px 0;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-line {
+  background-position: -185px 0;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-search {
+  background-position: -70px -32px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-print {
+  background-position: -296px 0;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-json {
+  background-position: -166px 0;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar > div .toolbar-max {
+  background-position: -203px 0;
+  width: 16px;
+  height: 16px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .searchArea {
+  display: inline-block;
+  width: 130px;
+  vertical-align: middle;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .searchArea #search_input {
+  box-shadow: none;
+  /*border:none;*/
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .searchArea .searchBtnDiv {
+  border-left: none !important;
+  margin-left: -1px !important;
+  border-radius: 0 3px 3px 0 !important;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn,
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn-group {
+  margin: 0;
+  margin-right: 5px;
+  border-radius: 3px;
+  clear: none;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn .btn,
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn-group .btn {
+  margin: 0px -1px;
+  border: none;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn .btn:first-child,
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn-group .btn:first-child,
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn .btn:last-child,
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn-group .btn:last-child {
+  margin: 0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn .btn-group-vertical,
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn-group .btn-group-vertical {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn > .btn:first-child:not(:last-child):not(.dropdown-toggle),
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn-group > .btn:first-child:not(:last-child):not(.dropdown-toggle) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn > .btn:not(:first-child):not(:last-child):not(.dropdown-toggle),
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn-group > .btn:not(:first-child):not(:last-child):not(.dropdown-toggle) {
+  border-radius: 0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn > .btn:first-child,
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn-group > .btn:first-child {
+  margin-left: 0;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .btn,
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar #toolbar .btn-group {
+  margin-right: 5px;
+  border: 1px solid #ccc;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > .q-toolbar #toolbar .groupWrap .group {
+  color: red;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #canvasWrap {
+  margin-top: 60px;
+  float: right;
+  overflow-y: auto;
+  height: 500px;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container > #canvasWrap #canvas {
+  /*float: right;*/
+  background: url(../images/topobg.png) repeat;
+  /*border-top: 1px solid #E7E7E7;*/
+  /*margin-top:75px;*/
+  /*transition: all 1s;*/
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > ul.contextmenu {
+  position: absolute;
+  min-width: 100px;
+  padding: 0;
+  border: 1px solid #b2defc;
+  border-bottom-width: 0;
+  border-radius: 3px;
+  box-shadow: 0 0 6px #60cdf7;
+  margin: 0;
+  list-style: none;
+  background: #fff;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > ul.contextmenu:after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border: 1px none #b2defc;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  box-shadow: -1px 1px 3px #b2defc;
+  margin-top: -5px;
+  transform: rotate(45deg);
+  background: #fff;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > ul.contextmenu li {
+  padding: 5px 10px;
+  border-bottom: 1px solid #dddddd;
+  transition: all .3s;
+  cursor: pointer;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > ul.contextmenu li:hover {
+  background: #fff;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > ul.contextmenu li a {
+  text-decoration: none;
+  color: #717274;
+}
+main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > .titleDiv {
+  position: absolute;
+  z-index: 10;
+  width: 200px;
+  height: 50px;
+  border: 1px solid black;
+  background: white;
+  text-align: center;
+}

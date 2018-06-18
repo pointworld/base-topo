@@ -1,3 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
-/.idea/
 "js/jtopo-0.4.8_\342\210\217\306\222\342\200\230\303\217setInterval.js"
+
+bower_components
+node_modules
+.idea
+package-lock.json

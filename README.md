@@ -4,9 +4,73 @@
 ---
 
 # focusTopo
+## How to use
+1. `git clone https://github.com/pointworld/base-topo.git`: clone this project from github
+2. `npm install`, `bower install`: install all dependencies and devDependencies
+3. `gulp serve`: run all task, watch and sync changes to file, start a static server
+4. code in your favorite editor
+
+## Project structure
+```text
+base-topo/
+|
++- src/ <-- project source folders
+|  |
+|  +- index.html
+|  |
+|  +- favicon.ico
+|  |
+|  +- css/
+|  |  |
+|  |  +- base.less <-- global style
+|  |  |
+|  |  +- index.less <-- index style
+|  |
+|  +- fonts/
+|  |
+|  +- js/
+|  |  |
+|  |  +- main.js <-- require configuration file
+|  |  |
+|  |  +- drag.js
+|  |  |
+|  |  +- topo-focus.js <-- 业务代码文件：调用封装代码文件暴露的接口
+|  |  |
+|  |  +- topo-main.js <-- 封装代码文件：基于源码进行的封装
+|  |  |
+|  |  +- jtopo-0.4.8.js <-- 源码文件
+|  |  |
+|  |  +- require.min.js
+|  |  |
+|  |  +- bootstrap.min.js
+|  |  |
+|  |  +- jquery-1.9.1.min.js
+|  |
+|  +- images/
+|  |
+|  +- lib/ <-- third-part package
+|
++- dist/
+|
++- gulpfile.js
+|
++- package.json
+|
++- node_modules/
+|
++- bower_components/
+|
++- README.md
+|
++- PROJECT.md
+```
+
 ## 使用到的技术和框架
-   - jQuery
-   - jtopo-0.4.8.js // 拓扑
+   - HTML5 Canvas
+   - jquery.js(v1.9.1)
+   - jtopo.js(v0.4.8) // 拓扑
+   - Bootstrap(v3.3.5) // 前端组件和样式库
+   - require.js // 异步模块加载
 
 ## 代码文件介绍
    插件主要由三个js文件构成: 
@@ -43,7 +107,7 @@
    
    >数据管理者
    
-     用于接受topo数据,并展示到画不上来
+     用于接受topo数据,并展示到画布上来
    
    >节点排列管理者
    
