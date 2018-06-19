@@ -787,7 +787,7 @@ define(
           return
         }
 
-        if (linkType == 'Link') {
+        if (linkType === 'Link') {
           //实线
           link = new JTopo.Link(sNode, tNode)
         }
@@ -1428,7 +1428,7 @@ define(
         const $dragContainer = $('#container')
 
         $('#equipmentArea .dragTag').each(function () {
-          if ($(this).attr('isDragTag') == 'true') {
+          if ($(this).attr('isDragTag') === 'true') {
             return
           }
           $(this).dragging({

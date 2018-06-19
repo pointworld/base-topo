@@ -575,22 +575,23 @@ define(
               container.add(progressNode)
             }
 
-            container.add(textNode)
-            container.add(node)
-            container.add(circleNode)
-            container.add(containerRightBottom)
-            container.add(containerLeftTop)
+            container
+              .add(textNode)
+              .add(node)
+              .add(circleNode)
+              .add(containerRightBottom)
+              .add(containerLeftTop)
 
-            scene.add(textNode)
-            scene.add(node)
-            scene.add(circleNode)
-            scene.add(containerLeftTop)
-            scene.add(containerRightBottom)
-            scene.add(container)
+            scene
+              .add(textNode)
+              .add(node)
+              .add(circleNode)
+              .add(containerLeftTop)
+              .add(containerRightBottom)
+              .add(container)
             //添加事件
 
             return container
-
           },
           event: {
             'mouseup': function (e) {
@@ -600,11 +601,10 @@ define(
             'mousemove': null,
             'mouseover': null,
             'mouseout': null,
-
           }
         },
         {
-          "fnName": 'haha',
+          fnName: 'haha',
           fn: function (nodeObj) {
             const node = new JTopo.Node('luojie');
             node.setSize(100, 100)
@@ -827,7 +827,7 @@ define(
 
       canvasManager.renderTopoCallback = function () {
         JTopo.flag.curScene.childs.forEach(function (p) {
-          if (p.elementType == 'node' && p.parentType != 'containerNode') {
+          if (p.elementType === 'node' && p.parentType !== 'containerNode') {
             const imgOffsetX = 15;
             const imgOffsetY = 10;
             const imgObj = new Image();
@@ -846,11 +846,11 @@ define(
               if (this.image) {
                 const b = a.globalAlpha;
                 a.globalAlpha = this.alpha
-                if (typeof  this.image != 'string') {
+                if (typeof  this.image !== 'string') {
                   if (this.keepChangeColor) {
                     a.drawImage(this.image.alarm, -this.width / 2, -this.height / 2, this.width, this.height)
                   } else {
-                    if (null != this.image.alarm && null != this.alarm) {
+                    if (null !== this.image.alarm && null !== this.alarm) {
                       a.drawImage(this.image.alarm, -this.width / 2, -this.height / 2, this.width, this.height)
                     } else {
                       a.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height)
@@ -862,7 +862,7 @@ define(
               else {
                 a.beginPath(),
                   a.fillStyle = "rgba(" + this.fillColor + "," + this.alpha + ")",
-                  null == this.borderRadius || 0 == this.borderRadius ? a.rect(-this.width / 2, -this.height / 2, this.width, this.height) : a.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width, this.height, this.borderRadius),
+                  null === this.borderRadius || 0 === this.borderRadius ? a.rect(-this.width / 2, -this.height / 2, this.width, this.height) : a.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width, this.height, this.borderRadius),
                   a.fill()
               }
               if (this.linearGradient) {
@@ -872,7 +872,7 @@ define(
                   grd.addColorStop(this.colorStop[grdCount * 2], this.colorStop[grdCount * 2 + 1])
                 }
                 a.fillStyle = grd
-                null == this.borderRadius || 0 == this.borderRadius ? a.rect(-this.width / 2, -this.height / 2, this.width * kVal, this.height) : a.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width * kVal, this.height, kVal < 0.03 ? 0 : this.borderRadius)
+                null === this.borderRadius || 0 === this.borderRadius ? a.rect(-this.width / 2, -this.height / 2, this.width * kVal, this.height) : a.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width * kVal, this.height, kVal < 0.03 ? 0 : this.borderRadius)
                 a.fill()
 
               }
@@ -915,7 +915,7 @@ define(
       }
 
       /*********其他开发者自定义拓展*****************************************************************/
-//右键删除
+      //鼠标右键弹框
       $('.contextmenu li').click(function () {
         let $this = $(this)
         if ($this.hasClass('del')) {
@@ -937,63 +937,96 @@ define(
         }
         $('.contextmenu').hide()
       })
-      /*****注入用于拖拽的图标********/
-//数据层
-      let getDragData = function () {
-        let data = [
-          {
-            imgName: 'android',
-            type: 'node',
-            name: '安卓',
-            width: 102,
-            height: 50
-          },
-          {
-            imgName: 'apple',
-            type: 'node',
-            name: '苹果',
-            width: 102,
-            height: 50
+
+      /*****图标生成管理者：注入用于拖拽的图标，start********/
+      const iconGenerateManager = {
+        //数据层：定义或获取数据
+        getDragData: function () {
+          let data = [
+            {
+              imgName: 'android',
+              type: 'node',
+              name: '安卓',
+              width: 102,
+              height: 50
+            },
+            {
+              imgName: 'android',
+              type: 'node',
+              name: '安卓',
+              width: 102,
+              height: 50
+            },
+            {
+              imgName: 'android',
+              type: 'node',
+              name: '安卓',
+              width: 102,
+              height: 50
+            },
+            {
+              imgName: 'apple',
+              type: 'node',
+              name: '苹果',
+              width: 102,
+              height: 50
+            },
+            {
+              imgName: 'apple',
+              type: 'node',
+              name: '苹果',
+              width: 102,
+              height: 50
+            },
+            {
+              imgName: 'apple',
+              type: 'node',
+              name: '苹果',
+              width: 102,
+              height: 50
+            }
+          ]
+          return data
+        },
+        //显示层：根据上面获取的数据组装得到一个 HTML 片段
+        showDragIcon: function (data) {
+          /**
+           * 类名 dragTag 用于标志可以拖动
+           */
+          let html = ""
+          for (let i = 0; i < data.length; i++) {
+            let obj = data[i]
+
+            // obj.width=100
+            // obj.height=20
+            // obj.textOffsetY=-20
+            // obj.text=obj.imgName
+            // obj.imgName=null
+            // obj.textAlpah=1
+            // obj.alpha=0
+
+            let jsonStr = JSON.stringify(obj)
+
+            html += '<div class="dragTag ' + obj.imgName + '" title="' + obj.name + '"  json=' + jsonStr + ' ><div class="dragNodeName">' + obj.name + '</div></div>'
           }
-        ]
-        return data
-      }
-//显示层
-      let showDragIcon = function (data) {
-        /****
-         * dragTag用于标志可以拖动
-         */
-
-        let html = ""
-        for (let i = 0; i < data.length; i++) {
-          let obj = data[i]
-
-          // obj.width=100
-          // obj.height=20
-          // obj.textOffsetY=-20
-          // obj.text=obj.imgName
-          // obj.imgName=null
-          // obj.textAlpah=1
-          // obj.alpha=0
-
-          let jsonStr = JSON.stringify(obj)
-
-          html += '<div class="dragTag ' + obj.imgName + '" title="' + obj.name + '"  json=' + jsonStr + ' ><div class="dragNodeName">' + obj.name + '</div></div>'
+          return html
+        },
+        //控制层：将组装好的 HTML 片段插入到 HTML 中对应的节点上
+        setDragIcon: function () {
+          const data = iconGenerateManager.getDragData() // data layer: get drag data
+          const html = iconGenerateManager.showDragIcon(data) // show layer: show drag icon
+          $('.iconContainer .basicIconTag').html(html) // inject a HTML fragment into HTML
         }
-        return html
       }
-//控制层
-      let setDragIcon = function () {
-        const data = getDragData()
-        const html = showDragIcon(data)
-        $('.iconContainer .basicIconTag').html(html)
-      }
-      /************执行*************/
-      setDragIcon()
+      /******图标生成管理者：注入用于拖拽的图标，end**********/
 
+      /************ run *************/
+      // 图标生成管理者 - 控制层：注入用于拖拽的图标
+      iconGenerateManager.setDragIcon()
+      // initialize modules data (modules: stateManager, powerManager, popupManager, canvasManager, dragManager, toolbarManager, nodesRankManager)
       topoManager.init()
-      dataManager.setTopoData()//开关
-
+      //数据管理者 - 控制层：渲染数据
+      dataManager.setTopoData()
     }
 
     return init
