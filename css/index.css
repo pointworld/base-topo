@@ -21,7 +21,7 @@ main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel {
   border-radius: 5px;
   min-height: 650px;
   /* border: solid 1px #DDD; */
-  /*overflow: hidden;*/
+  /* overflow: hidden; */
 }
 main.main-content section.app-main .custom-wraper .jtp-main > #graph_panel > #container {
   position: relative;
