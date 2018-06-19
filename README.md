@@ -68,7 +68,7 @@ base-topo/
 ## 使用到的技术和框架
    - HTML5 Canvas
    - jquery.js(v1.9.1)
-   - jtopo.js(v0.4.8) // 拓扑
+   - jtopo.js(v0.4.8) // 基于 HTML5 canvas 的拓扑框架
    - Bootstrap(v3.3.5) // 前端组件和样式库
    - require.js // 异步模块加载
 
