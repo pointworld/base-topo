@@ -28,19 +28,19 @@ define(
       toolbarManager.searchArr = ['id'] //用于搜索的属性
       /******************初始化,end***********************/
 
-
       /***********数据管理者*************/
-//获取后台拓扑图数据
+      //获取后台拓扑图数据
       dataManager.getTopoData = function (callback) {
         /**
-         * 1\json中的imgName属性，用于存储节点图片名字
-         * 2\elementType用于标志节点类型(node、container、containerNode)，必填
-         * 3\json中的text用于存储节点名字
-         * 4\自定义结点的elementType必须设置为containerNode,且nodeFn需要设置为创建自定义结点的方法名
-         * 5\如果自定义结点是拖拽创建，则必须设置id等于_id
-         * 6\必填项:id type json(elementType,如果是自定义结点,必填nodeFn)
-         * 7\type为node时,如果elementType为node,则为普通节点,如果elementType为containerNode,则为自定义节点
-         * 8\type为containerNode,elementType也为containerNode,则为自定义容器节点
+         * json 数据：
+         * 1、imgName 属性，用于存储节点图片名字
+         * 2、elementType 用于标志节点类型(node、container、containerNode)，必填
+         * 3、json 中的 text 用于存储节点名字
+         * 4、自定义结点的 elementType 必须设置为 containerNode，且 nodeFn 需要设置为创建自定义结点的方法名
+         * 5、如果自定义结点是拖拽创建，则必须设置 id 等于 _id
+         * 6、必填项：id type json (elementType，如果是自定义结点，必填 nodeFn)
+         * 7、type 为 node 时，如果 elementType 为 node，则为普通节点，如果 elementType 为 containerNode，则为自定义节点
+         * 8、type 为 containerNode，elementType 也为 containerNode，则为自定义容器节点
          */
 
         let data = {
@@ -259,8 +259,8 @@ define(
             },
           ]
         }
-        //json属性需要处理成对象
-        callback(data)
+        //json 属性需要处理成对象（json 字符串和 json 对象之间的相互转换）
+        callback(data) // undefined
 
         nodesRankManager.setNodesRank(data, "100", {
           subWidth: 200,
@@ -275,28 +275,21 @@ define(
         // },'ring')
       }
 
-
-//存储拓扑图数据 TODO: --
+      //存储拓扑图数据
       dataManager.saveTopoData = function (data) {
         console.log('save data: ')
         console.log(data)
       }
-
 
       /*************画布管理者*********/
       canvasManager.beforeCreateLink = function (link) {
         return !stateManager.setLink.isSetting
       }
 
-
-//结点事件
-
+      /**结点事件*/
       // 画圆
       function drawCircle(fillColor, ctx, nodeObj) {
         // ctx.imageSmoothingEnabled = true
-        // ctx.mozImageSmoothingEnabled = true
-        // ctx.webkitImageSmoothingEnabled = true
-        // ctx.msImageSmoothingEnabled = true
         ctx.scale(.5, .5)
         ctx.clearRect(-nodeObj.width / 2, -nodeObj.height / 2, nodeObj.width, nodeObj.height)
         ctx.beginPath()
@@ -305,11 +298,10 @@ define(
         ctx.fill()
         //ctx.scale(2, 2)
       }
-
       let i = 0
       canvasManager.nodeEvent = {
         mouseup: function (e) {
-          if (e.which == 3) {
+          if (e.which === 3) {
             //右键
             $('#contextmenuNode')
               .css({
@@ -318,6 +310,7 @@ define(
               })
               .show()
           }
+          //结点本身图片闪动
           JTopo.util.nodeFlash(e.target, true, true, [148,193,90], [227,38,49])
 
           // ++i
@@ -326,7 +319,6 @@ define(
           //     // 填色
           //     drawCircle(i%2?'blue':'red',a,e.target)
           // }
-
         },
         mousemove: function () {
           $('#canvas')
@@ -350,10 +342,10 @@ define(
         },
         dbclick: null
       }
-//线条事件
+      //线条事件
       canvasManager.linkEvent = {
         mouseup: function (e) {
-          if (e.which == 3) {
+          if (e.which === 3) {
             //右键
             $('#contextmenuLink')
               .css({
@@ -371,11 +363,11 @@ define(
         mousemove: null,
         dbclick: null
       }
-//容器事件
+      //容器事件
       canvasManager.containerEvent = {
         mouseup: function (e) {
           console.log(e.target)
-          if (e.which == 3) {
+          if (e.which === 3) {
             //右键
             $('#contextmenuContainer')
               .css({
@@ -390,15 +382,14 @@ define(
         mousemove: null,
         dbclick: null
       }
-//画布事件
+      //画布事件
       canvasManager.sceneEvent = {
         mouseup: function (e) {
           console.log(e)
         },
-        mousedrag: function (e) {
-        }
+        mousedrag: function (e) {}
       }
-//自定义节点拓展，样例
+      //自定义节点拓展，样例
       canvasManager.userDefinedNodes = [
         {
           fnName: 'createSystemNode',
@@ -411,13 +402,12 @@ define(
               _alertLevel = jsonObj.alertLevel,
               dataArr = jsonObj.msgArr;
             //系统节点
-            var scene = stateManager.scene
+            let scene = stateManager.scene
             const nodeName = _nodeName;
             const nodeX = _nodeX;
             const nodeY = _nodeY;
             const url = './images/' + _imgName + '.png';
             const alertLevel = _alertLevel.toString();//告警级别
-
 
             let containerWidth = 245;
             const containerHeight = 90;
@@ -437,7 +427,6 @@ define(
             const tragetX = 90;
             const tragetY = 30;
             const tragetSubY = 15.7;
-            var scene = stateManager.scene
 
             const max1 = JTopo.flag.graphics.measureText(traget3_text_val).width;
             const max2 = JTopo.flag.graphics.measureText(traget4_text_val).width;
@@ -486,7 +475,6 @@ define(
 
             circleNode.parentType = 'containerNode'
 
-
             //容器标题文字
             const textNode = new JTopo.Node();
             textNode.fontColor = '43,43,43'
@@ -498,7 +486,6 @@ define(
             textNode.setLocation(nodeX + 35, nodeY + 68)
             textNode.parentType = 'containerNode'
             textNode.nodeFn = 'title'
-
 
             //容器位置,左上角
             const containerLeftTop = new JTopo.Node();
@@ -587,7 +574,6 @@ define(
               scene.add(progressNode)
               container.add(progressNode)
             }
-
 
             container.add(textNode)
             container.add(node)
@@ -934,7 +920,7 @@ define(
         let $this = $(this)
         if ($this.hasClass('del')) {
           stateManager.scene.remove(stateManager.currentChooseElement)
-          stateManager.romveAgentLink()
+          stateManager.removeAgentLink()
         }
         else if ($this.hasClass('rename')) {}
         else if ($this.hasClass('addColor')) {}

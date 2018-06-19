@@ -20,56 +20,56 @@ define(
   function ($) {
     //画布管理者：包含节点/线条/容器的创建与相关的事件,以及数据的保存和呈现
     const canvasManager = {
-      nodeEvent:{
-        mouseup:null,
-        mousedown:null,
-        mousemove:null,
-        mouseover:null,
-        mouseout:null,
-        dbclick:null
+      nodeEvent: {
+        mouseup: null,
+        mousedown: null,
+        mousemove: null,
+        mouseover: null,
+        mouseout: null,
+        dbclick: null
       },
-      linkEvent:{
-        mouseup:null,
-        mouseover:null,
-        mouseout:null,
-        mousemove:null,
-        dbclick:null
+      linkEvent: {
+        mouseup: null,
+        mouseover: null,
+        mouseout: null,
+        mousemove: null,
+        dbclick: null
       },
-      containerEvent:{
-        mouseup:null,
-        mouseover:null,
-        mouseout:null,
-        mousemove:null,
-        dbclick:null
+      containerEvent: {
+        mouseup: null,
+        mouseover: null,
+        mouseout: null,
+        mousemove: null,
+        dbclick: null
       },
-      sceneEvent:{
-        mouseup:null,
-        mousedrag:null
+      sceneEvent: {
+        mouseup: null,
+        mousedrag: null
       },
-      groupObj:{
-        paddingWidth:100,
-        paddingHeight:100,
-        parentContainerRecord:null,
+      groupObj: {
+        paddingWidth: 100,
+        paddingHeight: 100,
+        parentContainerRecord: null,
       },
-      userDefinedNodes:[],//自定义结点样例
-      elementShowEffect:{
-        alphaEffect:false,//开启元素渐渐浮现效果
-        start:function () {
+      userDefinedNodes: [],//自定义结点样例
+      elementShowEffect: {
+        alphaEffect: false,//开启元素渐渐浮现效果
+        start: function () {
           if(this.alphaEffect){
 
             stateManager.scene.childs.filter(function (p1, p2, p3) {
               p1.alpha=0;
-              (p1.fillColor=="22,124,255")&&(p1.fillColor="255,255,255")
-              JTopo.Animate.stepByStep(p1,{alpha:1},1000,false).start()
+              (p1.fillColor==="22,124,255")&&(p1.fillColor="255,255,255")
+              JTopo.Animate.stepByStep(p1,{alpha: 1},1000,false).start()
             })
             JTopo.flag.allElementAlpha=1
           }
         }
       },
-      renderTopoCallback:null,
-      isRunRenderCallback:true,
-      afterCreateLink:null,//创建连线之前的事件
-      idToNode:{},
+      renderTopoCallback: null,
+      isRunRenderCallback: true,
+      afterCreateLink: null,//创建连线之前的事件
+      idToNode: {},
       /******************画布处理，start***************************/
       /**
        * 创建节点、容器、自定义结点、线条时
@@ -179,7 +179,7 @@ define(
 
                 //如果是容器节点和其内部的节点连线,或者其内部节点之间连线，则不应该连线
                 if ([  stateManager.beginNode.parentType, endNode.parentType].indexOf('containerNode') < 0) {
-                  var l = self._createLink(  stateManager.beginNode, endNode)//正式连线
+                  let l = self._createLink(  stateManager.beginNode, endNode)//正式连线
                   scene.add(l)
 
                 }
@@ -251,9 +251,9 @@ define(
       renderTopo:function (data,type) {
         const self = canvasManager
         const stage = stateManager.stage
-        if(!(type&&type=='add')){
+        if(!(type&&type==='add')){
           stage.remove(stateManager.scene)
-          var scene = stateManager.scene = new JTopo.Scene(stage)
+          let scene = stateManager.scene = new JTopo.Scene(stage)
           //绑定画布事件
           self.initCanvasEvent()
         }
@@ -273,16 +273,16 @@ define(
 
 
         //绘制节点
-        for (var i = 0; i < nodesArr.length; i++)  {
-          var obj = nodesArr[i]
-          if(typeof obj.json=='string'){
+        for (let i = 0; i < nodesArr.length; i++)  {
+          let obj = nodesArr[i]
+          if(typeof obj.json==='string'){
             obj.json =eval('('+obj.json+')')
           }
-          if (obj.json.elementType=='node') {
+          if (obj.json.elementType==='node') {
             idToNode[obj.id] =self._createNode(obj)
           }
 
-          if(i==0&&obj.json.sceneTrans){
+          if(i===0 && obj.json.sceneTrans){
 
             sceneTransX=obj.json.sceneTrans[0]
             sceneTransY=obj.json.sceneTrans[1]
@@ -291,9 +291,9 @@ define(
 
 
         //绘制自定义节点
-        for (var i = 0; i < nodesArr.length; i++)  {
-          var obj = nodesArr[i]
-          if(obj.json.elementType=='containerNode'){
+        for (let i = 0; i < nodesArr.length; i++)  {
+          let obj = nodesArr[i]
+          if(obj.json.elementType==='containerNode'){
 
             idToNode[obj.id] =self.createUserDefinedNode(obj)
 
@@ -301,18 +301,18 @@ define(
         }
 
         //绘制容器
-        for (var i = 0; i < nodesArr.length; i++)  {
-          var obj = nodesArr[i]
-          if (obj.json.elementType=='container') {
+        for (let i = 0; i < nodesArr.length; i++)  {
+          let obj = nodesArr[i]
+          if (obj.json.elementType==='container') {
 
             idToNode[obj.id] = self._createContainer(obj, idToNode)
           }
         }
 
         //绘制线条
-        for (var i = 0; i < linksArr.length; i++) {
-          var obj = linksArr[i]
-          if(typeof obj.json=='string'){
+        for (let i = 0; i < linksArr.length; i++) {
+          let obj = linksArr[i]
+          if(typeof obj.json==='string'){
             obj.json= eval('('+obj.json+')')
           }
           const link = self._createLink(idToNode[obj.from_id], idToNode[obj.to_id], obj)
@@ -348,7 +348,7 @@ define(
             "containerNode": saveContainerNodeAttr,
             "container": saveContainerAttr,
           }
-          if(child.parentType != 'containerNode'&&['node','container','containerNode'].indexOf(child.elementType)>=0)
+          if(child.parentType !== 'containerNode' && ['node','container','containerNode'].indexOf(child.elementType)>=0)
           {
             const nodeObj = {}
 
@@ -356,7 +356,7 @@ define(
 
             //后台所需数据
             for(let m =0; m<saveAttrArr.length; m++){
-              var attr=saveAttrArr[m]
+              let attr=saveAttrArr[m]
               nodeObj[attr]=child[attr]
             }
 
@@ -365,16 +365,16 @@ define(
               nodeObj.json={}
             }
             for(let m1 in child){
-              var value=child[m1]
+              let value=child[m1]
               if(stateManager.attrIsNeedSave(m1,value,child.elementType)){
                 nodeObj.json[m1]=value
               }
-              else if(isContainer&&m1=='childs'){
+              else if(isContainer && m1==='childs'){
                 nodeObj.json.childsArr=[]
                 //保存容器的child的id到childsArr
                 for(let m2=0; m2<value.length; m2++){
                   const containerChilds = value[m2]
-                  if(containerChilds.parentType=="containerNode"){
+                  if(containerChilds.parentType==="containerNode"){
                     //自定义节点
                     //获取自定义结点的id
                     const parentId = containerChilds.parentId
@@ -394,10 +394,10 @@ define(
 
             nodes.push(nodeObj)
           }
-          else if(child.elementType=='link'){
+          else if(child.elementType==='link'){
             const linkObj = {}
             for(let n =0; n<saveLinkAttr.length; n++){
-              var attr=saveLinkAttr[n]
+              let attr=saveLinkAttr[n]
               if(['from_id'].indexOf(attr)>=0){
                 linkObj[attr]=child.nodeA.id
               }
@@ -413,7 +413,7 @@ define(
               linkObj.json = {}
             }
             for(let n1 in child) {
-              var value = child[n1]
+              let value = child[n1]
               if(stateManager.attrIsNeedSave(n1,value,child.elementType)){
                 linkObj.json[n1] = value
               }
@@ -899,17 +899,20 @@ define(
         canvasManager.initCanvasEvent() //canvas事件初始化
       }
     }
-    //数据管理者：用于接受topo数据,并展示到画布上来
-    const dataManager={
+    //数据管理者：用于接受 topo 数据，并展示到画布上来
+    const dataManager = {
       /*******数据层******/
-      getTopoData:function () {},
+      //获取后台拓扑图数据
+      getTopoData: function () {
+        // 调用后台接口，获取 json 数据，数据包括 节点数据和节点
+      },
       /*******显示层******/
-      showTopoData:function (data) {
+      showTopoData: function (data) {
         canvasManager.renderTopo(data)
         toolbarManager.history.save()
       },
       /*******控制层******/
-      setTopoData:function (data) {
+      setTopoData: function (data) {
         const self = dataManager
         const showTopoData = self.showTopoData
         if (data) {
@@ -918,20 +921,21 @@ define(
           self.getTopoData(showTopoData)
         }
       },
-      saveTopoData:function () {},
-      init:function () {
+      // 存储拓扑图数据
+      saveTopoData: function () {},
+      init: function () {
         dataManager.setTopoData()
       }
     }
     //状态管理者：用于存放全局状态,比如选中一个节点,右侧滑出弹窗,弹窗展现节点的属性
     const stateManager = {
-      stage: {},
+      stage: {}, // canvas 舞台
       scene: {}, //系统节点
       canvas: {},
-      equipmentAreaWidth: 250,
-      setLink: { //线条类型
-        isSetting: false,
-        linkType: ''
+      equipmentAreaWidth: 250, // TODO: ?
+      setLink: { // 设置连接线的模式和样式
+        isSetting: false, // 是否开启连线模式
+        linkType: '' // 线条类型：实线、箭头、双箭头、虚线、曲线、折线
       },
       isNeedSave: false,//用于判断画布内容是否改变,用于是否保存
       fineTuneMouseUpX: 0,//鼠标松开后,微调节点的x位置
@@ -944,11 +948,7 @@ define(
       currentLink: null,//当前选中的线条
       agentLink: null,//用于连线的线条
       beginNode: null,
-      romveAgentLink: function () {
-        stateManager.agentLink && stateManager.scene.remove(stateManager.agentLink)
-        stateManager.beginNode = null
-      },
-      currentTopo: [], //当前树节点的拓扑图，包含物理、逻辑、系统、业务流程 ，analysisTopo会给它赋值
+      currentTopo: [], //当前树节点的拓扑图，包含物理、逻辑、系统、业务流程 ，analysisTopo 会给它赋值
       currentActiveIndex: null,//当前选中拓扑图的序号
       currentTreeNode: null,//当前选中的树节点
       isFirstLoad: true,//初次加载页面
@@ -956,43 +956,49 @@ define(
       isFromParentTree: false,//点击系统视图节点，触发子拓扑图打开，并切换到系统视图或逻辑拓扑
       isFullScreen: false,//当前是否全屏的状态
       isCreateGroupByDrag: false,//是否拖动成组
+      scrollHeight: 0,
       formatNodes: ['id', 'type', 'json'],//复现与保存时，读取后台nodes数组中node对象的属性
       formatContainerNodes: ['id', 'type', 'json'],//复现与保存时，读取后台nodes数组中containerNode对象的属性
       formatContainers: ['id', 'type', 'json'],//复现与保存时，读取后台nodes数组中container对象的属性
       formatLinks: ['id', 'type', 'from_id', 'to_id', 'json'],//复现与保存时，读取后台links数组中对象的属性
-      //获取复现与保存时，所需读取后台links、nodes数组中对象的属性
+      //获取复现与保存时，读取后台 links、nodes 数组中对象的属性，验证数据是否符合要求
       setFormatNodesAndLinks: function (linksArr, nodesArr) {
+
+        console.log('setFormatNodesAndLinks -- nodesArr: ')
+        console.log(nodesArr)
+
+        // 遍历验证数据格式是否符合要求（节点类型为 node、containerNode、container）
         for (let k = 0; k < nodesArr.length; k++) {
           let obj = nodesArr[k]
 
           sugar(null, null, obj.type)
 
-
-          if (obj.type == "node" && stateManager.formatNodes.length == 3) {
+          if (obj.type === "node" && stateManager.formatNodes.length === 3) {
             for (let m in obj) {
               stateManager.formatNodes.indexOf(m) < 0 && stateManager.formatNodes.push(m)
             }
             sugar(stateManager.formatNodes, obj.json, obj.type)
           }
-          else if (obj.type == "containerNode" && stateManager.formatContainerNodes.length == 3) {
-            for (var m in obj) {
+          else if (obj.type === "containerNode" && stateManager.formatContainerNodes.length === 3) {
+            for (let m in obj) {
               stateManager.formatContainerNodes.indexOf(m) < 0 && stateManager.formatContainerNodes.push(m)
             }
             sugar(stateManager.formatContainerNodes, obj.json, obj.type)
           }
-          else if (obj.type == "container" && stateManager.formatContainers.length == 3) {
-            for (var m in obj) {
+          else if (obj.type === "container" && stateManager.formatContainers.length === 3) {
+            for (let m in obj) {
               stateManager.formatContainers.indexOf(m) < 0 && stateManager.formatContainers.push(m)
             }
             sugar(stateManager.formatContainers, obj.json, obj.type)
           }
         }
 
+        // 遍历验证数据格式是否符合要求（连接线的数据格式）
         for (let i = 0; i < linksArr.length; i++) {
-          if (stateManager.formatLinks.length == 5) {
+          if (stateManager.formatLinks.length === 5) {
             break
           }
-          var obj = linksArr[i]
+          let obj = linksArr[i]
           for (let j in obj) {
             stateManager.formatLinks.indexOf(m) < 0 && stateManager.formatLinks.push(j)
           }
@@ -1005,16 +1011,16 @@ define(
           const checkArr2 = ['elementType']
           const checkArr3 = ['nodeFn']
 
-          if (typeof  jsonStr != 'string') {
+          if (typeof jsonStr !== 'string') {
             jsonStr = JSON.stringify(jsonStr)
           }
 
-          const str2 = '必填项:id type json(elementType必填,如果elementType==containerNode,必填nodeFn) ,其中elementType和type值保持一致'
+          const str2 = '必填项：id type json (elementType 必填，如果 elementType==containerNode，必填 nodeFn)，其中 elementType 和 type 值保持一致'
 
           if (!eleType) {
-            console.log("数据格式缺少:type,请添加上去!!!\n" + str2)
+            console.log("数据格式缺少：type，请添加上去!!!\n" + str2)
           }
-          if (!arr || arr.length == 0) {
+          if (!arr || arr.length === 0) {
             return false
           }
 
@@ -1030,21 +1036,24 @@ define(
             }
           })
           checkArr3.forEach(function (p1, p2, p3) {
-            if (jsonStr.indexOf(p1) < 0 && eleType == "containerNode") {
+            if (jsonStr.indexOf(p1) < 0 && eleType === "containerNode") {
               console.log(eleType + "的数据格式缺少:" + p1 + ",请添加上去!!!\n" + str2)
             }
           })
         }
       },
+      removeAgentLink: function () { // 移除用于连接的线条
+        stateManager.agentLink && stateManager.scene.remove(stateManager.agentLink)
+        stateManager.beginNode = null
+      },
       //判断对象中的属性是否应该保存
       attrIsNeedSave: function (attr, value, elementType) {
         const attrArr = ['lastParentContainer', 'propertiesStack', 'serializedProperties', 'animateNode', 'childs', 'image', 'inLinks', 'messageBus', 'outLinks', 'json', 'nodeA', 'nodeZ', 'selectedLocation', 'parentContainer']
-        if (elementType == 'containerNode') {
+        if (elementType === 'containerNode') {
           attrArr.push('childs')
         }
         return attrArr.indexOf(attr) < 0
       },
-      scrollHeight: 0,
       /**********辅助方法**********/
       //本地环境下的特殊处理,比如本地环境下的一级目录过长，则隐藏掉
       setStateUnderLocalHost: function () {
@@ -1055,10 +1064,16 @@ define(
       init: function () {
         const self = this
 
+        // console.log('init statemanager')
+
         //监控滚动条滚动距离
+
+        // TODO: ?
         $('#appMain')
           .scroll(function () {
             self.scrollHeight = $(this).scrollTop()
+            // conosle.log('监控滚动条滚动距离:')
+            // conosle.log(self.scrollHeight)
           })
 
         this.setStateUnderLocalHost()
@@ -1088,7 +1103,7 @@ define(
     }
     //工具栏管理者：包含放大\缩小\全屏\鹰眼\线条类型选择等功能
     const toolbarManager = {
-      searchArr: ['id'],
+      searchArr: ['id'], //用于搜索的属性
       history: {
         arr: [],
         curIndex: -1,
@@ -1318,7 +1333,7 @@ define(
       //鹰眼设定
       setEagleEye: function (b) {
         const stage = stateManager.stage
-        stage.eagleEye.visible = b != undefined
+        stage.eagleEye.visible = b !== undefined
           ? b
           : !stage.eagleEye.visible
         stage.eagleEye.update()
@@ -1369,7 +1384,7 @@ define(
           'position': 'absolute',
           'padding-left': '0',
         })
-        stateManager.romveAgentLink()
+        stateManager.removeAgentLink()
       },
       dragMouseMove: null,
       dragMouseUp: function ($thisClone, mDown, e) {
@@ -1435,8 +1450,8 @@ define(
     const nodesRankManager = {
       /****状态值*****/
       dataJson: {},//用于存储画布数据
-      nodesArr: [],
-      linksArr: [],
+      nodesArr: [],// 存储节点的数组
+      linksArr: [],// 存储连接线的数组
       nodesRankArr: [],//二维数组,用于根据节点关系,存储节点
       maxLength: 0,//最长一维数组的长度
       subWidth: 0,
@@ -1455,6 +1470,7 @@ define(
       setNodesRank: function (dataObj, rootNodeId, params, type) {
         nodesRankManager.init()//清空所有数据
         let dataJson = dataObj
+
         if (dataJson) {
           nodesRankManager.dataJson = dataJson
         } else {
@@ -1468,23 +1484,19 @@ define(
         nodesRankManager.originY = params.originY
         this.getArrTwoDimensional([rootNodeId])
 
-
-        if (type == 'tree') {
+        if (type === 'tree') {
           nodesRankManager.subWidth = params.subWidth
           nodesRankManager.subHeight = params.subHeight
           nodesRankManager.rankTree()
         }
-        else if (type == 'ring') {
+        else if (type === 'ring') {
           nodesRankManager.subRadius = params.subRadius
-
           nodesRankManager.rankRing()
         }
         if (dataObj) {
           nodesRankManager.rankNoRelatedNodes() //设置跟根节点不产生关系的节点位置
         }
         nodesRankManager.setNodesPosition()//设置自动排列节点的位置
-
-
       },
       //选中树
       chooseTree: function (rootNodeId) {
@@ -1507,8 +1519,12 @@ define(
       //获取关联节点id
       getRelatedNodesId: function (nodesIdArr) {
         const linksArr = nodesRankManager.linksArr
-        const fatherNodesArr = nodesRankManager.nodesRankArr.length > 1 ? nodesRankManager.nodesRankArr[nodesRankManager.nodesRankArr.length - 2] : []
-        const thisNodesArr = nodesRankManager.nodesRankArr.length > 0 ? nodesRankManager.nodesRankArr[nodesRankManager.nodesRankArr.length - 1] : []
+        const fatherNodesArr = nodesRankManager.nodesRankArr.length > 1
+          ? nodesRankManager.nodesRankArr[nodesRankManager.nodesRankArr.length - 2]
+          : []
+        const thisNodesArr = nodesRankManager.nodesRankArr.length > 0
+          ? nodesRankManager.nodesRankArr[nodesRankManager.nodesRankArr.length - 1]
+          : []
         const targetNodesIdArr = []
         linksArr.forEach(function (p) {
           if (nodesIdArr.indexOf(p.from_id) >= 0) {
@@ -1540,13 +1556,11 @@ define(
       },
       //获取节点坐标,树形
       rankTree: function () {
-
         const maxLength = nodesRankManager.maxLength
         const width = nodesRankManager.subWidth
         const height = nodesRankManager.subHeight
         const originX = nodesRankManager.originX
         const originY = nodesRankManager.originY
-
 
         nodesRankManager.nodesRankArr.forEach(function (oneDimensionalArr, index1) {
           const onoDimensionalLength = oneDimensionalArr.length
@@ -1557,8 +1571,6 @@ define(
             }
           })
         })
-
-
       },
       //获取节点坐标,环形
       rankRing: function () {
@@ -1578,7 +1590,8 @@ define(
           })
         })
 
-        console.log(nodesRankManager.nodePositionJson)
+        // console.log('nodesRankManager.nodePositionJson:')
+        // console.log(nodesRankManager.nodePositionJson)
       },
       //设置节点坐标
       setNodesPosition: function () {
@@ -1613,7 +1626,6 @@ define(
         nodesRankManager.nodesArr.forEach(function (p) {
           if (nodesRankManager.nodesRankIdArr.indexOf(p.id) < 0) {
             nodesRankManager.nodesNoRankIdArr.push(p.id)
-
           }
         })
         nodesRankManager.nodesNoRankIdArr.forEach(function (id, index) {

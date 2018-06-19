@@ -42,8 +42,6 @@ base-topo/
 |  |  |
 |  |  +- require.min.js
 |  |  |
-|  |  +- bootstrap.min.js
-|  |  |
 |  |  +- jquery-1.9.1.min.js
 |  |
 |  +- images/
@@ -63,6 +61,8 @@ base-topo/
 +- README.md
 |
 +- PROJECT.md
+|
++- THINK.md
 ```
 
 ## 使用到的技术和框架
@@ -75,7 +75,7 @@ base-topo/
 ## 代码文件介绍
    插件主要由三个js文件构成: 
    1. 源码文件:[jtopo-0.4.8.js](http://www.jtopo.com/) 
-   2. 封装代码文件:topo-main.js  基于源码进行的封装 (下文主要针对topo-main.js里面的接口进行介绍)
+   2. 封装代码文件:topo-main.js  基于源码进行的封装 (下文主要针对 topo-main.js 里面的接口进行介绍)
    3. 业务代码文件:topo-focus.js 调用封装代码文件暴露的接口
    
    其中封装代码由以下几个模块构成:

@@ -555,6 +555,7 @@ define(
         });
         var canvas = document.createElement("canvas")
           , graphics = canvas.getContext("2d");
+
         JTopo.util = {
           //全局通用方法
           rotatePoint: rotatePoint,
@@ -790,7 +791,7 @@ define(
           window.$foreach = $foreach
       }(JTopo),
       //舞台stage方法的具体实现
-      function( a) {
+      function(a) {
         function b(a) {
           return {
             hgap: 16,
