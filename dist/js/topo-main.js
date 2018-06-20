@@ -1402,7 +1402,7 @@ define(
         }
       }
     }
-    //拖拽管理者：用于管理从左下角拖拽图标到画布上生成节点,用了个drag.js插件
+    //拖拽管理者：用于管理从左下角拖拽图标到画布上生成节点,用了个 drag.js 插件
     const dragManager = {
       beforeDragMouseUp: null,
       afterDragMouseUp: null,
@@ -1457,10 +1457,12 @@ define(
       dragInit: function () {
         const $dragContainer = $('#container')
 
+        // 遍历每一个符合条件的元素
         $('#equipmentArea .dragTag').each(function () {
           if ($(this).attr('isDragTag') === 'true') {
             return
           }
+          // 调用 drag.js 插件
           $(this).dragging({
             move: 'both', //拖动方向，x y both
             randomPosition: false, //初始位置是否随机

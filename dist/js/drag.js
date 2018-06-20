@@ -1,62 +1,62 @@
 $.fn.extend({
   //---元素拖动插件
   dragging:function(data){
-    var $this = $(this);
-    if($this.attr('isDragTag')=='true'){return;}
-    var $thisClone;
-    var xPage;
-    var yPage;
-    var X;
-    var Y;
-    var xRand = 0;
-    var yRand = 0;
-    var defaults = {
-      move : 'both',
-      randomPosition : true ,
-      hander:1,
-      dragContainer:$(this).parent()
-    }
-    var opt = $.extend({},defaults,data);
-    var father = opt.dragContainer;
-    var movePosition = opt.move;
-    var random = opt.randomPosition;
-    var hander = opt.hander;
-    var fnCreateNodeByDrag=opt.fnCreateNodeByDrag;
-    var fnDragMouseDown=opt.dragMouseDown;
-    var fnDragMouseMove=opt.dragMouseMove;
+    const $this = $(this);
+    if($this.attr('isDragTag')==='true'){return;}
+    let $thisClone;
+    let xPage;
+    let yPage;
+    let X;
+    let Y;
+    const xRand = 0;
+    const yRand = 0;
+    const defaults = {
+      move: 'both',
+      randomPosition: true,
+      hander: 1,
+      dragContainer: $(this).parent()
+    };
+    const opt = $.extend({}, defaults, data);
+    const father = opt.dragContainer;
+    const movePosition = opt.move;
+    const random = opt.randomPosition;
+    let hander = opt.hander;
+    const fnCreateNodeByDrag = opt.fnCreateNodeByDrag;
+    const fnDragMouseDown = opt.dragMouseDown;
+    const fnDragMouseMove = opt.dragMouseMove;
     $this.attr('isDragTag',true);
-    hander=hander == 1?$this:$this.find(opt.hander);
+    hander=hander === 1?$this:$this.find(opt.hander);
     //---初始化
     father.css({"position":"relative","overflow":"hidden"});
     hander.css({"cursor":"move"});
-    var faWidth = father.width();
-    var faHeight = father.height();
-    var thisWidth=50;
-    var thisHeight=50;
-    var mDown = false;
-    var positionX;
-    var positionY;
-    var moveX ;
-    var moveY ;
-    var sonWidth=0;
-    var sonHeight=0;
+    const faWidth = father.width();
+    const faHeight = father.height();
+    const thisWidth = 50;
+    const thisHeight = 50;
+    let mDown = false;
+    let positionX;
+    let positionY;
+    let moveX;
+    let moveY;
+    let sonWidth = 0;
+    let sonHeight = 0;
 
     if(random){
       $thisRandom();
     }
     function $thisRandom(){ //随机函数
       $this.each(function(index){
-        var randY = parseInt(Math.random()*(faHeight-thisHeight));///
-        var randX = parseInt(Math.random()*(faWidth-thisWidth));///
-        if(movePosition.toLowerCase() == 'x'){
+        const randY = parseInt(Math.random() * (faHeight - thisHeight));///
+        const randX = parseInt(Math.random() * (faWidth - thisWidth));///
+        if(movePosition.toLowerCase() === 'x'){
           $(this).css({
             left:randX
           });
-        }else if(movePosition.toLowerCase() == 'y'){
+        }else if(movePosition.toLowerCase() === 'y'){
           $(this).css({
             top:randY
           });
-        }else if(movePosition.toLowerCase() == 'both'){
+        }else if(movePosition.toLowerCase() === 'both'){
           $(this).css({
             top:randY,
             left:randX
@@ -70,7 +70,7 @@ $.fn.extend({
       positionX = $this.position().left;  //按下鼠标时,元素的left
       positionY = $this.position().top;//按下鼠标时,元素的top
       $thisClone = $this.clone();
-      var $target=$(e.target);
+      const $target = $(e.target);
       sonWidth=$target.width()/2;
       sonHeight=$target.height()/2;
       $('body').append($thisClone);
@@ -90,11 +90,11 @@ $.fn.extend({
       }
       mDown = false;
     }).mousemove(function(e){
-      var k_x=0;
-      var k_y=0;
+      let k_x = 0;
+      let k_y = 0;
 
       if(fnDragMouseMove) {
-        var posObj = fnDragMouseMove(e);
+        const posObj = fnDragMouseMove(e);
         k_x = posObj.x;
         k_y = posObj.y;
       }
@@ -103,17 +103,17 @@ $.fn.extend({
       moveY =  e.pageY-sonHeight+k_y;//元素拖拽的y坐标
 
 
-      if(movePosition.toLowerCase() == "x"){
+      if(movePosition.toLowerCase() === "x"){
         thisXMove();
-      }else if(movePosition.toLowerCase() == "y"){
+      }else if(movePosition.toLowerCase() === "y"){
         thisYMove();
-      }else if(movePosition.toLowerCase() == 'both'){
+      }else if(movePosition.toLowerCase() === 'both'){
         thisAllMove();
       }
     });
 
     function thisXMove(){ //x轴移动
-      if(mDown == true){
+      if(mDown === true){
         $thisClone.css({"left":moveX});
       }else{
         return;
@@ -128,7 +128,7 @@ $.fn.extend({
     }
 
     function thisYMove(){ //y轴移动
-      if(mDown == true){
+      if(mDown === true){
         $thisClone.css({"top":moveY});
       }else{
         return;
@@ -143,7 +143,7 @@ $.fn.extend({
     }
 
     function thisAllMove(){ //全部移动
-      if(mDown == true){
+      if(mDown === true){
         $thisClone.css({"left":moveX,"top":moveY});
       }else{
         return;
