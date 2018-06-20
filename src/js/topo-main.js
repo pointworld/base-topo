@@ -78,29 +78,41 @@ define(
        * */
       //设置画布大小
       setCanvasStyle: function () {
+        // 将 canvas 节点对象赋值给 oCanvas 变量
         const oCanvas = stateManager.canvas
+        // 将 id=canvasWrap 的节点对象（canvas 节点的父节点）赋值给 oCanvasWrap 变量
         const oCanvasWrap = document.getElementById('canvasWrap')
+        // 将 id=container 的节点对象（canvasWrap 节点的父节点）赋值给 oContainer 变量
         const oContainer = document.getElementById('container')
+
+        // 触发一次该函数
         fnSetCanvas()
-        //随窗口变化
+
+        //监听窗口变化
         window.onresize = function () {
           fnSetCanvas()
+          // 退出全屏
           stateManager.isFullScreen&&canvasManager.runPrefixMethodBack()
         }
 
+        // 根据窗口的变化实时调节 canvas 的宽高
         function fnSetCanvas() {
+          // oContainer_w 参与 canvas 元素最终的宽度的计算
           const oContainer_w = oContainer.offsetWidth
+          // oContainer_h 参与 canvas 元素最终的高度的计算
           let oContainer_h = 650
+          // 获取 scene 场景实例的保存的宽高位置等信息：
+          // {top:xx, right:xx, bottom: xx, left: xx, width: xx, height: xx}
           const elementsBoundObj = stateManager.scene.getElementsBound()
           const elementsBoundHeight = elementsBoundObj.bottom + stateManager.scene.translateY
-          if(elementsBoundHeight>oContainer_h) {
+          if (elementsBoundHeight>oContainer_h) {
             oContainer_h = elementsBoundHeight + 30
           }
+          // 装备区域的宽度
           const oEquipmentArea_w = stateManager.equipmentAreaWidth
-          oCanvas.setAttribute('width', oContainer_w - oEquipmentArea_w-10)
+          oCanvas.setAttribute('width', oContainer_w - oEquipmentArea_w - 10)
           oCanvas.setAttribute('height', oContainer_h)
         }
-
       },
       //全屏
       runPrefixMethod: function (element, method) {
@@ -136,57 +148,75 @@ define(
       initCanvasEvent: function () {
         /********动态连线处理*****************/
         const self = this
+        // 存储 scene 场景实例
         const scene = stateManager.scene
+        // 储存连线的模式和样式
         const setLink = stateManager.setLink
 
+        // new 一个名为 tempA 的 canvas 内部节点实例
         const tempNodeA = new JTopo.Node('tempA')
+        // 设置临时节点的宽度和高度
         tempNodeA.setSize(1, 1)
         const tempNodeZ = new JTopo.Node('tempZ')
         tempNodeZ.setSize(1, 1)
+
         let link
 
+        // 存储场景事件对象
         const sceneEventObj = canvasManager.sceneEvent
+
+        /** 为 scene 场景实例注册事件 */
+        // 单击事件
         scene.addEventListener('click', function (e) {
-          if (e.button == 0) {
+          if (e.button === 0) { // 鼠标左键
             $(".contextmenu").hide()
           }
         })
         scene.addEventListener('mouseup', function (e) {
           sceneEventObj.mouseup&&sceneEventObj.mouseup(e)
+          // 判断事件的源是否属于拓扑对象 JTopo 的节点、容器或容器节点的实例
           const isInstanceofElement = e.target instanceof JTopo.Node || e.target instanceof JTopo.Container || e.target instanceof JTopo.ContainerNode
-          if (e.button == 2) {
+          if (e.button === 2) { // 鼠标右键
             // scene.remove(link)
             return
           }
-          //开启连线模式
+          // 如果连线模式开启
           if (setLink.isSetting) {
-            if (e.target != null &&  isInstanceofElement)
-            {
-              if (  stateManager.beginNode == null) {
-                //第一次点击，生成连线
+            // 如果存在事件源且事件源属于拓扑对象 JTopo 的节点、容器或容器节点的实例
+            if (e.target !== null && isInstanceofElement) {
+              // 如果 stateManager.beginNode 为空
+              if (stateManager.beginNode === null) {
+                /** 第一次点击，生成连线 */
+                // 将当前触发事件的节点赋值给 stateManager.beginNode
                 stateManager.beginNode = e.target
+
+                // 基于节点 tempNodeA 和 tempNodeZ 创建连线
                 link = self._createLink(tempNodeA, tempNodeZ)
                 stateManager.agentLink=link
+                scene.add(link) // 这一步是否有必要 TODO：？
 
-
-                scene.add(link)
+                // 设置临时节点的位置
                 tempNodeA.setLocation(e.x-2, e.y-2)
                 tempNodeZ.setLocation(e.x-2, e.y-2)
               }
-              else if (  stateManager.beginNode !== e.target) {
-                //第二次点击，完成连线
+              // 如果当前触发事件的节点不是 stateManager.beginNode
+              else if (stateManager.beginNode !== e.target) {
+                /** 第二次点击，完成连线 */
+
                 const endNode = e.target
 
-                //如果是容器节点和其内部的节点连线,或者其内部节点之间连线，则不应该连线
-                if ([  stateManager.beginNode.parentType, endNode.parentType].indexOf('containerNode') < 0) {
-                  let l = self._createLink(  stateManager.beginNode, endNode)//正式连线
+                //如果是容器节点和其内部的节点连线,或者其内部节点之间的连线，则不应该连线
+                if ([stateManager.beginNode.parentType, endNode.parentType].indexOf('containerNode') < 0) {
+                  let l = self._createLink(stateManager.beginNode, endNode)//正式连线
                   scene.add(l)
-
                 }
                 canvasManager.afterCreateLink&&canvasManager.afterCreateLink(stateManager.beginNode,endNode,l)
+                // 设置开始节点为空
                 stateManager.beginNode = null
-                scene.remove(link)
+                // 移除连线
+                scene.remove(link) // TODO ?
 
+                // 保存此次操作到一个 history 数组尾部
                 toolbarManager.history.save()
               }
               else {
@@ -194,29 +224,28 @@ define(
               }
             }
             else {
-
               link&&scene.remove(link)
             }
           }
         })
         scene.addEventListener('mousedown', function (e) {
-          if ((e.target == null || e.target ===   stateManager.beginNode || e.target === link) && e.button !== 2) {
+          if ((e.target === null || e.target === stateManager.beginNode || e.target === link) && e.button !== 2) {
             link && scene.remove(link)
             stateManager.beginNode = null
             scene.childs.filter(function (child) {
               child.selected = false
             })
           }
-
         })
         scene.addEventListener('mousedrag', function (e) {
           scene.findElements(function (child) {
-            if(child.elementType=='containerNode'){
+            if(child.elementType==='containerNode'){
+              // 绘制当前容器节点中的所有节点，JTopo.flag.graphics 为 canvas 的上下文环境
               child.paint(JTopo.flag.graphics)
             }
           })
-          sceneEventObj.mousedrag&&sceneEventObj.mousedrag(e)
 
+          sceneEventObj.mousedrag&&sceneEventObj.mousedrag(e)
 
           //拖动成组
           if(stateManager.isCreateGroupByDrag){
@@ -240,11 +269,12 @@ define(
               }
             }
           }
-
         })
         scene.addEventListener('mousemove', function (e) {
           tempNodeZ.setLocation(e.x-3, e.y+3)
         })
+
+        //为工具栏管理者设置快捷键
         toolbarManager.setShortcutKey()
       },
       //复现
@@ -888,15 +918,19 @@ define(
       /******************线条处理，end***************************/
 
       init: function () {
+        // 获取 canvas 元素对象
         const canvas = stateManager.canvas = document.getElementById('canvas')
+        // 将获取的 canvas 元素作为参数传给 JTopo.Stage 构造器，然后 new 一个 stage 舞台实例
         const stage = stateManager.stage = new JTopo.Stage(canvas)
+        // 将 stage 舞台实例作为参数传给 JTopo.Scene 构造器，然后 new 一个 scene 场景实例
         const scene = stateManager.scene = new JTopo.Scene(stage)
+
         canvasManager.userDefinedNodes.filter(function (p1, p2, p3) {
           canvasManager[p1.fnName]=p1.fn
           canvasManager['userDefinedNodeEvent_'+p1.fnName]=p1.event
         })
-        canvasManager.setCanvasStyle()
-        canvasManager.initCanvasEvent() //canvas事件初始化
+        canvasManager.setCanvasStyle()  //设置画布大小
+        canvasManager.initCanvasEvent() //canvas 事件初始化
       }
     }
     //数据管理者：用于接受 topo 数据，并展示到画布上来
@@ -929,9 +963,9 @@ define(
     }
     //状态管理者：用于存放全局状态,比如选中一个节点,右侧滑出弹窗,弹窗展现节点的属性
     const stateManager = {
-      stage: {}, // canvas 舞台
-      scene: {}, //系统节点
-      canvas: {},
+      stage: {},  // 用于存储 stage 舞台实例
+      scene: {},  // 用于储存 scene 场景实例，系统节点
+      canvas: {}, // 用于储存 canvas 元素对象
       equipmentAreaWidth: 250, // TODO: ?
       setLink: { // 设置连接线的模式和样式
         isSetting: false, // 是否开启连线模式
@@ -1064,17 +1098,13 @@ define(
       init: function () {
         const self = this
 
-        // console.log('init statemanager')
-
-        //监控滚动条滚动距离
-
-        // TODO: ?
-        $('#appMain')
+        //监控滚动条滚动距离 TODO: ?
+        /*$('#appMain')
           .scroll(function () {
             self.scrollHeight = $(this).scrollTop()
-            // conosle.log('监控滚动条滚动距离:')
-            // conosle.log(self.scrollHeight)
-          })
+            conosle.log('监控滚动条滚动距离:')
+            conosle.log(self.scrollHeight)
+          })*/
 
         this.setStateUnderLocalHost()
       }
@@ -1298,11 +1328,11 @@ define(
           if (powerManager.isViewModel) {
             return
           }
-          if (e.ctrlKey && e.which == 13) {
+          if (e.ctrlKey && e.which === 13) { // Ctrl + Enter
             //设置成组
             $('.groupWrap').click()
           }
-          else if (e.ctrlKey && e.which == 8) {
+          else if (e.ctrlKey && e.which === 8) { // Ctrl + 退格
             //删除
             scene.selectedElements.filter(function (e) {
               if (e.selected) {
@@ -1313,15 +1343,15 @@ define(
               }
             })
           }
-          else if (e.which == 27) {
+          else if (e.which === 27) { // ESC
             $('.patternArea .toolbar-default').click()
           }
           if (stateManager.isFullScreen) {
-            if (187 == e.keyCode && e.shiftKey) {
+            if (187 === e.keyCode && e.shiftKey) { // 'shift' + '+'
               stateManager.scene.zoomOut(0.9)
-            } else if (189 == e.keyCode && e.shiftKey) {
+            } else if (189 === e.keyCode && e.shiftKey) { // 'shift' + '_'
               stateManager.scene.zoomIn(0.9)
-            } else if (32 == e.keyCode) {
+            } else if (32 === e.keyCode) { // 空格
               stateManager.scene.translateX = 0
               stateManager.scene.translateY = 0
               stateManager.scene.centerAndZoom()
@@ -1438,7 +1468,7 @@ define(
             dragMouseDown: dragManager.dragMouseDown,
             dragMouseMove: dragManager.dragMouseMove,
             stateManager: stateManager,
-            fnCreateNodeByDrag: dragManager.dragMouseUp
+            fnCreateNodeByDrag: dragManager.dragMouseUp // 通过拖拽生成节点
           })
         })
       },
@@ -1668,7 +1698,7 @@ define(
         stateManager.init()
         powerManager.init()
         canvasManager.init()
-        dragManager.init()
+        dragManager.init() // TODO: 20180620 21:24
         toolbarManager.init()
         nodesRankManager.init()
       }

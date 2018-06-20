@@ -42,6 +42,7 @@ require.config({
 require(
   ['bootstrap', 'topo-focus'],
   function (_______, init) {
+    // console.log(_______) // undefined
     init()
   }
 )

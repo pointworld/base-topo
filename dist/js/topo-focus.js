@@ -24,7 +24,8 @@ define(
       stateManager.formatNodes = ['id', 'type', 'json']
       stateManager.formatContainers = ['id', 'type', 'json']
       stateManager.formatLinks = ['id', 'type', 'json', 'from_id', 'to_id']
-      stateManager.isCreateGroupByDrag = true
+      stateManager.isCreateGroupByDrag = true // 是否通过拖拽创建组
+
       toolbarManager.searchArr = ['id'] //用于搜索的属性
       /******************初始化,end***********************/
 
@@ -286,7 +287,6 @@ define(
         return !stateManager.setLink.isSetting
       }
 
-      /**结点事件*/
       // 画圆
       function drawCircle(fillColor, ctx, nodeObj) {
         // ctx.imageSmoothingEnabled = true
@@ -299,10 +299,11 @@ define(
         //ctx.scale(2, 2)
       }
       let i = 0
+      // 结点事件
       canvasManager.nodeEvent = {
-        mouseup: function (e) {
+        mouseup: function (e) {// 在节点上释放鼠标键时的事件处理过程
           if (e.which === 3) {
-            //右键
+            //右键：在节点上释放鼠标右键时的事件处理：弹出框
             $('#contextmenuNode')
               .css({
                 "top": e.pageY - 75,
@@ -313,18 +314,18 @@ define(
           //结点本身图片闪动
           JTopo.util.nodeFlash(e.target, true, true, [148,193,90], [227,38,49])
 
-          // ++i
-          // console.log(i%2)
-          // e.target.beforePaintCallback=function (a) {
-          //     // 填色
-          //     drawCircle(i%2?'blue':'red',a,e.target)
-          // }
+          ++i
+          console.log(i%2)
+          e.target.beforePaintCallback=function (a) {
+              // 填色
+              drawCircle(i%2?'blue':'red',a,e.target)
+          }
         },
-        mousemove: function () {
+        mousemove: function () { // 在节点上移动鼠标键时的事件处理过程：鼠标光标变成小手
           $('#canvas')
             .attr('style','cursor:pointer')
         },
-        mouseover: function (e) {
+        mouseover: function (e) { // 当鼠标悬浮在节点上时的事件处理过程
           // $('#nodeTitle').show()
           // JTopo.util.setPopPos($('#nodeTitle'),e.target.id,0,0)
 
@@ -332,15 +333,15 @@ define(
           $('#canvas')
             .attr('style','cursor:pointer')
         },
-        mousedown: function (e) {
+        mousedown: function (e) { // 在节点上按下鼠标键时的事件处理过程
 
         },
-        mouseout: function (e) {
+        mouseout: function (e) { // 当鼠标移出节点时的事件处理过程
           //设置鼠标形状
           $('#canvas')
             .attr('style','cursor:default')
         },
-        dbclick: null
+        dbclick: null // 鼠标双击时的事件处理过程
       }
       //线条事件
       canvasManager.linkEvent = {
@@ -354,11 +355,11 @@ define(
               })
               .show()
           }
-          console.log(e.target)
+          // console.log(e.target)
         },
         mouseover: null,
         mouseout: function (e) {
-          console.log(e.target)
+          // console.log(e.target)
         },
         mousemove: null,
         dbclick: null
@@ -366,7 +367,7 @@ define(
       //容器事件
       canvasManager.containerEvent = {
         mouseup: function (e) {
-          console.log(e.target)
+          // console.log(e.target)
           if (e.which === 3) {
             //右键
             $('#contextmenuContainer')
@@ -385,9 +386,11 @@ define(
       //画布事件
       canvasManager.sceneEvent = {
         mouseup: function (e) {
-          console.log(e)
+          // console.log(e)
         },
-        mousedrag: function (e) {}
+        mousedrag: function (e) {
+          // console.log(e)
+        }
       }
       //自定义节点拓展，样例
       canvasManager.userDefinedNodes = [
@@ -595,7 +598,7 @@ define(
           },
           event: {
             'mouseup': function (e) {
-              console.log(e.target)
+              // console.log(e.target)
             },
             'dbclick': null,
             'mousemove': null,
@@ -628,7 +631,7 @@ define(
           },
           event: {
             'mouseup': function (e) {
-              console.log(e.target)
+              // console.log(e.target)
             },
             'dbclick': null,
             'mousemove': null,
@@ -815,7 +818,8 @@ define(
           },
           event: {
             'mouseup': function (e) {
-              console.log(e.target)
+              // console.log('e.target')
+              // console.log(e.target)
             },
             'dbclick': null,
             'mousemove': null,
@@ -961,6 +965,27 @@ define(
               imgName: 'android',
               type: 'node',
               name: '安卓',
+              width: 102,
+              height: 50
+            },
+            {
+              imgName: 'android',
+              type: 'node',
+              name: '安卓',
+              width: 102,
+              height: 50
+            },
+            {
+              imgName: 'apple',
+              type: 'node',
+              name: '苹果',
+              width: 102,
+              height: 50
+            },
+            {
+              imgName: 'apple',
+              type: 'node',
+              name: '苹果',
               width: 102,
               height: 50
             },

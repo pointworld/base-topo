@@ -221,7 +221,7 @@ define(
             f = d - b),
             Math.sqrt(e * e + f * f)
         }
-        function getElementsBound(a) {
+        function getElementsBound(a) { // 用于获取 scene 场景实例的宽高位置等信息
           for (var b = {
             left: Number.MAX_VALUE,
             right: Number.MIN_VALUE,
@@ -790,7 +790,7 @@ define(
           window.$for = $for,
           window.$foreach = $foreach
       }(JTopo),
-      //舞台stage方法的具体实现
+      //舞台stage方法的具体实现（JTopo.Stage(canvas) 构造器函数，参数为一个 canvas 元素节点对象）
       function(a) {
         function b(a) {
           return {
@@ -1279,7 +1279,7 @@ define(
         },
           a.Stage = c
       }(JTopo),
-      //场景scene方法的具体实现
+      //场景scene方法的具体实现（JTopo.Scene(stage) 构造器函数，参数为 stage 舞台实例）
       function(a) {
         function b(c) {
           function d(a, b, c, d) {
@@ -2268,7 +2268,7 @@ define(
           a.InteractiveElement = c,
           a.EditableElement = d
       }(JTopo),
-      //node的具体实现（包括textNode和linkNode、CircleNode、AnimateNode）
+      //node的具体实现（包括 textNode 和 linkNode、CircleNode、AnimateNode）
       function(a) {
         function b(c) {
           this.initialize = function(c) {
@@ -5254,5 +5254,4 @@ define(
 
     return JTopo;
   })
-
 
