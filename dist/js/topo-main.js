@@ -123,8 +123,8 @@ define(
               // 无前缀，方法首字母小写
               method = method.slice(0, 1).toLowerCase() + method.slice(1)
             }
-          const typePrefixMethod = typeof element[prefix + method]
-          if (typePrefixMethod + "" !== "undefined") {
+            const typePrefixMethod = typeof element[prefix + method]
+            if (typePrefixMethod + "" !== "undefined") {
               if (typePrefixMethod === "function") {
                 usablePrefixMethod = element[prefix + method]()
               } else {
@@ -193,7 +193,7 @@ define(
                 // 基于节点 tempNodeA 和 tempNodeZ 创建连线
                 link = self._createLink(tempNodeA, tempNodeZ)
                 stateManager.agentLink=link
-                scene.add(link) // 这一步是否有必要 TODO：？
+                scene.add(link)
 
                 // 设置临时节点的位置
                 tempNodeA.setLocation(e.x-2, e.y-2)
@@ -1406,6 +1406,14 @@ define(
     const dragManager = {
       beforeDragMouseUp: null,
       afterDragMouseUp: null,
+      /**
+       * 当拖拽发生时的事件处理函数
+       *
+       * @param $thisClone
+       * @param positionX
+       * @param positionY
+       * @param e
+       */
       dragMouseDown: function ($thisClone, positionX, positionY, e) {
         $thisClone.css({
           "zIndex": "99",
@@ -1414,7 +1422,7 @@ define(
           'position': 'absolute',
           'padding-left': '0',
         })
-        stateManager.removeAgentLink()
+        stateManager.removeAgentLink() // 移除用于连接的线条
       },
       dragMouseMove: null,
       dragMouseUp: function ($thisClone, mDown, e) {
@@ -1449,30 +1457,29 @@ define(
         toolbarManager.history.save()
         dragManager.afterDragMouseUp && dragManager.afterDragMouseUp($thisClone, e)
       },
-      /*******************************************************数据层******/
-
+      /**********************************************************数据层*****/
       /**********************************************************视觉层*****/
-
       /**********************************************************控制层*****/
       dragInit: function () {
         const $dragContainer = $('#container')
 
         // 遍历每一个符合条件的元素
-        $('#equipmentArea .dragTag').each(function () {
-          if ($(this).attr('isDragTag') === 'true') {
-            return
-          }
-          // 调用 drag.js 插件
-          $(this).dragging({
-            move: 'both', //拖动方向，x y both
-            randomPosition: false, //初始位置是否随机
-            dragContainer: $dragContainer, //可拖拽区域容器
-            dragMouseDown: dragManager.dragMouseDown,
-            dragMouseMove: dragManager.dragMouseMove,
-            stateManager: stateManager,
-            fnCreateNodeByDrag: dragManager.dragMouseUp // 通过拖拽生成节点
+        $('#equipmentArea .dragTag')
+          .each(function () {
+            if ($(this).attr('isDragTag') === 'true') {
+              return
+            }
+            // 调用 drag.js 插件
+            $(this).dragging({
+              move: 'both', //拖动方向（x: 水平拖动；y: 垂直拖动；both: 任意方向拖动）
+              randomPosition: false, //可拖拽图标的初始位置是否随机排列
+              dragContainer: $dragContainer, //可被拖拽的区域容器
+              dragMouseDown: dragManager.dragMouseDown, // 当拖拽发生时的事件处理函数
+              dragMouseMove: dragManager.dragMouseMove,
+              stateManager: stateManager,
+              fnCreateNodeByDrag: dragManager.dragMouseUp // 通过拖拽生成节点
+            })
           })
-        })
       },
       init: function () {
         this.dragInit()
@@ -1700,7 +1707,7 @@ define(
         stateManager.init()
         powerManager.init()
         canvasManager.init()
-        dragManager.init() // TODO: 20180620 21:24
+        dragManager.init()
         toolbarManager.init()
         nodesRankManager.init()
       }

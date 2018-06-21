@@ -82,7 +82,6 @@ $.fn.extend({
       return false;
     });
 
-
     $('body').mouseup(function(e){
       if($thisClone){
         fnCreateNodeByDrag($thisClone,mDown,e);
@@ -162,15 +161,6 @@ $.fn.extend({
         $thisClone.css({"top":faHeight-thisHeight});
       }
     }
-
   }
 });
-
-
-
-
-
-
-
-
 

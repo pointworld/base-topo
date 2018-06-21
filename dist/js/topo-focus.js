@@ -1043,7 +1043,7 @@ define(
           $('.iconContainer .basicIconTag').html(html) // inject a HTML fragment into HTML
         }
       }
-      /******图标生成管理者：注入用于拖拽的图标，end**********/
+      /*****图标生成管理者：注入用于拖拽的图标，end**********/
 
       /************ run *************/
       // 图标生成管理者 - 控制层：注入用于拖拽的图标
