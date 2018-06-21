@@ -193,7 +193,7 @@ define(
                 // 基于节点 tempNodeA 和 tempNodeZ 创建连线
                 link = self._createLink(tempNodeA, tempNodeZ)
                 stateManager.agentLink=link
-                scene.add(link)
+                scene.add(link) // 这一步是否有必要 TODO：？
 
                 // 设置临时节点的位置
                 tempNodeA.setLocation(e.x-2, e.y-2)

@@ -12,38 +12,43 @@ define(
   function (JTopo, topoManager) {
     // initialize data
     function init() {
-      /******************初始化,start***********************/
-      let stateManager = topoManager.stateManager         // 状态管理者
-      let canvasManager = topoManager.canvasManager       // 画布管理者
-      let dataManager = topoManager.dataManager           // 数据管理者
-      let toolbarManager = topoManager.toolbarManager     // 工具栏管理者
-      let dragManager = topoManager.dragManager           // 拖拽管理者
-      let nodesRankManager = topoManager.nodesRankManager // 节点排列管理者
+      /** 初始化,start */
+      // 状态管理者
+      let stateManager = topoManager.stateManager;
+      // 画布管理者
+      let canvasManager = topoManager.canvasManager;
+      // 数据管理者
+      let dataManager = topoManager.dataManager;
+      // 工具栏管理者
+      let toolbarManager = topoManager.toolbarManager;
+      // 拖拽管理者
+      let dragManager = topoManager.dragManager;
+      // 节点排列管理者
+      let nodesRankManager = topoManager.nodesRankManager;
 
       stateManager.formatContainerNodes = ['id', 'type', 'json']
       stateManager.formatNodes = ['id', 'type', 'json']
       stateManager.formatContainers = ['id', 'type', 'json']
       stateManager.formatLinks = ['id', 'type', 'json', 'from_id', 'to_id']
-      stateManager.isCreateGroupByDrag = true // 是否通过拖拽创建组
+      // 是否通过拖拽创建组
+      stateManager.isCreateGroupByDrag = true
+      // 用于搜索的属性
+      toolbarManager.searchArr = ['id']
+      /** 初始化,end */
 
-      toolbarManager.searchArr = ['id'] //用于搜索的属性
-      /******************初始化,end***********************/
-
-      /***********数据管理者*************/
-      //获取后台拓扑图数据
+      // 数据管理者 - 获取拓扑图数据
       dataManager.getTopoData = function (callback) {
         /**
          * json 数据：
-         * 1、imgName 属性，用于存储节点图片名字
-         * 2、elementType 用于标志节点类型(node、container、containerNode)，必填
-         * 3、json 中的 text 用于存储节点名字
-         * 4、自定义结点的 elementType 必须设置为 containerNode，且 nodeFn 需要设置为创建自定义结点的方法名
-         * 5、如果自定义结点是拖拽创建，则必须设置 id 等于 _id
-         * 6、必填项：id type json (elementType，如果是自定义结点，必填 nodeFn)
-         * 7、type 为 node 时，如果 elementType 为 node，则为普通节点，如果 elementType 为 containerNode，则为自定义节点
-         * 8、type 为 containerNode，elementType 也为 containerNode，则为自定义容器节点
+         * imgName 属性，用于存储节点图片名字
+         * elementType 用于标志节点类型(node、container、containerNode)，必填
+         * json 中的 text 用于存储节点名字
+         * 自定义结点的 elementType 必须设置为 containerNode，且 nodeFn 需要设置为创建自定义结点的方法名
+         * 如果自定义结点是拖拽创建，则必须设置 id 等于 _id
+         * 必填项：id type json (elementType，如果是自定义结点，必填 nodeFn)
+         * type 为 node 时，如果 elementType 为 node，则为普通节点，如果 elementType 为 containerNode，则为自定义节点
+         * type 为 containerNode，elementType 也为 containerNode，则为自定义容器节点
          */
-
         let data = {
           "nodes": [
             // {
@@ -260,8 +265,9 @@ define(
             },
           ]
         }
-        //json 属性需要处理成对象（json 字符串和 json 对象之间的相互转换）
-        callback(data) // undefined
+
+        // json 属性需要处理成对象（json 字符串和 json 对象之间的相互转换）
+        callback(data)
 
         nodesRankManager.setNodesRank(data, "100", {
           subWidth: 200,
@@ -276,18 +282,24 @@ define(
         // },'ring')
       }
 
-      //存储拓扑图数据
+      // 数据管理者 - 存储拓扑图数据
       dataManager.saveTopoData = function (data) {
         console.log('save data: ')
         console.log(data)
       }
 
-      /*************画布管理者*********/
+      // 画布管理者 - 创建连线前的操作
       canvasManager.beforeCreateLink = function (link) {
         return !stateManager.setLink.isSetting
       }
 
-      // 画圆
+      /**
+       * 画圆
+       *
+       * @param {String} fillColor
+       * @param {Object} ctx
+       * @param {Object} nodeObj
+       */
       function drawCircle(fillColor, ctx, nodeObj) {
         // ctx.imageSmoothingEnabled = true
         ctx.scale(.5, .5)
@@ -298,12 +310,15 @@ define(
         ctx.fill()
         //ctx.scale(2, 2)
       }
+
       let i = 0
-      // 结点事件
+
+      // 画布管理者 - 结点事件
       canvasManager.nodeEvent = {
-        mouseup: function (e) {// 在节点上释放鼠标键时的事件处理过程
+        // 在节点上释放鼠标键时的事件处理过程：弹出框、
+        mouseup: function (e) {
           if (e.which === 3) {
-            //右键：在节点上释放鼠标右键时的事件处理：弹出框
+            //右键：在节点上释放鼠标右键时的事件处理：弹出框、闪动、画圆
             $('#contextmenuNode')
               .css({
                 "top": e.pageY - 75,
@@ -316,34 +331,38 @@ define(
 
           ++i
           console.log(i%2)
-          e.target.beforePaintCallback=function (a) {
+
+          e.target.beforePaintCallback = function (a) {
               // 填色
-              drawCircle(i%2?'blue':'red',a,e.target)
+              drawCircle(i % 2 ? 'blue' : 'red', a, e.target)
           }
         },
-        mousemove: function () { // 在节点上移动鼠标键时的事件处理过程：鼠标光标变成小手
+        // 在节点上移动鼠标键时的事件处理过程：鼠标光标变成小手
+        mousemove: function () {
           $('#canvas')
-            .attr('style','cursor:pointer')
+            .attr('style','cursor: pointer')
         },
-        mouseover: function (e) { // 当鼠标悬浮在节点上时的事件处理过程
+        // 当鼠标悬浮在节点上时的事件处理过程：鼠标光标变成小手
+        mouseover: function (e) {
           // $('#nodeTitle').show()
           // JTopo.util.setPopPos($('#nodeTitle'),e.target.id,0,0)
 
           //设置鼠标形状
           $('#canvas')
-            .attr('style','cursor:pointer')
+            .attr('style','cursor: pointer')
         },
-        mousedown: function (e) { // 在节点上按下鼠标键时的事件处理过程
-
-        },
-        mouseout: function (e) { // 当鼠标移出节点时的事件处理过程
+        // 在节点上按下鼠标键时的事件处理过程
+        mousedown: null,
+        // 当鼠标移出节点时的事件处理过程：鼠标光标变成默认
+        mouseout: function (e) {
           //设置鼠标形状
           $('#canvas')
             .attr('style','cursor:default')
         },
-        dbclick: null // 鼠标双击时的事件处理过程
+        // 鼠标双击时的事件处理过程
+        dbclick: null
       }
-      //线条事件
+      // 画布管理者 - 线条事件
       canvasManager.linkEvent = {
         mouseup: function (e) {
           if (e.which === 3) {
@@ -358,13 +377,11 @@ define(
           // console.log(e.target)
         },
         mouseover: null,
-        mouseout: function (e) {
-          // console.log(e.target)
-        },
+        mouseout: null,
         mousemove: null,
         dbclick: null
       }
-      //容器事件
+      // 画布管理者 - 容器事件
       canvasManager.containerEvent = {
         mouseup: function (e) {
           // console.log(e.target)
@@ -383,62 +400,68 @@ define(
         mousemove: null,
         dbclick: null
       }
-      //画布事件
+      // 画布管理者 - 画布事件
       canvasManager.sceneEvent = {
-        mouseup: function (e) {
-          // console.log(e)
-        },
-        mousedrag: function (e) {
-          // console.log(e)
-        }
+        mouseup: null,
+        mousedrag: null
       }
-      //自定义节点拓展，样例
+      // 画布管理者 - 自定义节点拓展，样例
       canvasManager.userDefinedNodes = [
         {
           fnName: 'createSystemNode',
           fn: function (nodeObj) {
-            const jsonObj = nodeObj.json;
-            const _nodeX = jsonObj.x,
-              _nodeY = jsonObj.y,
-              _nodeName = jsonObj.name,
-              _imgName = jsonObj.imgName,
-              _alertLevel = jsonObj.alertLevel,
-              dataArr = jsonObj.msgArr;
+            const jsonObj = nodeObj.json
+            const _nodeX = jsonObj.x
+            const _nodeY = jsonObj.y
+            const _nodeName = jsonObj.name
+            const _imgName = jsonObj.imgName
+            const _alertLevel = jsonObj.alertLevel
+            const dataArr = jsonObj.msgArr
+
+            const nodeName = _nodeName
+            const nodeX = _nodeX
+            const nodeY = _nodeY
+
+            const url = './images/' + _imgName + '.png'
+
+            //告警级别
+            const alertLevel = _alertLevel.toString()
+
             //系统节点
             let scene = stateManager.scene
-            const nodeName = _nodeName;
-            const nodeX = _nodeX;
-            const nodeY = _nodeY;
-            const url = './images/' + _imgName + '.png';
-            const alertLevel = _alertLevel.toString();//告警级别
 
-            let containerWidth = 245;
-            const containerHeight = 90;
-            const traget1_text = dataArr[0][0];
-            const traget1_kVal = dataArr[0][1];
+            let containerWidth = 245
+            const containerHeight = 90
 
-            const traget2_text = dataArr[1][0];
-            const traget2_kVal = dataArr[1][1];
+            const traget1_text = dataArr[0][0]
+            const traget1_kVal = dataArr[0][1]
 
-            const traget3_text = dataArr[2][0];
-            const traget3_text_val = dataArr[2][1];//update
+            const traget2_text = dataArr[1][0]
+            const traget2_kVal = dataArr[1][1]
 
-            const traget4_text = dataArr[3][0];
-            const traget4_text_val = dataArr[3][1];//updata
+            const traget3_text = dataArr[2][0]
+            // update
+            const traget3_text_val = dataArr[2][1]
 
-            const traget5_text = dataArr[4][0];
-            const tragetX = 90;
-            const tragetY = 30;
-            const tragetSubY = 15.7;
+            const traget4_text = dataArr[3][0]
+            // updata
+            const traget4_text_val = dataArr[3][1]
 
-            const max1 = JTopo.flag.graphics.measureText(traget3_text_val).width;
-            const max2 = JTopo.flag.graphics.measureText(traget4_text_val).width;
-            const max = Math.max(max1, max2);
+            const traget5_text = dataArr[4][0]
+            const tragetX = 90
+            const tragetY = 30
+            const tragetSubY = 15.7
+
+            const max1 = JTopo.flag.graphics.measureText(traget3_text_val).width
+            const max2 = JTopo.flag.graphics.measureText(traget4_text_val).width
+            const max = Math.max(max1, max2)
+
             if (max > 70) {
               containerWidth += max - 60
             }
-            //图片
-            const node = new JTopo.Node();
+
+            // 图片
+            const node = new JTopo.Node()
             node.setSize(50, 50)
             node.setLocation(nodeX + 15, nodeY + 10)
             node.showSelected = false
@@ -448,29 +471,30 @@ define(
             node.dragable = false
             node.nodeFn = 'icon'
 
-            //告警
-            const circleNode = new JTopo.Node();
+            // 告警
+            const circleNode = new JTopo.Node()
             circleNode.setSize(19, 19)
             circleNode.setLocation(nodeX + 5, nodeY + 5)
             circleNode.fillColor = '192,223,246'
             circleNode.font = '12px Consolas'
-            const alertImgName = null;
+            const alertImgName = null
             switch (alertLevel) {
               case "0":
-                //正常
+                // 正常
                 circleNode.visible = false
                 break
               case "1":
-                //没数据
+                // 没数据
                 circleNode.setImage('./images/alertIcon.png')
                 break
               case "2":
-                //黄色告警
+                // 黄色告警
                 circleNode.setImage('./images/alertIcon2.png')
-                JTopo.util.nodeFlash(circleNode, true, true, [202, 202, 202], [244, 102, 58])//node,isChangeColor,isFlash,originColor,changeColor
+                // 参数: node, isChangeColor, isFlash, originColor, changeColor
+                JTopo.util.nodeFlash(circleNode, true, true, [202, 202, 202], [244, 102, 58])
                 break
               case "3":
-                //红色告警
+                // 红色告警
                 circleNode.setImage('./images/alertIcon2.png')
                 JTopo.util.nodeFlash(circleNode, true, true, [202, 202, 202], [222, 81, 69])
                 break
@@ -479,7 +503,7 @@ define(
             circleNode.parentType = 'containerNode'
 
             //容器标题文字
-            const textNode = new JTopo.Node();
+            const textNode = new JTopo.Node()
             textNode.fontColor = '43,43,43'
             textNode.font = "14px Consolas"
             textNode.text = nodeName
@@ -491,7 +515,7 @@ define(
             textNode.nodeFn = 'title'
 
             //容器位置,左上角
-            const containerLeftTop = new JTopo.Node();
+            const containerLeftTop = new JTopo.Node()
             containerLeftTop.setSize(0, 0)
             containerLeftTop.showSelected = false
             containerLeftTop.setLocation(nodeX, nodeY)
@@ -499,7 +523,7 @@ define(
             containerLeftTop.nodeFn = 'pLeft'
 
             //容器位置,右下角
-            const containerRightBottom = new JTopo.Node();
+            const containerRightBottom = new JTopo.Node()
             containerRightBottom.setSize(0, 0)
             containerRightBottom.showSelected = false
             containerRightBottom.setLocation(nodeX + containerWidth, nodeY + containerHeight)
@@ -507,13 +531,13 @@ define(
             containerRightBottom.nodeFn = 'pRight'
 
             //容器本尊
-            const container = new JTopo.ContainerNode();
+            const container = new JTopo.ContainerNode()
             container.textPosition = 'Bottom_Center'
             container.fontColor = '232,31,0'
             container.font = '16px 微软雅黑'
             container.alpha = 1
             container.childDragble = false
-            container.borderRadius = 5 // 圆角
+            container.borderRadius = 5
             container.borderWidth = 1
             container.borderColor = '223,226,228'
             container.fillColor = '255,255,255'
@@ -531,12 +555,13 @@ define(
             sugarTragetText(traget4_text, 3)
             sugarTragetText(traget4_text_val, 3, "107,205,243", null, 70)
             sugarTragetText(traget5_text, 4.2, '198,200,201', 12)
-            sugarProgressNode('213,223,235', "#f4c63a", traget1_kVal, 80, 7, 120, 10, traget1_kVal * 100 + '%')//update
+            //update
+            sugarProgressNode('213,223,235', "#f4c63a", traget1_kVal, 80, 7, 120, 10, traget1_kVal * 100 + '%')
             sugarProgressNode('213,223,235', "#1bbab9", traget2_kVal, 80, 7, 120, 25, traget2_kVal * 100 + '%')
 
             function sugarTragetText(text, subYIndex, textColor, fontSize, offsetX) {
-              const _offsetX = offsetX || 0;
-              const tragetNode = new JTopo.Node();
+              const _offsetX = offsetX || 0
+              const tragetNode = new JTopo.Node()
               tragetNode.fontColor = textColor || '94,144,198'
               tragetNode.font = (fontSize || 14) + "px Consolas"
               tragetNode.text = text
@@ -552,21 +577,37 @@ define(
               container.add(tragetNode)
             }
 
-            function sugarProgressNode(fillColor, targetColor, kVal, _width, _height, pos_x, pos_y, percVal) {//update
-              const progressNode = new JTopo.Node();
-              const width = _width || 85;
-              const height = _height || 7;
-              const _pos_x = pos_x || 125;
-              const _pos_y = pos_y || 10;
-              const _percVal = percVal || 0;
+            //update
+            /**
+             * update
+             *
+             * @param {String} fillColor
+             * @param {String} targetColor
+             * @param {String} kVal
+             * @param {String} _width
+             * @param {String} _height
+             * @param {String} pos_x
+             * @param {String} pos_y
+             * @param {String} percVal
+             */
+            function sugarProgressNode(fillColor, targetColor, kVal, _width, _height, pos_x, pos_y, percVal) {
+              const progressNode = new JTopo.Node()
+              const width = _width || 85
+              const height = _height || 7
+              const _pos_x = pos_x || 125
+              const _pos_y = pos_y || 10
+              const _percVal = percVal || 0
+
               progressNode.setSize(width, height)
               progressNode.setLocation(nodeX + _pos_x, nodeY + _pos_y)
               progressNode.linearGradient = [0, 0, width, height]
-              progressNode.colorStop = [0, targetColor, 1, targetColor]//"#f4c63a"
+              // "#f4c63a"
+              progressNode.colorStop = [0, targetColor, 1, targetColor]
               progressNode.kVal = kVal
               progressNode.borderRadius = 4
               progressNode.showSelected = false
-              progressNode.fillColor = fillColor//'213,223,235'
+              // '213,223,235'
+              progressNode.fillColor = fillColor
               progressNode.parentType = 'containerNode'
               progressNode.textPosition = "Middle_Right"
               progressNode.fontColor = '94,144,198'
@@ -592,14 +633,13 @@ define(
               .add(containerLeftTop)
               .add(containerRightBottom)
               .add(container)
-            //添加事件
+
+            //添加事件: none
 
             return container
           },
           event: {
-            'mouseup': function (e) {
-              // console.log(e.target)
-            },
+            'mouseup': null,
             'dbclick': null,
             'mousemove': null,
             'mouseover': null,
@@ -609,7 +649,7 @@ define(
         {
           fnName: 'haha',
           fn: function (nodeObj) {
-            const node = new JTopo.Node('luojie');
+            const node = new JTopo.Node('luojie')
             node.setSize(100, 100)
             node.setLocation(0, 0)
             node.fillColor = '43,43,43'
@@ -625,14 +665,12 @@ define(
               ctx.closePath()
             }
 
-            //添加事件
+            //添加事件: none
 
             return node
           },
           event: {
-            'mouseup': function (e) {
-              // console.log(e.target)
-            },
+            'mouseup': null,
             'dbclick': null,
             'mousemove': null,
             'mouseover': null,
@@ -642,51 +680,52 @@ define(
         {
           fnName: 'hostNode',
           fn: function (nodeObj) {
-            const jsonObj = nodeObj.json;
-            const _nodeX = jsonObj.x,
-              _nodeY = jsonObj.y,
-              _nodeName = jsonObj.name,
-              _imgName = jsonObj.imgName,
-              _alertLevel = jsonObj.alertLevel,
-              dataArr = jsonObj.msgArr;
+            const jsonObj = nodeObj.json
+            const _nodeX = jsonObj.x
+            const _nodeY = jsonObj.y
+            const _nodeName = jsonObj.name
+            const _imgName = jsonObj.imgName
+            const _alertLevel = jsonObj.alertLevel
+            const dataArr = jsonObj.msgArr
 
             //系统节点
-            const scene = stateManager.scene;
-            const nodeName = _nodeName;
-            const nodeX = _nodeX;
-            const nodeY = _nodeY;
-            const url = './images/' + _imgName + '.png';
+            const scene = stateManager.scene
+            const nodeName = _nodeName
+            const nodeX = _nodeX
+            const nodeY = _nodeY
+            const url = './images/' + _imgName + '.png'
 
+            let containerWidth = 245
+            const containerHeight = 90
+            const traget1_text = dataArr[0][0]
+            const traget1_kVal = dataArr[0][1]
 
-            let containerWidth = 245;
-            const containerHeight = 90;
-            const traget1_text = dataArr[0][0];
-            const traget1_kVal = dataArr[0][1];
+            const traget2_text = dataArr[1][0]
+            const traget2_kVal = dataArr[1][1]
 
-            const traget2_text = dataArr[1][0];
-            const traget2_kVal = dataArr[1][1];
+            const traget3_text = dataArr[2][0]
+            // update
+            const traget3_text_val = dataArr[2][1]
 
-            const traget3_text = dataArr[2][0];
-            const traget3_text_val = dataArr[2][1];//update
+            const traget4_text = dataArr[3][0]
+            // updata
+            const traget4_text_val = dataArr[3][1]
 
-            const traget4_text = dataArr[3][0];
-            const traget4_text_val = dataArr[3][1];//updata
+            const traget5_text = dataArr[4][0]
+            const tragetX = 90
+            const tragetY = 30
+            const tragetSubY = 15.7
 
-            const traget5_text = dataArr[4][0];
-            const tragetX = 90;
-            const tragetY = 30;
-            const tragetSubY = 15.7;
+            const max1 = JTopo.flag.graphics.measureText(traget3_text_val).width
+            const max2 = JTopo.flag.graphics.measureText(traget4_text_val).width
+            const max = Math.max(max1, max2)
 
-
-            const max1 = JTopo.flag.graphics.measureText(traget3_text_val).width;
-            const max2 = JTopo.flag.graphics.measureText(traget4_text_val).width;
-            const max = Math.max(max1, max2);
             if (max > 70) {
               containerWidth += max - 60
             }
 
             //图片
-            const node = new JTopo.Node();
+            const node = new JTopo.Node()
             node.setSize(50, 50)
             node.setLocation(nodeX + 15, nodeY + 10)
             node.showSelected = false
@@ -697,7 +736,7 @@ define(
             node.nodeFn = 'icon'
 
             //容器标题文字
-            const textNode = new JTopo.Node();
+            const textNode = new JTopo.Node()
             textNode.fontColor = '43,43,43'
             textNode.font = "14px Consolas"
             textNode.text = nodeName
@@ -708,9 +747,8 @@ define(
             textNode.parentType = 'containerNode'
             textNode.nodeFn = 'title'
 
-
             //容器位置,左上角
-            const containerLeftTop = new JTopo.Node();
+            const containerLeftTop = new JTopo.Node()
             containerLeftTop.setSize(0, 0)
             containerLeftTop.showSelected = false
             containerLeftTop.setLocation(nodeX, nodeY)
@@ -718,7 +756,7 @@ define(
             containerLeftTop.nodeFn = 'pLeft'
 
             //容器位置,右下角
-            const containerRightBottom = new JTopo.Node();
+            const containerRightBottom = new JTopo.Node()
             containerRightBottom.setSize(0, 0)
             containerRightBottom.showSelected = false
             containerRightBottom.setLocation(nodeX + containerWidth, nodeY + containerHeight)
@@ -726,13 +764,13 @@ define(
             containerRightBottom.nodeFn = 'pRight'
 
             //容器本尊
-            const container = new JTopo.ContainerNode();
+            const container = new JTopo.ContainerNode()
             container.textPosition = 'Bottom_Center'
             container.fontColor = '232,31,0'
             container.font = '16px 微软雅黑'
             container.alpha = 1
             container.childDragble = false
-            container.borderRadius = 5 // 圆角
+            container.borderRadius = 5
             container.borderWidth = 1
             container.borderColor = '223,226,228'
             container.fillColor = '255,255,255'
@@ -750,8 +788,8 @@ define(
             sugarTragetText(traget4_text, 3)
             sugarTragetText(traget4_text_val, 3, "107,205,243", null, 70)
             sugarTragetText(traget5_text, 4.2, '198,200,201', 12)
-
-            sugarProgressNode('213,223,235', "#f4c63a", traget1_kVal, 80, 7, 120, 10, traget1_kVal * 100 + '%')//update
+            // update
+            sugarProgressNode('213,223,235', "#f4c63a", traget1_kVal, 80, 7, 120, 10, traget1_kVal * 100 + '%')
             sugarProgressNode('213,223,235', "#1bbab9", traget2_kVal, 80, 7, 120, 25, traget2_kVal * 100 + '%')
 
             function sugarTragetText(text, subYIndex, textColor, fontSize, offsetX) {
@@ -782,11 +820,13 @@ define(
               progressNode.setSize(width, height)
               progressNode.setLocation(nodeX + _pos_x, nodeY + _pos_y)
               progressNode.linearGradient = [0, 0, width, height]
-              progressNode.colorStop = [0, targetColor, 1, targetColor]//"#f4c63a"
+              // "#f4c63a"
+              progressNode.colorStop = [0, targetColor, 1, targetColor]
               progressNode.kVal = kVal
               progressNode.borderRadius = 4
               progressNode.showSelected = false
-              progressNode.fillColor = fillColor//'213,223,235'
+              // '213,223,235'
+              progressNode.fillColor = fillColor
               progressNode.parentType = 'containerNode'
               progressNode.textPosition = "Middle_Right"
               progressNode.fontColor = '94,144,198'
@@ -797,7 +837,6 @@ define(
               scene.add(progressNode)
               container.add(progressNode)
             }
-
 
             container.add(textNode)
             container.add(node)
@@ -811,16 +850,13 @@ define(
             scene.add(containerLeftTop)
             scene.add(containerRightBottom)
             scene.add(container)
-            //添加事件
+
+            //添加事件: none
 
             return container
-
           },
           event: {
-            'mouseup': function (e) {
-              // console.log('e.target')
-              // console.log(e.target)
-            },
+            'mouseup': null,
             'dbclick': null,
             'mousemove': null,
             'mouseover': null,
@@ -828,13 +864,14 @@ define(
           }
         },
       ]
-
+      // 画布管理者 - 重绘拓扑回调
       canvasManager.renderTopoCallback = function () {
         JTopo.flag.curScene.childs.forEach(function (p) {
           if (p.elementType === 'node' && p.parentType !== 'containerNode') {
-            const imgOffsetX = 15;
-            const imgOffsetY = 10;
-            const imgObj = new Image();
+            const imgOffsetX = 15
+            const imgOffsetY = 10
+            const imgObj = new Image()
+
             imgObj.src = "./images/z.png"
             // p.showSelected=false
             p.borderColor='223,226,228'
@@ -846,7 +883,7 @@ define(
             p.fontColor='234,32,0'
             p.paint = function (a) {
 
-              /******源码部分,start*********/
+              /** 源码部分,start */
               if (this.image) {
                 const b = a.globalAlpha;
                 a.globalAlpha = this.alpha
@@ -862,8 +899,7 @@ define(
                   }
                 }
                 a.globalAlpha = b
-              }
-              else {
+              } else {
                 a.beginPath(),
                   a.fillStyle = "rgba(" + this.fillColor + "," + this.alpha + ")",
                   null === this.borderRadius || 0 === this.borderRadius ? a.rect(-this.width / 2, -this.height / 2, this.width, this.height) : a.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width, this.height, this.borderRadius),
@@ -878,7 +914,6 @@ define(
                 a.fillStyle = grd
                 null === this.borderRadius || 0 === this.borderRadius ? a.rect(-this.width / 2, -this.height / 2, this.width * kVal, this.height) : a.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width * kVal, this.height, kVal < 0.03 ? 0 : this.borderRadius)
                 a.fill()
-
               }
               a.closePath()
 
@@ -887,34 +922,32 @@ define(
                 this.paintCtrl(a),
                 this.paintAlarmText(a),
                 this.paintAlarmImage(a)
-              /******源码部分,end*********/
+              /** 源码部分,end */
 
-              /*******图片的拓展******/
+              /** 图片的拓展 */
               //绘制圆圈
-
               a.beginPath()
               a.fillStyle='green'
-              a.arc( -p.width / 2+imgOffsetX+26, -p.height / 2+imgOffsetY+26,25, 0, Math.PI * 2)
+              a.arc( -p.width / 2 + imgOffsetX + 26, -p.height / 2 + imgOffsetY + 26,25, 0, Math.PI * 2)
               a.fill()
               //绘制图片
-              a.drawImage(imgObj, -p.width / 2+imgOffsetX, -p.height / 2+imgOffsetY, 52, 52)
+              a.drawImage(imgObj, -p.width / 2 + imgOffsetX, -p.height / 2 + imgOffsetY, 52, 52)
 
-
-              const subHeight = 18;
-              const baseY = -20;
-              const baseX = 20;
-              textWrap(a,'致命:',10,baseX,baseY+subHeight*0)
-              textWrap(a,'严重:',10,baseX,baseY+subHeight*1)
-              textWrap(a,'告警:',10,baseX,baseY+subHeight*2)
-              textWrap(a,'预警:',10,baseX,baseY+subHeight*3)
+              const subHeight = 18
+              const baseY = -20
+              const baseX = 20
+              textWrap(a, '致命:', 10, baseX, baseY + subHeight * 0)
+              textWrap(a, '严重:', 10, baseX, baseY + subHeight * 1)
+              textWrap(a, '告警:', 10, baseX, baseY + subHeight * 2)
+              textWrap(a, '预警:', 10, baseX, baseY + subHeight * 3)
             }
           }
         })
-        function textWrap(a,name,num,offsetX,offsetY) {
-          a.fillStyle='#949899'
-          a.fillText(name,0+offsetX,0+offsetY)
-          a.fillStyle='red'
-          a.fillText(num+"",40+offsetX,0+offsetY)
+        function textWrap(a, name, num, offsetX, offsetY) {
+          a.fillStyle= '#949899'
+          a.fillText(name, 0+offsetX, 0+offsetY)
+          a.fillStyle= 'red'
+          a.fillText(num+"", 40+offsetX, 0+offsetY)
         }
       }
 
