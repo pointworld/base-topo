@@ -8,59 +8,66 @@
  * 1、采用面向对象编程方式编写，阅读与修改时注意从对象的角度入手
  * 2、每个类、方法、行为要写注释，命名方式采用骆驼命名
  * 3、功能关联度较大的方法，应模块化成一个类，比如弹窗、权限管理
- * 4、mvc结构里面，数据层用get开头，显示层show开头，控制层用set开头
- * 5、辅助方法用fn开头
- * 6、私有方法用下划线‘_’开头
+ * 4、mvc 结构里面，数据层用 get 开头，显示层 show 开头，控制层用 set 开头
+ * 5、辅助方法用 fn 开头
+ * 6、私有方法用下划线 ‘_’ 开头
  *
  * Modified by point on 20180615
  */
 
 define(
-  ['jquery', "drag"],
+  ['jquery', "drag",],
   function ($) {
-    //画布管理者：包含节点/线条/容器的创建与相关的事件,以及数据的保存和呈现
+    // 画布管理者：包含节点/线条/容器的创建与相关的事件，以及数据的保存和呈现
     const canvasManager = {
+      // 节点事件
       nodeEvent: {
         mouseup: null,
         mousedown: null,
         mousemove: null,
         mouseover: null,
         mouseout: null,
-        dbclick: null
+        dbclick: null,
       },
+      // 连线事件
       linkEvent: {
         mouseup: null,
         mouseover: null,
         mouseout: null,
         mousemove: null,
-        dbclick: null
+        dbclick: null,
       },
+      // 容器事件
       containerEvent: {
         mouseup: null,
         mouseover: null,
         mouseout: null,
         mousemove: null,
-        dbclick: null
+        dbclick: null,
       },
+      // 场景事件
       sceneEvent: {
         mouseup: null,
-        mousedrag: null
+        mousedrag: null,
       },
+      // TODO: ?
       groupObj: {
         paddingWidth: 100,
         paddingHeight: 100,
         parentContainerRecord: null,
       },
-      userDefinedNodes: [],//自定义结点样例
-      elementShowEffect: {
-        alphaEffect: false,//开启元素渐渐浮现效果
-        start: function () {
-          if(this.alphaEffect){
+      // 自定义结点样例
+      userDefinedNodes: [],
 
+      elementShowEffect: {
+        // 是否开启元素渐渐浮现效果
+        alphaEffect: false,
+        start() {
+          if (this.alphaEffect) {
             stateManager.scene.childs.filter(function (p1, p2, p3) {
-              p1.alpha=0;
-              (p1.fillColor==="22,124,255")&&(p1.fillColor="255,255,255")
-              JTopo.Animate.stepByStep(p1,{alpha: 1},1000,false).start()
+              p1.alpha = 0
+              ;(p1.fillColor === "22, 124, 255") && (p1.fillColor = "255, 255, 255")
+              JTopo.Animate.stepByStep(p1, {alpha: 1}, 1000, false).start()
             })
             JTopo.flag.allElementAlpha=1
           }
@@ -193,7 +200,7 @@ define(
                 // 基于节点 tempNodeA 和 tempNodeZ 创建连线
                 link = self._createLink(tempNodeA, tempNodeZ)
                 stateManager.agentLink=link
-                scene.add(link)
+                scene.add(link) // 这一步是否有必要 TODO：？
 
                 // 设置临时节点的位置
                 tempNodeA.setLocation(e.x-2, e.y-2)
