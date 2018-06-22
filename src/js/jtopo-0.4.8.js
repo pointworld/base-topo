@@ -221,7 +221,8 @@ define(
             f = d - b),
             Math.sqrt(e * e + f * f)
         }
-        function getElementsBound(a) { // 用于获取 scene 场景实例的宽高位置等信息
+        // 用于获取 scene 场景实例的宽高位置等信息
+        function getElementsBound(a) {
           for (var b = {
             left: Number.MAX_VALUE,
             right: Number.MIN_VALUE,
