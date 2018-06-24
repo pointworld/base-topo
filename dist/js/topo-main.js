@@ -93,6 +93,7 @@
         },
       },
 
+      // TODO: ?
       renderTopoCallback: null,
       isRunRenderCallback: true,
 
@@ -110,7 +111,9 @@
        * 后台拿到 id 可以改一下，也可不改
        */
 
-      // 设置画布样式：画布大小
+      /**
+       * 设置画布样式：根据窗口的变化实时调节 canvas 的宽高
+       */
       setCanvasStyle() {
         // 将 canvas 节点对象赋值给 oCanvas 变量
         const oCanvas = stateManager.canvas
@@ -207,6 +210,7 @@
         /** 动态连线处理 */
 
         const self = this
+
         // 存储 scene 场景实例
         const scene = stateManager.scene
         // 存储连线模式和连线类型
@@ -216,23 +220,98 @@
         const tempNodeA = new JTopo.Node('tempA')
         // 设置临时虚拟起始节点的宽度和高度
         tempNodeA.setSize(1, 1)
+
         // new 一个名为 tempZ 的 canvas 内部虚拟终止节点实例
         const tempNodeZ = new JTopo.Node('tempZ')
         // 设置临时虚拟终止节点的宽度和高度
         tempNodeZ.setSize(1, 1)
 
+        // 储存连线
         let link
 
         // 存储场景事件对象
         const sceneEventObj = canvasManager.sceneEvent
 
         /** 为 scene 场景实例注册事件 */
-        // 单击事件：在场景内部单击鼠标左键，则关闭弹窗
+        // 单击事件：在场景内部单击鼠标左键时，关闭鼠标右键触发的弹窗
         scene.addEventListener('click', function (e) {
           // 鼠标左键
           if (e.button === 0) {
             $(".contextmenu").hide()
           }
+        })
+        /***
+         * 鼠标按下事件
+         *
+         * 若:
+         * 事件源不存在
+         * 或 事件源是起始节点（stateManager.beginNode）
+         * 或 事件源是连线
+         * 且 触发鼠标按下的不是鼠标右键
+         * 则：
+         * 存在连线则移除连线
+         * stateManager.beginNode 设为空
+         * 场景下的所有节点元素的选中状态设为 false
+         *
+         */
+        scene.addEventListener('mousedown', function (e) {
+          if ((e.target === null || e.target === stateManager.beginNode || e.target === link) && e.button !== 2) {
+            link && scene.remove(link)
+            stateManager.beginNode = null
+            scene.childs.filter(function (child) {
+              child.selected = false
+            })
+          }
+        })
+        // 鼠标拖动事件：
+        scene.addEventListener('mousedrag', function (e) {
+          scene.findElements(function (child) {
+            if(child.elementType === 'containerNode'){
+              // 绘制当前容器节点中的所有节点，JTopo.flag.graphics 为 canvas 的上下文环境
+              child.paint(JTopo.flag.graphics)
+            }
+          })
+
+          sceneEventObj.mousedrag && sceneEventObj.mousedrag(e)
+
+          // 拖动成组
+          if (stateManager.isCreateGroupByDrag) {
+            let nodeObj = e.target
+
+            if (!nodeObj) {return}
+
+            // 只记录一次
+            const containerObjArr = nodeObj.parentContainer
+
+            if (containerObjArr) {
+              const containerObj = containerObjArr[0]
+
+              if (!canvasManager.groupObj.parentContainerRecord) {
+                canvasManager.groupObj.parentContainerRecord = {
+                  x: containerObj.x,
+                  y: containerObj.y,
+                  width: containerObj.width,
+                  height: containerObj.height,
+                }
+              }
+
+              if (
+                !(
+                  nodeObj.x > canvasManager.groupObj.parentContainerRecord.x - canvasManager.groupObj.paddingWidth
+                  && nodeObj.x + nodeObj.width < canvasManager.groupObj.parentContainerRecord.x + canvasManager.groupObj.parentContainerRecord.width + canvasManager.groupObj.paddingWidth
+                  && nodeObj.y > canvasManager.groupObj.parentContainerRecord.y - canvasManager.groupObj.paddingHeight
+                  && nodeObj.y + nodeObj.height < canvasManager.groupObj.parentContainerRecord.y + canvasManager.groupObj.parentContainerRecord.height + canvasManager.groupObj.paddingHeight
+                )
+              ) {
+                containerObj.remove(nodeObj)
+                canvasManager.groupObj.parentContainerRecord = null
+              }
+            }
+          }
+        })
+        // 鼠标移动事件：微调临时终止节点的位置，防止鼠标落在连线上
+        scene.addEventListener('mousemove', function (e) {
+          tempNodeZ.setLocation(e.x - 3, e.y + 3)
         })
         // 鼠标弹起事件：
         scene.addEventListener('mouseup', function (e) {
@@ -257,13 +336,16 @@
               // 如果 stateManager.beginNode 为空
               if (stateManager.beginNode === null) {
                 /** 第一次点击，生成连线 */
+
                 // 将当前触发事件的节点赋值给 stateManager.beginNode
                 stateManager.beginNode = e.target
 
-                // 基于节点 tempNodeA 和 tempNodeZ 创建连线
+                // 基于节点 tempNodeA 和 tempNodeZ 创建虚拟连线
                 link = self._createLink(tempNodeA, tempNodeZ)
-                stateManager.agentLink=link
-                scene.add(link) // 这一步是否有必要 TODO：？
+                // 将虚拟连线赋值给 stateManager.agentLink
+                stateManager.agentLink = link
+                // 将虚拟连线添加到场景中
+                scene.add(link)
 
                 // 设置临时节点的位置
                 tempNodeA.setLocation(e.x-2, e.y-2)
@@ -294,66 +376,27 @@
               }
             }
             else {
-              link&&scene.remove(link)
+              link && scene.remove(link)
             }
           }
-        })
-        scene.addEventListener('mousedown', function (e) {
-          if ((e.target === null || e.target === stateManager.beginNode || e.target === link) && e.button !== 2) {
-            link && scene.remove(link)
-            stateManager.beginNode = null
-            scene.childs.filter(function (child) {
-              child.selected = false
-            })
-          }
-        })
-        scene.addEventListener('mousedrag', function (e) {
-          scene.findElements(function (child) {
-            if(child.elementType==='containerNode'){
-              // 绘制当前容器节点中的所有节点，JTopo.flag.graphics 为 canvas 的上下文环境
-              child.paint(JTopo.flag.graphics)
-            }
-          })
-
-          sceneEventObj.mousedrag&&sceneEventObj.mousedrag(e)
-
-          //拖动成组
-          if(stateManager.isCreateGroupByDrag){
-            let nodeObj = e.target
-            if(!nodeObj){return}
-            const containerObjArr = nodeObj.parentContainer//只记录一次
-            if(containerObjArr){
-              const containerObj = containerObjArr[0]
-
-              if(!canvasManager.groupObj.parentContainerRecord){
-                canvasManager.groupObj.parentContainerRecord={
-                  x:containerObj.x,
-                  y:containerObj.y,
-                  width:containerObj.width,
-                  height:containerObj.height,
-                }
-              }
-              if(!(nodeObj.x> canvasManager.groupObj.parentContainerRecord.x-canvasManager.groupObj.paddingWidth &&nodeObj.x+nodeObj.width< canvasManager.groupObj.parentContainerRecord.x+ canvasManager.groupObj.parentContainerRecord.width+canvasManager.groupObj.paddingWidth&&nodeObj.y> canvasManager.groupObj.parentContainerRecord.y-canvasManager.groupObj.paddingHeight&&nodeObj.y+nodeObj.height< canvasManager.groupObj.parentContainerRecord.y+ canvasManager.groupObj.parentContainerRecord.height+canvasManager.groupObj.paddingHeight) ) {
-                containerObj.remove(nodeObj)
-                canvasManager.groupObj.parentContainerRecord=null
-              }
-            }
-          }
-        })
-        scene.addEventListener('mousemove', function (e) {
-          tempNodeZ.setLocation(e.x-3, e.y+3)
         })
 
         //为工具栏管理者设置快捷键
         toolbarManager.setShortcutKey()
       },
       // 复现
-      renderTopo(data,type) {
+      renderTopo(data, type) {
         const self = canvasManager
         const stage = stateManager.stage
+
+        // 若不存在 type 或 type === 'add'
         if(!(type && type === 'add')) {
+          // 移除当前场景
           stage.remove(stateManager.scene)
+
+          // 重新 new 一个场景实例，并重新赋值给 stateManager.scene
           let scene = stateManager.scene = new JTopo.Scene(stage)
+
           // 绑定画布事件
           self.initCanvasEvent()
         }
@@ -364,25 +407,29 @@
           return
         }
 
-        // 分开绘制是因为必须现有节点，后有容器，最后再有连线
         const nodesArr = data.nodes
         const linksArr = data.links
         let sceneTransX = 0
         let sceneTransY = 0
 
-        // 获取复现和保存的时的数据格式
-        stateManager.setFormatNodesAndLinks(linksArr,nodesArr)
+        // 复现与保存时，读取后台 links、nodes 数组中对象的属性，验证数据是否符合要求
+        stateManager.setFormatNodesAndLinks(linksArr, nodesArr)
+
+        /** 分开绘制是因为必须先有节点，后有容器，最后再有连线 */
 
         // 绘制节点
         for (let i = 0; i < nodesArr.length; i++) {
           let obj = nodesArr[i]
 
-          if(typeof obj.json==='string'){
-            obj.json =eval('('+obj.json+')')
+          if(typeof obj.json === 'string'){
+            // 将 json 字符串转换为 json 对象
+            // FIXME：eval 函数存在安全问题
+            obj.json = eval('(' + obj.json + ')')
           }
 
-          if (obj.json.elementType==='node') {
-            idToNode[obj.id] =self._createNode(obj)
+          if (obj.json.elementType === 'node') {
+            // 创建节点，注：调用这个方法时，一定要有个 id
+            idToNode[obj.id] = self._createNode(obj)
           }
 
           if(i===0 && obj.json.sceneTrans){
@@ -391,7 +438,6 @@
             sceneTransY=obj.json.sceneTrans[1]
           }
         }
-
 
         // 绘制自定义节点
         for (let i = 0; i < nodesArr.length; i++) {
@@ -599,11 +645,14 @@
         }
         return node
       },
-      // 创建节点,注:调用这个方法时,一定要有个 id
+      // 创建节点，注：调用这个方法时，一定要有个 id
       _createNode(obj) {
         const scene = stateManager.scene
         const self = canvasManager
         const node = new JTopo.Node()
+
+        console.log(node)
+        console.log(new JTopo.Node())
 
         //设置后台数据
         for (let i in obj) {
@@ -611,7 +660,7 @@
         }
 
         //设置前端元素数据
-        for (let j in  obj.json){
+        for (let j in obj.json) {
           if (stateManager.formatNodes.indexOf(j) < 0){
             node[j] = obj.json[j]
           }
@@ -1040,11 +1089,11 @@
     }
     // 状态管理者：用于存放全局状态,比如选中一个节点,右侧滑出弹窗,弹窗展现节点的属性
     const stateManager = {
-      // 用于存储 stage 舞台实例
+      // 存储 stage 舞台实例
       stage: {},
-      // 用于储存 scene 场景实例，系统节点
+      // 储存 scene 场景实例，系统节点
       scene: {},
-      // 用于储存 canvas 元素对象
+      // 储存 canvas 元素对象
       canvas: {},
       // TODO: ?
       equipmentAreaWidth: 250,
@@ -1055,7 +1104,7 @@
         // 线条类型：实线、箭头、双箭头、虚线、曲线、折线
         linkType: ''
       },
-      // 用于判断画布内容是否改变,用于是否保存
+      // 判断画布内容是否改变,用于是否保存
       isNeedSave: false,
       // 鼠标松开后,微调节点的 x 位置
       fineTuneMouseUpX: 0,
@@ -1071,7 +1120,7 @@
       currentContainer: null,
       // 当前选中的线条
       currentLink: null,
-      // 用于连线的线条
+      // 储存虚拟连线
       agentLink: null,
       beginNode: null,
       // 当前树节点的拓扑图，包含物理、逻辑、系统、业务流程 ，analysisTopo 会给它赋值
@@ -1097,9 +1146,9 @@
       formatContainerNodes: ['id', 'type', 'json'],
       // 复现与保存时，读取后台 nodes 数组中 container 对象的属性
       formatContainers: ['id', 'type', 'json'],
-      // 复现与保存时，读取后台links数组中对象的属性
+      // 复现与保存时，读取后台 links 数组中对象的属性
       formatLinks: ['id', 'type', 'from_id', 'to_id', 'json'],
-      // 获取复现与保存时，读取后台 links、nodes 数组中对象的属性，验证数据是否符合要求
+      // 复现与保存时，读取后台 links、nodes 数组中对象的属性，验证数据是否符合要求
       setFormatNodesAndLinks(linksArr, nodesArr) {
         console.log('setFormatNodesAndLinks -- nodesArr: ')
         console.log(nodesArr)
@@ -1218,7 +1267,7 @@
     }
     // 权限管理者：未完成,等待勇敢的少年来拓展
     const powerManager = {
-      /** 状态 */
+      /** 状态：显示模式或编辑模式 */
       isViewModel: false,
 
       /** 显示层 */
@@ -1429,50 +1478,47 @@
       },
       // 快捷键
       setShortcutKey() {
+        // 存储场景实例
         const scene = stateManager.scene
+
+        // 设置快捷键
         scene.addEventListener('keyup', function (e) {
-          // 快捷键
+          // 若是显示模式，则直接返回，不做任何处理
           if (powerManager.isViewModel) {
             return
           }
 
-
-          if (e.ctrlKey && e.which === 13) {
-            // Ctrl + Enter
-
-            // 设置成组
+          if (e.ctrlKey && e.which === 13) { // Ctrl + Enter
+            // 当按下 Ctrl + Enter 时，触发一次工具栏上的 ‘组’ 按钮：设置成组
             $('.groupWrap').click()
-          } else if (e.ctrlKey && e.which === 8) {
-            // Ctrl + 退格
-
-            //删除
+          } else if (e.ctrlKey && e.which === 8) { // Ctrl + 退格
+            // 当按下 Ctrl + 退格时，删除选中的所有节点元素
             scene.selectedElements.filter(function (e) {
               if (e.selected) {
-                e.childs && e.childs.length > 0 && e.childs.filter(function (child) {
+                e.childs
+                && e.childs.length > 0
+                && e.childs.filter(function (child) {
                   scene.remove(child)
                 })
 
                 scene.remove(e)
               }
             })
-          } else if (e.which === 27) {
-            // ESC
-
+          } else if (e.which === 27) { // ESC
+            // 当按下 ESC 时，触发一次工具栏上的 ‘默认模式’ 按钮：设置默认模式
             $('.patternArea .toolbar-default').click()
           }
 
+          // 若在全屏模式下
           if (stateManager.isFullScreen) {
-            if (187 === e.keyCode && e.shiftKey) {
-              // 'shift' + '+'
-
+            if (187 === e.keyCode && e.shiftKey) { // 'shift' + '+'
+              // 当按下 'shift' + '+' 时，放大画布场景
               stateManager.scene.zoomOut(0.9)
-            } else if (189 === e.keyCode && e.shiftKey) {
-              // 'shift' + '_'
-
+            } else if (189 === e.keyCode && e.shiftKey) { // 'shift' + '_'
+              // 当按下 'shift' + '_' 时，缩小画布场景
               stateManager.scene.zoomIn(0.9)
-            } else if (32 === e.keyCode) {
-              // 空格
-
+            } else if (32 === e.keyCode) { // 空格
+              // 当按下 空格 时，场景的位移设为 0，居中和缩放场景中的节点
               stateManager.scene.translateX = 0
               stateManager.scene.translateY = 0
               stateManager.scene.centerAndZoom()
