@@ -93,14 +93,13 @@
         },
       },
 
-      // TODO: ?
       renderTopoCallback: null,
       isRunRenderCallback: true,
 
       // 创建连线之后的事件
       afterCreateLink: null,
 
-      // TODO: ?
+      // 用户自定义节点，存储根据对象 id 生成的节点
       idToNode: {},
 
       /** 画布处理，start */
@@ -159,6 +158,7 @@
           oCanvas.setAttribute('height', oContainer_h)
         }
       },
+
       /**
        * 进入全屏模式
        *
@@ -192,19 +192,21 @@
 
         return usablePrefixMethod
       },
+
       // 退出全屏模式
       cancelFullScreen() {
         stateManager.isFullScreen = false
 
-        // 水平方向移动元素
+        // 场景偏移量（水平方向），随鼠标拖拽变化
         stateManager.scene.translateX = 0
-        // 垂直方向移动元素
+        // 场景偏移量（水平方向），随鼠标拖拽变化
         stateManager.scene.translateY = 0
-        // 居中和缩放
+        // 缩放并居中显示所有元素
         stateManager.scene.centerAndZoom()
-        // 水平和垂直方向居中移动、元素
+        // 水平和垂直方向居中移动元素
         stateManager.scene.translateToCenter()
       },
+
       // 初始化画布事件
       initCanvasEvent() {
         /** 动态连线处理 */
@@ -240,6 +242,7 @@
             $(".contextmenu").hide()
           }
         })
+
         /***
          * 鼠标按下事件
          *
@@ -263,8 +266,10 @@
             })
           }
         })
+
         // 鼠标拖动事件：
         scene.addEventListener('mousedrag', function (e) {
+          // 查找场景中的对象，例如: findElements(function(e){ return e.x > 100; });
           scene.findElements(function (child) {
             if(child.elementType === 'containerNode'){
               // 绘制当前容器节点中的所有节点，JTopo.flag.graphics 为 canvas 的上下文环境
@@ -276,14 +281,17 @@
 
           // 拖动成组
           if (stateManager.isCreateGroupByDrag) {
+            // 存储事件源节点
             let nodeObj = e.target
 
+            // 若不存在事件源，则直接返回
             if (!nodeObj) {return}
 
-            // 只记录一次
+            // 存储事件源节点的父容器对象数组，只记录一次
             const containerObjArr = nodeObj.parentContainer
 
             if (containerObjArr) {
+              // 存储事件源节点父容器对象数组的第一个元素
               const containerObj = containerObjArr[0]
 
               if (!canvasManager.groupObj.parentContainerRecord) {
@@ -296,12 +304,10 @@
               }
 
               if (
-                !(
-                  nodeObj.x > canvasManager.groupObj.parentContainerRecord.x - canvasManager.groupObj.paddingWidth
+                !(nodeObj.x > canvasManager.groupObj.parentContainerRecord.x - canvasManager.groupObj.paddingWidth
                   && nodeObj.x + nodeObj.width < canvasManager.groupObj.parentContainerRecord.x + canvasManager.groupObj.parentContainerRecord.width + canvasManager.groupObj.paddingWidth
                   && nodeObj.y > canvasManager.groupObj.parentContainerRecord.y - canvasManager.groupObj.paddingHeight
-                  && nodeObj.y + nodeObj.height < canvasManager.groupObj.parentContainerRecord.y + canvasManager.groupObj.parentContainerRecord.height + canvasManager.groupObj.paddingHeight
-                )
+                  && nodeObj.y + nodeObj.height < canvasManager.groupObj.parentContainerRecord.y + canvasManager.groupObj.parentContainerRecord.height + canvasManager.groupObj.paddingHeight)
               ) {
                 containerObj.remove(nodeObj)
                 canvasManager.groupObj.parentContainerRecord = null
@@ -309,10 +315,12 @@
             }
           }
         })
+
         // 鼠标移动事件：微调临时终止节点的位置，防止鼠标落在连线上
         scene.addEventListener('mousemove', function (e) {
           tempNodeZ.setLocation(e.x - 3, e.y + 3)
         })
+
         // 鼠标弹起事件：
         scene.addEventListener('mouseup', function (e) {
           sceneEventObj.mouseup && sceneEventObj.mouseup(e)
@@ -384,6 +392,7 @@
         //为工具栏管理者设置快捷键
         toolbarManager.setShortcutKey()
       },
+
       // 复现
       renderTopo(data, type) {
         const self = canvasManager
@@ -432,10 +441,10 @@
             idToNode[obj.id] = self._createNode(obj)
           }
 
-          if(i===0 && obj.json.sceneTrans){
-
-            sceneTransX=obj.json.sceneTrans[0]
-            sceneTransY=obj.json.sceneTrans[1]
+          if(i === 0 && obj.json.sceneTrans) {
+            // 场景偏移量
+            sceneTransX = obj.json.sceneTrans[0]
+            sceneTransY = obj.json.sceneTrans[1]
           }
         }
 
@@ -443,7 +452,7 @@
         for (let i = 0; i < nodesArr.length; i++) {
           let obj = nodesArr[i]
 
-          if(obj.json.elementType==='containerNode'){
+          if(obj.json.elementType === 'containerNode'){
             idToNode[obj.id] =self.createUserDefinedNode(obj)
           }
         }
@@ -452,7 +461,7 @@
         for (let i = 0; i < nodesArr.length; i++) {
           let obj = nodesArr[i]
 
-          if (obj.json.elementType==='container') {
+          if (obj.json.elementType === 'container') {
             idToNode[obj.id] = self._createContainer(obj, idToNode)
           }
         }
@@ -461,86 +470,129 @@
         for (let i = 0; i < linksArr.length; i++) {
           let obj = linksArr[i]
 
-          if(typeof obj.json==='string'){
-            obj.json= eval('('+obj.json+')')
+          if(typeof obj.json === 'string'){
+            obj.json= eval('(' + obj.json + ')')
           }
 
+          // 创建节点间的连线
           const link = self._createLink(idToNode[obj.from_id], idToNode[obj.to_id], obj)
+          // 将连线添加到场景中
           link && scene.add(link)
         }
 
         stateManager.scene.translateX = sceneTransX
         stateManager.scene.translateY = sceneTransY
 
+        // 开启节点元素动画效果
         canvasManager.elementShowEffect.start()
 
         canvasManager.idToNode = idToNode
         canvasManager.renderTopoCallback && canvasManager.isRunRenderCallback && canvasManager.renderTopoCallback()
       },
+
       // 保存
-      saveTopo(callback,changeData) {
-        // 获取后台所需节点字段
+      saveTopo(callback, changeData) {
+        // 获取后台所需节点字段：['id', 'type', 'json']
         const saveNodeAttr = stateManager.formatNodes
-        // 获取后台所需节点字段
+        // 获取后台所需容器节点字段：['id', 'type', 'json']
         const saveContainerNodeAttr = stateManager.formatContainerNodes
-        // 获取后台所需节点字段
+        // 获取后台所需容器字段：['id', 'type', 'json']
         const saveContainerAttr = stateManager.formatContainers
-        // 获取后台所需线条字段
+        // 获取后台所需线条字段：['id', 'type', 'from_id', 'to_id', 'json']
         const saveLinkAttr = stateManager.formatLinks
 
         const nodes = []
         const links = []
-        // 拼接
+
+        // dataArr: [c, c, c, ...]
+        // c: {
+        //   alarmColor: "255,0,0", alpha: 0.5833333333333333, beforePaintCallback: null, borderColor: "223,226,228", borderRadius: 5, borderWidth: 1, colorStop: null, detailText: "liyin$xing", dragable: true, editAble: false, elementType: "node", fillAlarmNode: (3) [255, 0, 0], fillColor: "255,255,255", font: "12px Consolas", fontColor: "234,32,0", height: 85, id: "101", imgName: "", inLinks: null, isMouseOver: false, json: {x: 160, y: 100, width: 185, height: 85, text: "liyin$xing", …}, keepChangeColor: false, linearGradient: null, messageBus: MessageBus {name: undefined, messageMap: {…}, messageCount: 6, subscribe: ƒ, unsubscribe: ƒ, …}, nodeFn: null, nodeOriginColor: null, outLinks: null, paint: ƒ (a), paintCallback: null, propertiesStack: [], rotate: 0, scaleX: 1, scaleY: 1, selected: true, selectedLocation: null, selectedPoint: null, serializedProperties: (29) ["elementType", "x", "y", "width", "height", "visible", "alpha", "rotate", "scaleX", "scaleY", "strokeColor", "fillColor", "shadow", "shadowColor", "shadowOffsetX", "shadowOffsetY", "transformAble", "zIndex", "dragable", "selected", "showSelected", "isMouseOver", "text", "font", "fontColor", "textPosition", "textOffsetX", "textOffsetY", "borderRadius"], shadow: false, shadowBlur: 5, shadowColor: "rgba(0,0,0,0.5)", shadowOffsetX: 3, shadowOffsetY: 6, showAlarmText: false, showSelected: true, smallAlarmImageChangeObj: null, smallAlarmImageObj: null, smallAlarmImageTag: false, smallAlarmImage_h: 20, smallAlarmImage_w: 20, smallAlarmImage_x: null, smallAlarmImage_y: null, smallImageChangeColor: null, smallImageOriginColor: (3) [255, 0, 0], strokeColor: "22,124,255", text: "liyin$xing", textAlign: "left", textAlpah: 1, textBreakNumber: 5, textLineHeight: 15, textOffsetX: -50, textOffsetY: -20, textPosition: "Bottom_Center", transformAble: true, type: "node", visible: true, width: 185, x: 300, y: 300, zIndex: 3, _id: "front1529918150371145951",
+        // }
         const dataArr = changeData || stateManager.scene.childs
+
+        // console.log('dataArr')
+        // console.log(dataArr)
+
         dataArr.filter(function (child) {
+          // 节点元素类型是否是容器
           const isContainer = ['container'].indexOf(child.elementType) >= 0
+
+          // 存储相应节点元素类型所需保存的字段结构
           const typeToSaveAttr = {
             "node": saveNodeAttr,
             "containerNode": saveContainerNodeAttr,
             "container": saveContainerAttr,
           }
-          if (child.parentType !== 'containerNode' && ['node','container','containerNode'].indexOf(child.elementType)>=0) {
+
+          // 如果节点的父类型不是容器节点 且 节点的元素类型是节点、容器或容器节点的其中一个
+          if (
+            child.parentType !== 'containerNode'
+            && ['node', 'container', 'containerNode'].indexOf(child.elementType) >= 0
+          ) {
+            // nodeObj: {id: xxx, type: xxx, json: {...},}
             const nodeObj = {}
+            // saveAttrArr: ['id', 'type', 'json'] | ['id', 'type', 'from_id', 'to_id', 'json']
             const saveAttrArr = typeToSaveAttr[child.elementType]
 
-            //后台所需数据
-            for(let m =0; m < saveAttrArr.length; m++){
-              let attr=saveAttrArr[m]
-              nodeObj[attr]=child[attr]
+            // 后台所需数据
+            // saveAttrArr: ['id', 'type', 'json', ...]
+            for (let m = 0; m < saveAttrArr.length; m++) {
+              // attr: id | type | json
+              let attr = saveAttrArr[m]
+              // nodeObj: {id: xxx, type: xxx, json: xxx,}
+              nodeObj[attr] = child[attr]
             }
 
-            //前端数据
-            if(!nodeObj.json){
+            // 前端数据
+            if (!nodeObj.json) {
               nodeObj.json = {}
             }
-            for(let m1 in child){
-              let value=child[m1]
-              if(stateManager.attrIsNeedSave(m1,value,child.elementType)) {
-                nodeObj.json[m1]=value
-              }
-              else if (isContainer && m1 === 'childs'){
+
+            // console.log('child')
+            // console.log(child)
+
+            // 以任意顺序遍历 child 对象的所有可枚举属性，包括继承属性
+            for (let m1 in child) {
+              let value = child[m1]
+
+              // 如果对象中的属性需要保存
+              if (stateManager.attrIsNeedSave(m1, value, child.elementType)) {
+                nodeObj.json[m1] = value
+              } else if (isContainer && m1 === 'childs') { // 如果节点元素类型是容器 且 如果节点属性的字段名是 'childs'
+
                 nodeObj.json.childsArr = []
+
                 // 保存容器的 child 的 id 到 childsArr
-                for (let m2 = 0; m2 < value.length; m2++){
+                // 遍历 child.json 中的属性键
+                for (let m2 = 0; m2 < value.length; m2++) {
                   const containerChilds = value[m2]
-                  if (containerChilds.parentType === "containerNode"){
-                    //自定义节点
-                    //获取自定义结点的id
+
+                  // console.log('containerChilds')
+                  // console.log(containerChilds.parentType)
+
+                  if (containerChilds.parentType === "containerNode") {
+                    // 自定义节点
+                    // 获取自定义结点的 id
                     const parentId = containerChilds.parentId
-                    //判断数组中是否已经存在
-                    if (nodeObj.json.childsArr.indexOf(parentId) < 0){
+
+                    // 判断数组中是否已经存在
+                    if (nodeObj.json.childsArr.indexOf(parentId) < 0) {
                       nodeObj.json.childsArr.push(parentId)
                     }
                   } else {
-                    //普通节点
+                    // 普通节点
                     nodeObj.json.childsArr.push(containerChilds.id || containerChilds._id)
                   }
                 }
               }
             }
-            nodeObj.json.sceneTrans = [stateManager.scene.translateX,stateManager.scene.translateY]
+
+            // 存储场景位移数据到 nodeObj.json 中
+            nodeObj.json.sceneTrans = [stateManager.scene.translateX, stateManager.scene.translateY]
+            // 将一个 JavaScript 值(对象或者数组)转换为一个 JSON 字符串
             nodeObj.json = JSON.stringify(nodeObj.json)
 
+            // 将 nodeObj 添加到 nodes 数组中
             nodes.push(nodeObj)
           }
           else if(child.elementType === 'link'){
@@ -574,11 +626,13 @@
             links.push(linkObj)
           }
         })
+
         return {
           nodes,
           links,
         }
       },
+
       // 处理缩略
       fnDoBriefText(node) {
         if (node.ellipsisLength) {
@@ -645,6 +699,7 @@
         }
         return node
       },
+
       // 创建节点，注：调用这个方法时，一定要有个 id
       _createNode(obj) {
         const scene = stateManager.scene
@@ -687,6 +742,7 @@
 
         return node
       },
+
       // 设置节点的事件
       _setNodeEvent(node) {
         const nodeEventObj = canvasManager.nodeEvent
@@ -802,6 +858,7 @@
         self._setUserDefinedNodeEvent(userDefinedNode,canvasManager['userDefinedNodeEvent_'+nodeFn])
         return userDefinedNode
       },
+
       //设置自定义节点的事件
       _setUserDefinedNodeEvent(definedNode,eventObj) {
         for(let eventName in eventObj){
@@ -862,6 +919,7 @@
           stateManager.isNeedSave=true
         }
       },
+
       //创建容器
       _createContainer(obj, idToNode) {
         const stage = stateManager.stage
@@ -898,6 +956,7 @@
         scene.add(container)
         return container
       },
+
       //设置容器的事件
       _setGroupEvent(container) {
         const containerEventObj = canvasManager.containerEvent
@@ -933,78 +992,80 @@
       /** 容器处理，end */
 
       /** 线条处理，start */
-      //创建节点间的连线
+      // 创建节点间的连线
       _createLink(sNode, tNode,linkObj) {
         let link
         let slinkType = null
-        if(linkObj){
-          slinkType=linkObj.json.linkType
+
+        if (linkObj) {
+          slinkType = linkObj.json.linkType
         }
+
         const linkType = slinkType ? slinkType : (stateManager.setLink.linkType || 'arrow')
+
         if (!sNode || !tNode) {
           return
         }
 
         if (linkType === 'Link') {
-          //实线
+          // 实线
           link = new JTopo.Link(sNode, tNode)
-        }
-        else if (linkType == 'arrow') {
-          //箭头
+        } else if (linkType === 'arrow') {
+          // 箭头
           link = new JTopo.Link(sNode, tNode)
-          link.arrowsRadius = 10 //箭头大小
-          link.drawanimepic("images/p.png",JTopo.flag.curScene, 100,10,  5,5 ,1,1,5000,1)
-        }
-        else if (linkType == 'dArrow') {
-          //双箭头
+          // 箭头大小
+          link.arrowsRadius = 10
+          link.drawanimepic("images/p.png", JTopo.flag.curScene, 100, 10,  5, 5 , 1, 1,5000, 1)
+        } else if (linkType === 'dArrow') {
+          // 双箭头
           link = new JTopo.Link(sNode, tNode)
-          link.arrowsRadius = 10 //箭头大小
-        }
-        else if (linkType == 'dashed') {
-          //虚线
+          link.arrowsRadius = 10
+        } else if (linkType === 'dashed') {
+          // 虚线
           link = new JTopo.Link(sNode, tNode)
           link.dashedPattern = 5
-          // link.arrowsRadius = 10 //箭头大小
-        }
-        else if (linkType == 'curve') {
-          //曲线
+          // link.arrowsRadius = 10
+        } else if (linkType === 'curve') {
+          // 曲线
           link = new JTopo.CurveLink(sNode, tNode)
-        }
-        else if (linkType == 'flexional') {
-          //折线
+        } else if (linkType === 'flexional') {
+          // 折线
           link = new JTopo.FlexionalLink(sNode, tNode)
-          link.direction = 'horizontal' //horizontal水平,vertical垂直
-          link.arrowsRadius = 10 //箭头大小
-          link.flexionalRadius=0
-          link.offsetGap=50
-        }
-        else if (linkType == 'flow') {
+          // horizontal 水平，vertical 垂直
+          link.direction = 'horizontal'
+          link.arrowsRadius = 10
+          link.flexionalRadius = 0
+          link.offsetGap = 50
+        } else if (linkType === 'flow') {
           link = new JTopo.Link(sNode, tNode)
-          link.arrowsRadius = 10 //箭头大小
-          link.PointPathColor = "rgb(237,165,72)"//连线颜色
-        }
-        else if (linkType == 'userDefine') {
+          link.arrowsRadius = 10
+          // 连线颜色
+          link.PointPathColor = "rgb(237,165,72)"
+        } else if (linkType === 'userDefine') {
           link = new JTopo.Link(sNode, tNode)
-          link.arrowsRadius = 10 //箭头大小
-          link.PointPathColor = "rgb(237,165,72)"//连线颜色
+          link.arrowsRadius = 10
+          link.PointPathColor = "rgb(237,165,72)"
         }
+
         if (link) {
           this._setLinkEvent(link)
           link.linkType = linkType
-          link.lineWidth =0.7
+          link.lineWidth = 0.7
           link.strokeColor = '43,43,43'
-          link.linkConnectType ='toBorder'
-          link.bundleGap=15
-          link.id=link._id
-          link.type='link'
-          stateManager.isNeedSave=true
-          if(linkObj){
-            for(let i in linkObj){
-              link[i]=linkObj[i]
+          link.linkConnectType = 'toBorder'
+          link.bundleGap = 15
+          link.id = link._id
+          link.type = 'link'
+          stateManager.isNeedSave = true
+
+          if (linkObj) {
+            for (let i in linkObj) {
+              link[i] = linkObj[i]
             }
-            for(let j in linkObj.json){
-              if(stateManager.formatLinks.indexOf(j)<0){
-                link[j]=linkObj.json[j]
+
+            for (let j in linkObj.json) {
+              if (stateManager.formatLinks.indexOf(j) < 0) {
+                link[j] = linkObj.json[j]
               }
             }
           }
@@ -1012,6 +1073,7 @@
         }
         return link
       },
+
       //设置线条事件
       _setLinkEvent(link) {
         const linkEventObj = canvasManager.linkEvent
@@ -1236,12 +1298,24 @@
         stateManager.agentLink && stateManager.scene.remove(stateManager.agentLink)
         stateManager.beginNode = null
       },
-      // 判断对象中的属性是否应该保存
+      /**
+       * 判断对象中的属性是否应该保存
+       *
+       * @param {String} attr - 属性键
+       * @param {any} value - 属性值
+       * @param {String} elementType - 属性值
+       * @return {Boolean}
+       */
       attrIsNeedSave(attr, value, elementType) {
         const attrArr = ['lastParentContainer', 'propertiesStack', 'serializedProperties', 'animateNode', 'childs', 'image', 'inLinks', 'messageBus', 'outLinks', 'json', 'nodeA', 'nodeZ', 'selectedLocation', 'parentContainer']
+
+        // 如果节点元素类型是容器节点
         if (elementType === 'containerNode') {
+          // 将 'childs' 添加到数组 attrArr 中
           attrArr.push('childs')
         }
+
+        // 返回需要保存的属性键是否存在于 attrArr 中
         return attrArr.indexOf(attr) < 0
       },
       /** 辅助方法 */
