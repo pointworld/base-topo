@@ -985,14 +985,14 @@ define(
               type: 'node',
               name: '安卓',
               width: 102,
-              height: 50
+              height: 80
             },
             {
               imgName: 'android',
               type: 'node',
               name: '安卓',
               width: 102,
-              height: 50
+              height: 100
             },
             {
               imgName: 'android',

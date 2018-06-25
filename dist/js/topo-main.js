@@ -673,34 +673,47 @@
        * 通过从页面左下方拖拽缩略图到画布生成节点
        *
        * @param {Object} $thisClone
-       * @param {} mDown
-       * @param {Object} e
-       * @return {Object} node
+       * @param {Boolean} mDown
+       * @param {Object} e - 事件对象
+       * @return {Object} node - {elementType: "node", serializedProperties: Array(29), propertiesStack: Array(0), _id: "front1529937820036577393", x: 30, …}
        */
       createNodeByDrag($thisClone, mDown, e) {
         const scene = stateManager.scene
         const self = canvasManager
+
+        // {imgName: "android", type: "node", name: "安卓", width: 102, height: 50}
         const jsonObj = eval('(' + $thisClone.attr('json') + ')')
+
         jsonObj.width = jsonObj.width || 100
         jsonObj.height = jsonObj.height || 50
+
+        // console.log('e')
+        // console.log(e)
+        // console.log(mDown)
+
+        // subWidth = 鼠标在浏览器页面可视区上的横坐标 - 节点对象的一半宽度 - 装备区域的宽度 - 装备区域的左偏移量 + 鼠标松开后,微调节点的x位置值
         const subWidth = e.pageX - jsonObj.width / 2 - stateManager.equipmentAreaWidth - $('#equipmentArea').offset().left + stateManager.fineTuneMouseUpX
         const subHeight = e.pageY - jsonObj.height / 2 - $('#canvas').offset().top + stateManager.fineTuneMouseUpY
         // 松开鼠标时,元素在画布上的 x 坐标
         const nodeX = subWidth - scene.translateX
-        //松开鼠标时,元素在画布上的 y 坐标
+        // 松开鼠标时,元素在画布上的 y 坐标
         const nodeY = subHeight - scene.translateY
 
+        const node = new JTopo.Node()
+
         if (subWidth > 0 && subHeight > 0 && mDown) {
-          var node = new JTopo.Node()
+          // var node = new JTopo.Node()
+
           node.setLocation(nodeX, nodeY)
           node.font = "14px Consolas"
           node.text = $thisClone.attr('nodeName')
-          node.fillColor = '255,255,255'
-          node.fontColor = '85,85,85'
+          node.fillColor = '255, 255, 255'
+          node.fontColor = '85, 85, 85'
           node.textPosition = 'Bottom_Center'
-          node.textOffsetY =5
-          node.json=jsonObj
+          node.textOffsetY = 5
+          node.json = jsonObj
 
+          // topoImgMap：webpack 打包时，需要把所有图片引入进来，形成静态资源，然后用映射来调用图片
           if (JTopo.flag.topoImgMap) {
             node.setImage(jsonObj.imgName, 'imageDataFlow')
           } else {
@@ -709,18 +722,25 @@
           }
 
           node.id = node._id
+
+          // 设置节点的事件
           self._setNodeEvent(node)
 
+          // 添加节点到场景数组中
           scene.add(node)
+
+          // jsonObj: {imgName: "android", type: "node", name: "安卓", width: 102, height: 50}
           for (let i in jsonObj) {
             node[i] = jsonObj[i]
           }
+
           //节点省略处理
           node.detailText = node.detailText || node.text
           canvasManager.fnDoBriefText(node)
 
           stateManager.isNeedSave = true
         }
+
         return node
       },
 
@@ -730,10 +750,7 @@
         const self = canvasManager
         const node = new JTopo.Node()
 
-        console.log(node)
-        console.log(new JTopo.Node())
-
-        //设置后台数据
+        // 设置后台数据
         for (let i in obj) {
           node[i] = obj[i]
         }
@@ -746,6 +763,9 @@
         }
 
         if (JTopo.flag.topoImgMap) {
+          // 参数 setSmallImage 为设置小图标
+          // node.setImage('./images/alertIcon2.png','setSmallImage')
+
           node.setImage(node.imgName, 'imageDataFlow')
         } else {
           node.imgName && node.setImage(JTopo.flag.imageUrl + node.imgName + '.png')
@@ -755,12 +775,10 @@
         self._setNodeEvent(node)
         scene.add(node)
 
-        // setSmallImage 为设置小图标
-        // node.setImage('./images/alertIcon2.png','setSmallImage')
         // 结点,是否变色,是否闪动,底色,变色
-        // 节点省略处理
         // JTopo.util.smallNodeFlash(node,true,true,[202,202,202],[222,81,69])
 
+        // 节点省略处理
         node.detailText = node.detailText || node.text
         canvasManager.fnDoBriefText(node)
 
@@ -771,6 +789,7 @@
       _setNodeEvent(node) {
         const nodeEventObj = canvasManager.nodeEvent
         let clickTimeHandle = null
+
         node.addEventListener('mouseup', function (e) {
           clearTimeout(clickTimeHandle)
 
@@ -778,21 +797,27 @@
 
           clickTimeHandle = setTimeout(function () {
             $('.contextmenu').hide()
+
             toolbarManager.history.save()
+
             stateManager.currentChooseElement = thisObj
             stateManager.currentNode = thisObj
+
             nodeEventObj.mouseup && nodeEventObj.mouseup(e)
-            stateManager.isNeedSave=true
+
+            stateManager.isNeedSave = true
           }, 300)
 
-          if(stateManager.isCreateGroupByDrag) {
+          if (stateManager.isCreateGroupByDrag) {
             const nodeObj = e.target
             let runTag = true
+
             JTopo.flag.curScene.childs.forEach(function (child) {
-              if (runTag && !nodeObj.parentContainer && child.elementType == "container") {
+              if (runTag && !nodeObj.parentContainer && child.elementType === "container") {
 
                 if (nodeObj.x > child.x && nodeObj.x + nodeObj.width < child.x + child.width && nodeObj.y > child.y && nodeObj.y + nodeObj.height < child.y + child.height) {
                   runTag = false
+
                   child.add(nodeObj)
                 }
               }
@@ -802,34 +827,41 @@
         node.addEventListener('mousedown', function (e) {
           stateManager.currentChooseElement = this
           stateManager.currentNode = this
-          nodeEventObj.mousedown&&nodeEventObj.mousedown(e)
+
+          nodeEventObj.mousedown && nodeEventObj.mousedown(e)
         })
         node.addEventListener('mousemove', function (e) {
           stateManager.currentChooseElement = this
           stateManager.currentNode = this
-          nodeEventObj.mousemove&&nodeEventObj.mousemove(e)
 
+          nodeEventObj.mousemove && nodeEventObj.mousemove(e)
         })
         node.addEventListener('mouseover', function (e) {
           stateManager.currentChooseElement = this
           stateManager.currentNode = this
-          nodeEventObj.mouseover&&nodeEventObj.mouseover(e)
+          nodeEventObj.mouseover && nodeEventObj.mouseover(e)
+
           //节点省略处理
-          e.target.text=e.target.detailText
+          e.target.text = e.target.detailText
         })
         node.addEventListener('mouseout', function (e) {
           $(".titleDiv").hide()
-          e.target=stateManager.currentNode
-          nodeEventObj.mouseout&&nodeEventObj.mouseout(e)
+
+          e.target = stateManager.currentNode
+          nodeEventObj.mouseout && nodeEventObj.mouseout(e)
+
           canvasManager.fnDoBriefText(e.target)
         })
         node.addEventListener('dbclick', function (e) {
           clearTimeout(clickTimeHandle)
-          stateManager.currentChooseElement=this
+
+          stateManager.currentChooseElement = this
           stateManager.currentNode = this
-          nodeEventObj.dbclick&&nodeEventObj.dbclick(e)
+
+          nodeEventObj.dbclick && nodeEventObj.dbclick(e)
         })
       },
+
       /** 节点处理，end */
 
       /** 自定义节点处理，start */
