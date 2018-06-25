@@ -490,7 +490,13 @@
         canvasManager.renderTopoCallback && canvasManager.isRunRenderCallback && canvasManager.renderTopoCallback()
       },
 
-      // 保存
+      /**
+       * 保存
+       *
+       * @param {Function} callback
+       * @param {Object} changeData
+       * @return {Object}
+       */
       saveTopo(callback, changeData) {
         // 获取后台所需节点字段：['id', 'type', 'json']
         const saveNodeAttr = stateManager.formatNodes
@@ -594,16 +600,24 @@
 
             // 将 nodeObj 添加到 nodes 数组中
             nodes.push(nodeObj)
-          }
-          else if(child.elementType === 'link'){
+          } else if (child.elementType === 'link') { // 如果元素类型是连线
+
+            // 存储连线对象
+            // linkObj: {
+            //   from_id: "front1529926787797104500", id: "front1529926793450276933", json: "{"elementType":"link","_id":"front1529926793450276933","x":0,"y":0,"width":32,"height":32,"visible":true,"alpha":1,"rotate":0,"scaleX":1,"scaleY":1,"strokeColor":"43,43,43","borderColor":"22,124,255","fillColor":"255,255,255","shadow":false,"shadowBlur":5,"shadowColor":"rgba(0,0,0,0.5)","shadowOffsetX":3,"shadowOffsetY":6,"transformAble":false,"zIndex":2,"dragable":false,"selected":false,"showSelected":true,"isMouseOver":false,"nodeIndex":0,"font":"12px Consolas","fontColor":"43,43,43","isShowLinkName":true,"lineWidth":0.7,"lineJoin":"miter","bundleOffset":20,"bundleGap":15,"textOffsetX":0,"textOffsetY":0,"arrowsRadius":10,"arrowsOffset":0,"dashedPattern":null,"path":[{"x":149,"y":89.96682464454976},{"x":258,"y":92.03317535545023}],"animateNodePath":null,"linkType":"arrow","linkConnectType":"toBorder","mergeOutLink":true,"flexionalRadius":null,"openStartRadius":true,"openEndRadius":true,"animateT":271,"endAnimate":false,"animateCallback":null,"isremove":false,"id":"front1529926793450276933","type":"link"}", to_id: "front1529926789547861775", type: "link",
+            // }
             const linkObj = {}
 
-            for(let n = 0; n < saveLinkAttr.length; n++){
+            // console.log('child')
+            // console.log(child)
+
+            // saveLinkAttr: ['id', 'type', 'from_id', 'to_id', 'json']
+            for (let n = 0; n < saveLinkAttr.length; n++) {
               let attr = saveLinkAttr[n]
 
-              if (['from_id'].indexOf(attr) >= 0){
+              if (['from_id'].indexOf(attr) >= 0) {
                 linkObj[attr] = child.nodeA.id
-              } else if (['to_id'].indexOf(attr) >= 0){
+              } else if (['to_id'].indexOf(attr) >= 0) {
                 linkObj[attr] = child.nodeZ.id
               } else {
                 linkObj[attr] = child[attr]
@@ -638,8 +652,10 @@
         if (node.ellipsisLength) {
           const chineseNum = node.text.getChineseNum()
           const len = node.text.length
+
           if (chineseNum && (len + chineseNum > node.ellipsisLength)) {
             const subChineseNum = node.text.substring(0, node.ellipsisLength).getChineseNum()
+
             if (subChineseNum) {
               node.text = node.text.substring(0, node.ellipsisLength - subChineseNum / 2 - 1) + '...'
             } else {
@@ -652,7 +668,15 @@
       },
 
       /** 节点处理，start */
-      // 创建拖拽后的节点，初始化节点
+
+      /**
+       * 通过从页面左下方拖拽缩略图到画布生成节点
+       *
+       * @param {Object} $thisClone
+       * @param {} mDown
+       * @param {Object} e
+       * @return {Object} node
+       */
       createNodeByDrag($thisClone, mDown, e) {
         const scene = stateManager.scene
         const self = canvasManager
