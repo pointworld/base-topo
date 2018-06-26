@@ -1300,7 +1300,7 @@
       setLink: {
         // 是否开启连线模式
         isSetting: false,
-        // 线条类型：实线、箭头、双箭头、虚线、曲线、折线
+        // 线条类型：实线、虚线、曲线、箭头、双箭头、折线、流动、自定义
         linkType: ''
       },
       // 判断画布内容是否改变，是否需要保存
@@ -1801,6 +1801,7 @@
       setEagleEye(b) {
         const stage = stateManager.stage
 
+        // 鹰眼是否可见
         stage.eagleEye.visible = b !== undefined
           ? b
           : !stage.eagleEye.visible
@@ -1841,7 +1842,7 @@
         for (let i = 0; i < aEvents.length; i++) {
           $(aEvents[i][1]).on(aEvents[i][0], aEvents[i][2])
         }
-      }
+      },
     }
     //拖拽管理者：用于管理从左下角拖拽图标到画布上生成节点,用了个 drag.js 插件
     const dragManager = {

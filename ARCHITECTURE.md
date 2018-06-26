@@ -223,6 +223,73 @@ jTopo.Stage: 一个抽象的舞台对象，对应一个 Canvas 和多个场景�
 ### 容器分组的实现
 ### 自动布局的实现
 ### 动画和特效的实现 jTopo.Effect.Animate
+### 全局通用方法 JTopo.util
+
+#### 属性
+- isFirefox
+- isIE
+- isChrome
+
+
+
+
+#### 方法
+- rotatePoint
+- rotatePoints
+- getDistance
+- getEventPosition
+- mouseCoords
+- MessageBus
+- clone
+- isPointInRect
+- isRectOverlapRect
+- isPointInLine
+- removeFromArray
+- cloneEvent
+- randomColor
+- isIntsect
+- toJson
+- loadStageFromJson
+- getElementsBound
+- getImageAlarm
+- getOffsetPosition
+- lineF
+- intersection
+- intersectionLineBound
+
+- copy
+- getUrlParam
+- creatId
+- setImageUrl
+- setCurHandUrl
+- nodeFlash
+- smallNodeFlash
+- getRotateAng
+- findAllPrevNodesAndLinks
+- findAllNextNodesAndLinks
+- findEleById
+- findEleByType
+- setPopPos
+- moveElePosByContainerBorder
+
+### JTopo.flag
+- clearAllAnimateT
+- imageUrl
+- graphics
+- curScene
+- linkConfigure
+- nodeConfigure
+- alarmImageCache
+- topoImgMap
+
+
+
+
+
+
+
+
+
 
 动画效果
 
