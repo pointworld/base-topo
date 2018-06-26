@@ -495,7 +495,7 @@
        *
        * @param {Function} callback
        * @param {Object} changeData
-       * @return {Object}
+       * @return {Object} - {nodes, links}
        */
       saveTopo(callback, changeData) {
         // 获取后台所需节点字段：['id', 'type', 'json']
@@ -790,34 +790,47 @@
         const nodeEventObj = canvasManager.nodeEvent
         let clickTimeHandle = null
 
+        // 为节点对象绑定事件
         node.addEventListener('mouseup', function (e) {
           clearTimeout(clickTimeHandle)
 
           const thisObj = this
 
+          // 300ms 后让弹窗隐藏，调用保存按钮，...
           clickTimeHandle = setTimeout(function () {
             $('.contextmenu').hide()
-
             toolbarManager.history.save()
 
             stateManager.currentChooseElement = thisObj
+            // 存储当前选中的节点
             stateManager.currentNode = thisObj
 
             nodeEventObj.mouseup && nodeEventObj.mouseup(e)
 
+            // 判断画布内容是否改变,用于是否保存
             stateManager.isNeedSave = true
           }, 300)
 
           if (stateManager.isCreateGroupByDrag) {
+            // 存储当前事件源节点对象
             const nodeObj = e.target
+
             let runTag = true
 
             JTopo.flag.curScene.childs.forEach(function (child) {
-              if (runTag && !nodeObj.parentContainer && child.elementType === "container") {
-
-                if (nodeObj.x > child.x && nodeObj.x + nodeObj.width < child.x + child.width && nodeObj.y > child.y && nodeObj.y + nodeObj.height < child.y + child.height) {
+              if (
+                runTag
+                && !nodeObj.parentContainer
+                && child.elementType === "container"
+              ) {
+                if (
+                  nodeObj.x > child.x
+                  && nodeObj.x + nodeObj.width < child.x + child.width
+                  && nodeObj.y > child.y
+                  && nodeObj.y + nodeObj.height < child.y + child.height
+                ) {
                   runTag = false
-
+                  // 将当前事件源节点对象添加到 child 数组中
                   child.add(nodeObj)
                 }
               }
@@ -865,8 +878,9 @@
       /** 节点处理，end */
 
       /** 自定义节点处理，start */
-      //拖拽创建自定义节点
-      createUserDefinedNodeByDrag($thisClone, mDown,e) {
+
+      // 拖拽创建用户自定义节点
+      createUserDefinedNodeByDrag($thisClone, mDown, e) {
         const jsonObj = eval('(' + $thisClone.attr('json') + ')')
         const scene = stateManager.scene
         const obj = {
@@ -874,95 +888,128 @@
         }
         const subWidth = e.pageX - jsonObj.width / 2 - stateManager.equipmentAreaWidth - $('#equipmentArea').offset().left + stateManager.fineTuneMouseUpX
         const subHeight = e.pageY - jsonObj.height / 2 - $('#canvas').offset().top + stateManager.fineTuneMouseUpY
-        obj.json.x =subWidth - scene.translateX//松开鼠标时,元素在画布上的x坐标
-        obj.json.y=subHeight - scene.translateY//松开鼠标时,元素在画布上的y 坐标
+
+        // 松开鼠标时,元素在画布上的 x 坐标
+        obj.json.x = subWidth - scene.translateX
+        // 松开鼠标时,元素在画布上的 y 坐标
+        obj.json.y = subHeight - scene.translateY
 
         const nodeFn = obj.json.nodeFn
         const userDefinedNode = canvasManager[nodeFn](obj)
 
         userDefinedNode.id=userDefinedNode._id
+
         //设置后台数据
         for (let k in obj) {
           userDefinedNode[k] = obj[k]
         }
+
         //设置前端元素数据
-        for(let j in  obj.json){
-          if(stateManager.formatContainerNodes.indexOf(j)<0){
-            //luozheao
-            userDefinedNode[j]= obj.json[j]
+        for (let j in obj.json){
+          if (stateManager.formatContainerNodes.indexOf(j) < 0) {
+            // luozheao
+            userDefinedNode[j] = obj.json[j]
           }
         }
-        // !obj.id&&(obj.id=userDefinedNode._id)
-        // idToNode[obj.id] =userDefinedNode
-        canvasManager._setUserDefinedNodeEvent(userDefinedNode,canvasManager['userDefinedNodeEvent_'+nodeFn])
+        // !obj.id && (obj.id = userDefinedNode._id)
+        // idToNode[obj.id] = userDefinedNode
+        canvasManager._setUserDefinedNodeEvent(
+          userDefinedNode,
+          canvasManager['userDefinedNodeEvent_'+nodeFn]
+        )
       },
+
+      // 创建用户自定义节点
       createUserDefinedNode(obj) {
+        // obj: {id: "102_1", type: "containerNode", json: {…}}
+        // console.log(obj)
+
+        // nodeFn: "hostNode"
         const nodeFn = obj.json.nodeFn
         const self = canvasManager
         const userDefinedNode = self[nodeFn](obj)
+
         //设置后台数据
         for (let k in obj) {
           userDefinedNode[k] = obj[k]
         }
+
         //设置前端元素数据
-        for(let j in  obj.json){
-          if(stateManager.formatContainerNodes.indexOf(j)<0){
+        for (let j in obj.json){
+          if (stateManager.formatContainerNodes.indexOf(j) < 0) {
             //luozheao
-            userDefinedNode[j]= obj.json[j]
+            userDefinedNode[j] = obj.json[j]
           }
         }
-        self._setUserDefinedNodeEvent(userDefinedNode,canvasManager['userDefinedNodeEvent_'+nodeFn])
+
+        self._setUserDefinedNodeEvent(userDefinedNode, canvasManager['userDefinedNodeEvent_' + nodeFn])
+
+        // 返回用户自定义节点
         return userDefinedNode
       },
 
-      //设置自定义节点的事件
-      _setUserDefinedNodeEvent(definedNode,eventObj) {
-        for(let eventName in eventObj){
-          const fn = eventObj[eventName];
-          (function (definedNode,eventName,fn) {
+      // 设置用户自定义节点的事件
+      _setUserDefinedNodeEvent(definedNode, eventObj) {
+        for (let eventName in eventObj) {
+          const fn = eventObj[eventName]
+
+          ;(function (definedNode, eventName, fn) {
             definedNode.addEventListener(eventName, function (e) {
-              //通用事件
-              if(eventName=='mouseup'){
+              // 通用事件
+              if (eventName === 'mouseup') {
                 $('.contextmenu').hide()
                 toolbarManager.history.save()
-                stateManager.currentChooseElement=this
-              }else if(eventName=='dbclick'){
+                stateManager.currentChooseElement = this
+              } else if (eventName === 'dbclick') {
                 $('.contextmenu').hide()
                 stateManager.currentChooseElement=this
               }
-              //自定义事件
-              fn&&fn(e)
+
+              // 自定义事件
+              fn && fn(e)
             })
-          })(definedNode,eventName,fn)
+          })(definedNode, eventName, fn);
         }
       },
+
       /** 自定义节点处理，end */
 
       /** 容器处理，start */
-      //设置节点成容器,初始化容器
-      setNodesToGroup(nodeArr,jsonObj) {
+
+      // 设置节点成容器，初始化容器
+      setNodesToGroup(nodeArr, jsonObj) {
         const scene = stateManager.scene
-        const eleArr = nodeArr ? nodeArr : scene.selectedElements.filter(function (obj) {
-          return (obj.elementType == 'node' || obj.type == 'node')
-        })
+        const eleArr = nodeArr
+          ? nodeArr
+          : scene.selectedElements.filter(function (obj) {
+            return (obj.elementType === 'node' || obj.type === 'node')
+          })
+
+        // eleArr: [c, c, ...]
+        // console.log(eleArr)
+
         if (eleArr.length > 0) {
           const container = new JTopo.Container('')
           container.textPosition = 'Top_Bottom'
-          container.fontColor = '255,255,255'
+          container.fontColor = '255, 255, 255'
           container.font = '16px 微软雅黑'
           container.fillColor = '79,164,218'
-          container.alpha=0
-          container.textAlpha=1
-          container.shadowBlur =5
-          container.shadowColor = "rgba(43,43,43,0.5)"
-          container.borderColor='108,208,226'
-          container.borderWidth=1
-          container.borderDashed=false//边框成虚线，一定要设置borderRadius大于0
-          container.borderRadius = 5 // 圆角
-          container.id=container._id
-          container.type='container'
-          for(let k in jsonObj){
-            container[k]=jsonObj[k]
+          container.alpha = 0
+          container.textAlpha = 1
+          container.shadowBlur = 5
+          container.shadowColor = "rgba(43, 43, 43, 0.5)"
+          container.borderColor = '108, 208, 226'
+          // container.borderWidth = 1
+          container.borderWidth = 9
+          // 容器边框成虚线，一定要设置 borderRadius 大于 0，true 为实线，false 为虚线
+          // container.borderDashed = false
+          container.borderDashed = true
+          // 容器边框圆角
+          container.borderRadius = 5
+          container.id = container._id
+          container.type = 'container'
+          for (let k in jsonObj) {
+            container[k] = jsonObj[k]
           }
 
           for (let i = 0; i < eleArr.length; i++) {
@@ -972,44 +1019,48 @@
 
           this._setGroupEvent(container)
           scene.add(container)
-          stateManager.isNeedSave=true
+          stateManager.isNeedSave = true
         }
       },
 
-      //创建容器
+      // 创建容器
       _createContainer(obj, idToNode) {
         const stage = stateManager.stage
         const scene = stateManager.scene
         const self = canvasManager
         const container = new JTopo.Container('')
-        container.type='container'
+
+        container.type = 'container'
+
         //设置后台数据
         for (let i in obj) {
           container[i] = obj[i]
         }
 
-        //设置前端元素数据
-        for(let j in  obj.json){
-          if(stateManager.formatNodes.indexOf(j)<0){
-            container[j]= obj.json[j]
+        // 设置前端元素数据
+        for (let j in obj.json) {
+          if (stateManager.formatNodes.indexOf(j) < 0) {
+            container[j] = obj.json[j]
           }
-          if (j == 'childsArr') {
+
+          if (j === 'childsArr') {
             for (let k = 0; k < obj.json[j].length; k++) {
               const childObj = idToNode[obj.json[j][k]]
-              if(childObj.elementType=="containerNode"){
+
+              if (childObj.elementType === "containerNode") {
                 childObj.childs.filter(function (p1, p2, p3) {
                   container.add(p1)
                 })
-              }else{
+              } else {
                 container.add(childObj)
               }
             }
           }
         }
 
-
         self._setGroupEvent(container)
         scene.add(container)
+
         return container
       },
 
@@ -1019,38 +1070,50 @@
         container.addEventListener('mouseup', function (e) {
           $('.contextmenu').hide()
           toolbarManager.history.save()
-          stateManager.currentContainer = this
-          stateManager.currentChooseElement=this
-          containerEventObj.mouseup&&containerEventObj.mouseup(e)
-        })
-        container.addEventListener('mouseover', function (e){
-          stateManager.currentContainer = this
-          stateManager.currentChooseElement=this
-          containerEventObj.mouseover&&containerEventObj.mouseover(e)
-        })
-        container.addEventListener('mouseout', function (e){
-          e.target=stateManager.currentContainer
-          containerEventObj.mouseout&&containerEventObj.mouseout(e)
-        })
-        container.addEventListener('mousemove', function (e){
-          stateManager.currentContainer = this
-          stateManager.currentChooseElement=this
-          containerEventObj.mousemove&&containerEventObj.mousemove(e)
-        })
-        container.addEventListener('dbclick', function (e){
-          stateManager.currentContainer = this
-          stateManager.currentChooseElement=this
 
-          containerEventObj.dbclick&&containerEventObj.dbclick(e)
-        })
+          stateManager.currentContainer = this
+          stateManager.currentChooseElement = this
 
+          containerEventObj.mouseup && containerEventObj.mouseup(e)
+        })
+        container.addEventListener('mouseover', function (e) {
+          stateManager.currentContainer = this
+          stateManager.currentChooseElement = this
+          containerEventObj.mouseover && containerEventObj.mouseover(e)
+        })
+        container.addEventListener('mouseout', function (e) {
+          e.target = stateManager.currentContainer
+          containerEventObj.mouseout && containerEventObj.mouseout(e)
+        })
+        container.addEventListener('mousemove', function (e) {
+          stateManager.currentContainer = this
+          stateManager.currentChooseElement = this
+          containerEventObj.mousemove && containerEventObj.mousemove(e)
+        })
+        container.addEventListener('dbclick', function (e) {
+          stateManager.currentContainer = this
+          stateManager.currentChooseElement = this
+
+          containerEventObj.dbclick && containerEventObj.dbclick(e)
+        })
       },
+
       /** 容器处理，end */
 
       /** 线条处理，start */
-      // 创建节点间的连线
-      _createLink(sNode, tNode,linkObj) {
+
+      /**
+       * 创建节点间的连线
+       *
+       * @param {Object} sNode - 开始节点
+       * @param {Object} tNode - 终止节点
+       * @param {Object} linkObj - 连线对象 - {"from_id": "100", "to_id": "101", "id": "1000", "type": "link", "json": "{elementType:'link',linkType:'flow',text:'我是线条名字',fontColor:'237,165,72'}"}
+       * @return {Object} link
+       */
+      _createLink (sNode, tNode, linkObj) {
+        // 存储连线对象
         let link
+        // 起始连线类型
         let slinkType = null
 
         if (linkObj) {
@@ -1059,6 +1122,7 @@
 
         const linkType = slinkType ? slinkType : (stateManager.setLink.linkType || 'arrow')
 
+        // 若不存在起始节点和终止节点，则直接返回
         if (!sNode || !tNode) {
           return
         }
@@ -1071,7 +1135,7 @@
           link = new JTopo.Link(sNode, tNode)
           // 箭头大小
           link.arrowsRadius = 10
-          link.drawanimepic("images/p.png", JTopo.flag.curScene, 100, 10,  5, 5 , 1, 1,5000, 1)
+          link.drawanimepic("images/p.png", JTopo.flag.curScene, 100, 10, 5, 5 , 1, 1, 5000, 1)
         } else if (linkType === 'dArrow') {
           // 双箭头
           link = new JTopo.Link(sNode, tNode)
@@ -1096,15 +1160,16 @@
           link = new JTopo.Link(sNode, tNode)
           link.arrowsRadius = 10
           // 连线颜色
-          link.PointPathColor = "rgb(237,165,72)"
+          link.PointPathColor = "rgb(237, 165, 72)"
         } else if (linkType === 'userDefine') {
           link = new JTopo.Link(sNode, tNode)
           link.arrowsRadius = 10
-          link.PointPathColor = "rgb(237,165,72)"
+          link.PointPathColor = "rgb(237, 165, 72)"
         }
 
         if (link) {
           this._setLinkEvent(link)
+
           link.linkType = linkType
           link.lineWidth = 0.7
           link.strokeColor = '43,43,43'
@@ -1125,42 +1190,51 @@
               }
             }
           }
-
         }
+
         return link
       },
 
       //设置线条事件
       _setLinkEvent(link) {
         const linkEventObj = canvasManager.linkEvent
+
         link.addEventListener('mouseup', function (e) {
           $('.contextmenu').hide()
+
           stateManager.currentLink = this
-          stateManager.currentChooseElement=this
+          stateManager.currentChooseElement = this
+
           toolbarManager.history.save()
-          linkEventObj.mouseup&&linkEventObj.mouseup(e)
-          stateManager.isNeedSave=true
+
+          linkEventObj.mouseup && linkEventObj.mouseup(e)
+          stateManager.isNeedSave = true
         })
         link.addEventListener('mousemove', function (e) {
           stateManager.currentLink = this
-          stateManager.currentChooseElement=this
-          linkEventObj.mousemove&&linkEventObj.mousemove(e)
+          stateManager.currentChooseElement = this
+
+          linkEventObj.mousemove && linkEventObj.mousemove(e)
         })
         link.addEventListener('mouseover', function (e) {
           stateManager.currentLink = this
-          stateManager.currentChooseElement=this
-          linkEventObj.mouseover&&linkEventObj.mouseover(e)
+          stateManager.currentChooseElement = this
+
+          linkEventObj.mouseover && linkEventObj.mouseover(e)
         })
         link.addEventListener('mouseout', function (e) {
-          e.target=  stateManager.currentLink
-          linkEventObj.mouseout&&linkEventObj.mouseout(e)
+          e.target = stateManager.currentLink
+
+          linkEventObj.mouseout && linkEventObj.mouseout(e)
         })
         link.addEventListener('dbclick', function (e) {
           stateManager.currentLink = this
-          stateManager.currentChooseElement=this
-          linkEventObj.dbclick&&linkEventObj.dbclick(e)
+          stateManager.currentChooseElement = this
+
+          linkEventObj.dbclick && linkEventObj.dbclick(e)
         })
       },
+
       /** 线条处理，end */
 
       init: function () {
@@ -1172,11 +1246,15 @@
         const scene = stateManager.scene = new JTopo.Scene(stage)
 
         canvasManager.userDefinedNodes.filter(function (p1, p2, p3) {
-          canvasManager[p1.fnName]=p1.fn
-          canvasManager['userDefinedNodeEvent_'+p1.fnName]=p1.event
+          canvasManager[p1.fnName] = p1.fn
+          canvasManager['userDefinedNodeEvent_' + p1.fnName] = p1.event
         })
-        canvasManager.setCanvasStyle()  //设置画布大小
-        canvasManager.initCanvasEvent() //canvas 事件初始化
+
+        // 设置画布大小
+        canvasManager.setCanvasStyle()
+
+        // canvas 事件初始化
+        canvasManager.initCanvasEvent()
       }
     }
     // 数据管理者：用于接受 topo 数据，并展示到画布上来
@@ -1193,19 +1271,22 @@
       setTopoData(data) {
         const self = dataManager
         const showTopoData = self.showTopoData
-        if (data) {
+
+        data ? self.showTopoData(data) : self.getTopoData(showTopoData)
+        /*if (data) {
           self.showTopoData(data)
         } else {
           self.getTopoData(showTopoData)
-        }
+        }*/
       },
       // 存储拓扑图数据
       saveTopoData() {},
+
       init() {
         dataManager.setTopoData()
       },
     }
-    // 状态管理者：用于存放全局状态,比如选中一个节点,右侧滑出弹窗,弹窗展现节点的属性
+    // 状态管理者：用于存放全局状态，比如选中一个节点，右侧滑出弹窗，弹窗展现节点的属性
     const stateManager = {
       // 存储 stage 舞台实例
       stage: {},
@@ -1213,7 +1294,7 @@
       scene: {},
       // 储存 canvas 元素对象
       canvas: {},
-      // TODO: ?
+      // 装备区域宽度
       equipmentAreaWidth: 250,
       // 设置连接线的模式和样式
       setLink: {
@@ -1222,13 +1303,14 @@
         // 线条类型：实线、箭头、双箭头、虚线、曲线、折线
         linkType: ''
       },
-      // 判断画布内容是否改变,用于是否保存
+      // 判断画布内容是否改变，是否需要保存
       isNeedSave: false,
       // 鼠标松开后,微调节点的 x 位置
       fineTuneMouseUpX: 0,
       fineTuneMouseUpY: 0,
       // 目录树样式设置
       curExpandNode: null,
+      // 当前选中的节点
       currentChooseElement: null,
       // 当前选中的节点
       currentNode: null,
@@ -1240,8 +1322,9 @@
       currentLink: null,
       // 储存虚拟连线
       agentLink: null,
+
       beginNode: null,
-      // 当前树节点的拓扑图，包含物理、逻辑、系统、业务流程 ，analysisTopo 会给它赋值
+      // 当前树节点的拓扑图，包含物理、逻辑、系统、业务流程，analysisTopo 会给它赋值
       currentTopo: [],
       // 当前选中拓扑图的序号
       currentActiveIndex: null,
@@ -1257,6 +1340,7 @@
       isFullScreen: false,
       // 是否拖动成组
       isCreateGroupByDrag: false,
+
       scrollHeight: 0,
       // 复现与保存时，读取后台 nodes 数组中 node 对象的属性
       formatNodes: ['id', 'type', 'json'],
@@ -1266,31 +1350,51 @@
       formatContainers: ['id', 'type', 'json'],
       // 复现与保存时，读取后台 links 数组中对象的属性
       formatLinks: ['id', 'type', 'from_id', 'to_id', 'json'],
-      // 复现与保存时，读取后台 links、nodes 数组中对象的属性，验证数据是否符合要求
+
+      /**
+       * 复现与保存时，读取后台 links、nodes 数组中对象的属性，验证数据是否符合要求
+       *
+       * @param {Array} linksArr - [{from_id: "111", to_id: "113", id: "1013", type: "link", json: {…}}, {…}, ...]
+       * @param {Array} nodesArr - [{id: "101", type: "node", json: {…}}, {…}, ...]
+       */
       setFormatNodesAndLinks(linksArr, nodesArr) {
         console.log('setFormatNodesAndLinks -- nodesArr: ')
         console.log(nodesArr)
 
         // 遍历验证数据格式是否符合要求（节点类型为 node、containerNode、container）
         for (let k = 0; k < nodesArr.length; k++) {
+          // {id: "101", type: "node", json: {…}}
           let obj = nodesArr[k]
 
+          // 验证数据是否完整
           sugar(null, null, obj.type)
 
-          if (obj.type === "node" && stateManager.formatNodes.length === 3) {
+          if (
+            obj.type === "node"
+            && stateManager.formatNodes.length === 3
+          ) {
             for (let m in obj) {
               stateManager.formatNodes.indexOf(m) < 0 && stateManager.formatNodes.push(m)
             }
+
             sugar(stateManager.formatNodes, obj.json, obj.type)
-          } else if (obj.type === "containerNode" && stateManager.formatContainerNodes.length === 3) {
+          } else if (
+            obj.type === "containerNode"
+            && stateManager.formatContainerNodes.length === 3
+          ) {
             for (let m in obj) {
               stateManager.formatContainerNodes.indexOf(m) < 0 && stateManager.formatContainerNodes.push(m)
             }
+
             sugar(stateManager.formatContainerNodes, obj.json, obj.type)
-          } else if (obj.type === "container" && stateManager.formatContainers.length === 3) {
+          } else if (
+            obj.type === "container"
+            && stateManager.formatContainers.length === 3
+          ) {
             for (let m in obj) {
               stateManager.formatContainers.indexOf(m) < 0 && stateManager.formatContainers.push(m)
             }
+
             sugar(stateManager.formatContainers, obj.json, obj.type)
           }
         }
@@ -1306,28 +1410,40 @@
           for (let j in obj) {
             stateManager.formatLinks.indexOf(m) < 0 && stateManager.formatLinks.push(j)
           }
+
           sugar(stateManager.formatLinks, obj.json, obj.type)
         }
 
-        //数据格式验证机制
+        /**
+         * 数据格式验证机制：验证数据（连线和节点）是否完整
+         *
+         * @param {Array} arr - ["id", "type", "json"]
+         * @param {String} jsonStr - JSON 字符串
+         * @param {String} eleType - 元素类型: node | containerNode | ...
+         */
         function sugar(arr, jsonStr, eleType) {
           const checkArr1 = ['id', 'json']
           const checkArr2 = ['elementType']
           const checkArr3 = ['nodeFn']
 
+          // 将 JSON 字符串转换为 JSON 对象
           if (typeof jsonStr !== 'string') {
             jsonStr = JSON.stringify(jsonStr)
           }
 
-          const str2 = '必填项：id type json (elementType 必填，如果 elementType==containerNode，必填 nodeFn)，其中 elementType 和 type 值保持一致'
+          const str2 = '必填项：id、type、json (elementType 必填，如果 elementType === containerNode，必填 nodeFn)，其中 elementType 和 type 值保持一致'
 
+          // 如果不存在元素类型
           if (!eleType) {
             console.log("数据格式缺少：type，请添加上去!!!\n" + str2)
           }
+
+          // 若不存在 arr 或 arr 的长度为 0，则直接返回 false
           if (!arr || arr.length === 0) {
             return false
           }
 
+          // str: 'id,type,json'
           const str = arr.join(',')
 
           checkArr1.forEach(function (p1, p2, p3) {
@@ -1349,11 +1465,13 @@
           })
         }
       },
+
       // 移除用于连接的线条
       removeAgentLink() {
         stateManager.agentLink && stateManager.scene.remove(stateManager.agentLink)
         stateManager.beginNode = null
       },
+
       /**
        * 判断对象中的属性是否应该保存
        *
@@ -1374,6 +1492,7 @@
         // 返回需要保存的属性键是否存在于 attrArr 中
         return attrArr.indexOf(attr) < 0
       },
+
       /** 辅助方法 */
       // 本地环境下的特殊处理,比如本地环境下的一级目录过长，则隐藏掉
       setStateUnderLocalHost() {
@@ -1417,29 +1536,41 @@
     const toolbarManager = {
       // 用于搜索的属性
       searchArr: ['id'],
+      // 存储历史操作信息
       history: {
+        // 存放历史数据
         arr: [],
         curIndex: -1,
+        // 保存当前画布上的节点和连线数据到历史数组中
         save() {
-          const arr = canvasManager.saveTopo()
+          // 将当前 canvas 上的节点和连线存储在 data 中，即 data = {nodes, links}
+          const data = canvasManager.saveTopo()
           // 截取
           this.arr.length = this.curIndex + 1
-          this.arr.push(arr)
+          // 将当前 canvas 上的所有节点和连线数据作为一个对象添加到历史数组 history.arr 中
+          this.arr.push(data)
+
           this.curIndex++
         },
+        // 清空历史数组 history.arr：即清除所有历史数据
         clear() {
           this.arr = []
           this.curIndex = -1
         },
+        // 取上一条历史数据，重绘到画布中
         prev() {
           let index = this.curIndex
+
           --index
+
           if (index >= 0) {
             this.curIndex = index
             const data = JTopo.util.copy(this.arr[this.curIndex])
+
             canvasManager.renderTopo(data)
           }
         },
+        // 取下一条历史数据，重绘到画布中
         next() {
           let index = this.curIndex
           ++index
@@ -1450,6 +1581,8 @@
           }
         },
       },
+
+      // 历史操作的回调
       historyOperCallback: null,
 
       /** 显示层 */
@@ -1457,7 +1590,11 @@
 
       // 工具栏上面的按钮对应的事件
       aEvents: [
-        // 工具栏点击所有弹窗都关闭
+        /**
+         * [事件，事件源，事件回调]
+         */
+
+        // 点击工具栏区域所有弹窗都关闭
         ['click', '#toolbar', function () {
           popupManager.popHide()
         }],
@@ -1471,24 +1608,26 @@
           const canvas = stateManager.canvas
 
           if ($zoom.hasClass('toolbar-zoomin')) {
-            //放大
+            // 放大
             scene.zoomOut(zoom)
           } else if ($zoom.hasClass('toolbar-zoomout')) {
-            //缩小
+            // 缩小
             scene.zoomIn(zoom)
           } else if ($zoom.hasClass('toolbar-zoomreset')) {
-            //1:1
+            // 1:1
             scene.zoomReset()
           } else if ($zoom.hasClass('toolbar-center')) {
-            //缩放并居中显示
+            // 缩放并居中显示
             stateManager.scene.translateX = 0
             stateManager.scene.translateY = 0
+
             stateManager.scene.translateToCenter()
             stateManager.stage.eagleEye.update()
           } else if ($zoom.hasClass('toolbar-overview')) {
             const screenWidth = window.screen.width
             const screenHeight = window.screen.height
-            //全屏
+
+            // 全屏
             canvasManager.fullScreen(canvas, "RequestFullScreen")
 
             setTimeout(function () {
@@ -1536,8 +1675,7 @@
             // 框选
             scene.mode = "select"
             $('#toolbar .groupWrap').removeClass('hide')
-          }
-          else if ($pattern.hasClass('toolbar-pan')) {
+          } else if ($pattern.hasClass('toolbar-pan')) {
             // 浏览
             scene.mode = "drag"
           }
@@ -1656,7 +1794,9 @@
           }
         })
       },
+
       /** 辅助方法 */
+
       // 鹰眼设定
       setEagleEye(b) {
         const stage = stateManager.stage
@@ -1667,6 +1807,7 @@
 
         stage.eagleEye.update()
       },
+
       // 工具栏样式和恢复到默认状态,对外开放
       reset() {
         const stage = stateManager.stage
