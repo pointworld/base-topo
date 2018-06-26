@@ -5,7 +5,7 @@
     // 全局
     !function (window) {
 
-      // 构造函数 - 可以看做是基类，通过该构造函数可以构造出 Scene、Node、Link、Text 等对象
+      // 构造函数 - 可以看作是基类，通过该构造函数可以构造出 Scene、Node、Link、Text 等对象
       function Element() {
         /** this 可以是 scene、node、link、... */
 
@@ -70,8 +70,9 @@
         // 转换为 JSON 对象
         this.toJson = function () {
           const that = this
-          let b = "{"
           const len = this.serializedProperties.length
+          // b: '{"key": value, ...}'
+          let b = "{"
 
           return this.serializedProperties.forEach(function (attr, index) {
             let value = that[attr];
@@ -86,45 +87,46 @@
       /**
        * 绘制圆角矩形
        *
-       * @param {any} a
-       * @param {any} b
-       * @param {any} c
-       * @param {any} d
-       * @param {any} e
-       * @param {any} f
+       * @param {Number} x - x 轴坐标
+       * @param {Number} y - y 轴坐标
+       * @param {Number} w - 宽度
+       * @param {Number} h - 高度
+       * @param {Number} borderRadius - 边框圆角
+       * @param {String} borderType - 边框线的类型
        */
-      CanvasRenderingContext2D.prototype.JTopoRoundRect = function (a, b, c, d, e, f) {
-        // f 表示边框为虚线
-        if (f) {
-          "undefined" == typeof e && (e = 5)
+      CanvasRenderingContext2D.prototype.JTopoRoundRect = function (x, y, w, h, borderRadius, borderType) {
+        // borderType 表示边框为虚线
+        if (borderType) {
+          "undefined" == typeof borderRadius && (borderRadius = 5)
+
           this.beginPath()
-          // this.moveTo(a + e, b)
-          // this.lineTo(a + c - e, b)
-          this.JTopoDashedLineTo(a + e, b, a + c - e, b)
-          this.quadraticCurveTo(a + c, b, a + c, b + e)
-          // this.lineTo(a + c, b + d - e)
-          this.JTopoDashedLineTo(a + c, b + e, a + c, b + d - e)
-          this.quadraticCurveTo(a + c, b + d, a + c - e, b + d)
-          // this.lineTo(a + e, b + d)
-          this.JTopoDashedLineTo(a + c - e, b + d, a + e, b + d)
-          this.quadraticCurveTo(a, b + d, a, b + d - e)
-          // this.lineTo(a, b + e)
-          this.JTopoDashedLineTo(a, b + d - e, a, b + e)
-          this.quadraticCurveTo(a, b, a + e, b)
-          this.JTopoDashedLineTo(a, b, a + e, b)
+          // this.moveTo(x + borderRadius, y)
+          // this.lineTo(x + w - borderRadius, y)
+          this.JTopoDashedLineTo(x + borderRadius, y, x + w - borderRadius, y)
+          this.quadraticCurveTo(x + w, y, x + w, y + borderRadius)
+          // this.lineTo(x + w, y + h - borderRadius)
+          this.JTopoDashedLineTo(x + w, y + borderRadius, x + w, y + h - borderRadius)
+          this.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h)
+          // this.lineTo(x + borderRadius, y + h)
+          this.JTopoDashedLineTo(x + w - borderRadius, y + h, x + borderRadius, y + h)
+          this.quadraticCurveTo(x, y + h, x, y + h - borderRadius)
+          // this.lineTo(x, y + borderRadius)
+          this.JTopoDashedLineTo(x, y + h - borderRadius, x, y + borderRadius)
+          this.quadraticCurveTo(x, y, x + borderRadius, y)
+          this.JTopoDashedLineTo(x, y, x + borderRadius, y)
           this.closePath()
         } else {
-          "undefined" == typeof e && (e = 5)
+          "undefined" == typeof borderRadius && (borderRadius = 5)
           this.beginPath()
-          this.moveTo(a + e, b)
-          this.lineTo(a + c - e, b)
-          this.quadraticCurveTo(a + c, b, a + c, b + e)
-          this.lineTo(a + c, b + d - e)
-          this.quadraticCurveTo(a + c, b + d, a + c - e, b + d)
-          this.lineTo(a + e, b + d)
-          this.quadraticCurveTo(a, b + d, a, b + d - e)
-          this.lineTo(a, b + e)
-          this.quadraticCurveTo(a, b, a + e, b)
+          this.moveTo(x + borderRadius, y)
+          this.lineTo(x + w - borderRadius, y)
+          this.quadraticCurveTo(x + w, y, x + w, y + borderRadius)
+          this.lineTo(x + w, y + h - borderRadius)
+          this.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h)
+          this.lineTo(x + borderRadius, y + h)
+          this.quadraticCurveTo(x, y + h, x, y + h - borderRadius)
+          this.lineTo(x, y + borderRadius)
+          this.quadraticCurveTo(x, y, x + borderRadius, y)
           this.closePath()
         }
       }
