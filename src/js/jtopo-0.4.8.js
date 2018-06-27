@@ -87,77 +87,111 @@
       /**
        * 绘制圆角矩形
        *
-       * @param {Number} x - x 轴坐标
-       * @param {Number} y - y 轴坐标
+       * @param {Number} x - 起点横坐标
+       * @param {Number} y - 起点纵坐标
        * @param {Number} w - 宽度
        * @param {Number} h - 高度
-       * @param {Number} borderRadius - 边框圆角
+       * @param {Number} dashedLineSpacing - 虚线的间隔
        * @param {String} borderType - 边框线的类型
        */
-      CanvasRenderingContext2D.prototype.JTopoRoundRect = function (x, y, w, h, borderRadius, borderType) {
+      CanvasRenderingContext2D.prototype.JTopoRoundRect = function (x, y, w, h, dashedLineSpacing, borderType) {
         // borderType 表示边框为虚线
         if (borderType) {
-          "undefined" == typeof borderRadius && (borderRadius = 5)
+          "undefined" == typeof dashedLineSpacing && (dashedLineSpacing = 5)
 
           this.beginPath()
-          // this.moveTo(x + borderRadius, y)
-          // this.lineTo(x + w - borderRadius, y)
-          this.JTopoDashedLineTo(x + borderRadius, y, x + w - borderRadius, y)
-          this.quadraticCurveTo(x + w, y, x + w, y + borderRadius)
-          // this.lineTo(x + w, y + h - borderRadius)
-          this.JTopoDashedLineTo(x + w, y + borderRadius, x + w, y + h - borderRadius)
-          this.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h)
-          // this.lineTo(x + borderRadius, y + h)
-          this.JTopoDashedLineTo(x + w - borderRadius, y + h, x + borderRadius, y + h)
-          this.quadraticCurveTo(x, y + h, x, y + h - borderRadius)
-          // this.lineTo(x, y + borderRadius)
-          this.JTopoDashedLineTo(x, y + h - borderRadius, x, y + borderRadius)
-          this.quadraticCurveTo(x, y, x + borderRadius, y)
-          this.JTopoDashedLineTo(x, y, x + borderRadius, y)
+
+          // this.moveTo(x + dashedLineSpacing, y)
+          // this.lineTo(x + w - dashedLineSpacing, y)
+
+          // 绘制虚线
+          // 参数：起点横坐标，起点纵坐标，终点横坐标，终点纵坐标，虚线的间隔
+          this.JTopoDashedLineTo(x + dashedLineSpacing, y, x + w - dashedLineSpacing, y)
+
+          /**
+           * quadraticCurveTo() 方法通过使用表示二次贝塞尔曲线的指定控制点，向当前路径添加一个点
+           *
+           * 提示：二次贝塞尔曲线需要两个点。第一个点是用于二次贝塞尔计算中的控制点，第二个点是曲线的结束点。
+           * 曲线的开始点是当前路径中最后一个点。
+           * 如果路径不存在，那么请使用 beginPath() 和 moveTo() 方法来定义开始点。
+           *
+           * 参数：控制点坐标（x + w, y），结束点坐标（x + w, y + dashedLineSpacing）
+           */
+          this.quadraticCurveTo(x + w, y, x + w, y + dashedLineSpacing)
+
+          // this.lineTo(x + w, y + h - dashedLineSpacing)
+
+          this.JTopoDashedLineTo(x + w, y + dashedLineSpacing, x + w, y + h - dashedLineSpacing)
+          this.quadraticCurveTo(x + w, y + h, x + w - dashedLineSpacing, y + h)
+
+          // this.lineTo(x + dashedLineSpacing, y + h)
+
+          this.JTopoDashedLineTo(x + w - dashedLineSpacing, y + h, x + dashedLineSpacing, y + h)
+          this.quadraticCurveTo(x, y + h, x, y + h - dashedLineSpacing)
+
+          // this.lineTo(x, y + dashedLineSpacing)
+
+          this.JTopoDashedLineTo(x, y + h - dashedLineSpacing, x, y + dashedLineSpacing)
+          this.quadraticCurveTo(x, y, x + dashedLineSpacing, y)
+          this.JTopoDashedLineTo(x, y, x + dashedLineSpacing, y)
+
           this.closePath()
         } else {
-          "undefined" == typeof borderRadius && (borderRadius = 5)
+          "undefined" == typeof dashedLineSpacing && (dashedLineSpacing = 5)
+
           this.beginPath()
-          this.moveTo(x + borderRadius, y)
-          this.lineTo(x + w - borderRadius, y)
-          this.quadraticCurveTo(x + w, y, x + w, y + borderRadius)
-          this.lineTo(x + w, y + h - borderRadius)
-          this.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h)
-          this.lineTo(x + borderRadius, y + h)
-          this.quadraticCurveTo(x, y + h, x, y + h - borderRadius)
-          this.lineTo(x, y + borderRadius)
-          this.quadraticCurveTo(x, y, x + borderRadius, y)
+          this.moveTo(x + dashedLineSpacing, y)
+          this.lineTo(x + w - dashedLineSpacing, y)
+          this.quadraticCurveTo(x + w, y, x + w, y + dashedLineSpacing)
+          this.lineTo(x + w, y + h - dashedLineSpacing)
+          this.quadraticCurveTo(x + w, y + h, x + w - dashedLineSpacing, y + h)
+          this.lineTo(x + dashedLineSpacing, y + h)
+          this.quadraticCurveTo(x, y + h, x, y + h - dashedLineSpacing)
+          this.lineTo(x, y + dashedLineSpacing)
+          this.quadraticCurveTo(x, y, x + dashedLineSpacing, y)
           this.closePath()
         }
       }
 
       /**
        * 绘制虚线
+       * 绘制思路：把线条看成是矩形的对角线
+       * 绘制过程：确定线条的起点坐标（x1, y1）和终点坐标（x2, y2），用 x2 - x1 得到矩形的宽 w，用 y2 - y1 得到矩形的高 h，通过 对（w*w + h*h）开根号得到矩形对角线的长度
        *
-       * @param {any} a
-       * @param {any} b
-       * @param {any} c
-       * @param {any} d
-       * @param {any} e
+       * @param {Number} x1 - 虚线起点的横坐标
+       * @param {Number} y1 - 虚线起点的纵坐标
+       * @param {Number} x2 - 虚线终点的横坐标
+       * @param {Number} y2 - 虚线终点的纵坐标
+       * @param {Number} dashedLineSpacing - 虚线的间隔
        */
-      CanvasRenderingContext2D.prototype.JTopoDashedLineTo = function (a, b, c, d, e) {
-        "undefined" == typeof e && (e = 5)
+      CanvasRenderingContext2D.prototype.JTopoDashedLineTo = function (x1, y1, x2, y2, dashedLineSpacing) {
+        "undefined" == typeof dashedLineSpacing && (dashedLineSpacing = 5)
 
-        const f = c - a
-        const g = d - b
-        const h = Math.floor(Math.sqrt(f * f + g * g))
-        const i = 0 >= e ? h : h / e
-        const j = g / h * e
-        const k = f / h * e
+        const w = x2 - x1
+        const h = y2 - y1
+
+        // 斜边长度：直角三角形的斜边长度
+        const hypotenuseLength = Math.floor(Math.sqrt(w * w + h * h))
+
+        // 虚线间隔数量
+        const dashedLineSpacingAmount = 0 >= dashedLineSpacing
+          ? hypotenuseLength
+          : hypotenuseLength / dashedLineSpacing
+
+        // 虚线间隔线作为对角线时矩形的高
+        const dashedLineSpacingH = h / hypotenuseLength * dashedLineSpacing
+        // 虚线间隔线作为对角线时矩形的宽
+        const dashedLineSpacingW = w / hypotenuseLength * dashedLineSpacing
 
         this.beginPath()
 
-        for (let l = 0; i > l; l++) {
-          l % 2
-            ? this.lineTo(a + l * k, b + l * j)
-            : this.moveTo(a + l * k, b + l * j)
+        for (let stepAmount = 0; dashedLineSpacingAmount > stepAmount; stepAmount++) {
+          stepAmount % 2
+            ? this.lineTo(x1 + stepAmount * dashedLineSpacingW, y1 + stepAmount * dashedLineSpacingH)
+            : this.moveTo(x1 + stepAmount * dashedLineSpacingW, y1 + stepAmount * dashedLineSpacingH)
         }
 
+        // 描边
         this.stroke()
       }
 
@@ -202,16 +236,26 @@
       }
 
       JTopo = {
+        // JTopo 版本
         version: "0.4.8",
+        // 容器的显示级别
         zIndex_Container: 1,
+        // 连线的显示级别
         zIndex_Link: 2,
+        // 节点的显示级别
         zIndex_Node: 3,
+        // 场景模式
         SceneMode: {
+          // 正常模式
           normal: "normal",
+          // 拖拽模式
           drag: "drag",
+          // 编辑模式
           edit: "edit",
+          // 选择模式
           select: "select",
         },
+        // 鼠标光标
         MouseCursor: {
           normal: "default",
           pointer: "pointer",
@@ -228,66 +272,93 @@
           open_hand: "url(./images/openhand.cur) 8 8, default",
           closed_hand: "url(./images/closedhand.cur) 8 8, default",
         },
+        // 通过 JSON 数据创建舞台
         createStageFromJson(jsonStr, canvas) {
           eval("var jsonObj = " + jsonStr);
+
+          // new 一个舞台实例
           const stage = new JTopo.Stage(canvas);
-          for (let k in jsonObj) {
-            "childs" !== k && (stage[k] = jsonObj[k]);
+
+          for (let key in jsonObj) {
+            "childs" !== key && (stage[key] = jsonObj[key]);
           }
+
+          // 获取舞台下的所有子场景
           const scenes = jsonObj.childs;
-          return scenes.forEach(function (a) {
-            const b = new JTopo.Scene(stage);
-            for (var c in a)
-              "childs" != c && (b[c] = a[c]),
-              "background" == c && (b.background = a[c]);
-            const d = a.childs;
-            d.forEach(function (a) {
-              let c = null
-              ;const d = a.elementType;
-              "node" == d ? c = new JTopo.Node : "CircleNode" == d && (c = new JTopo.CircleNode);
-              for (let e in a)
-                c[e] = a[e];
-              b.add(c)
+
+          // 返回舞台对象
+          return scenes.forEach(function (scene) {
+            // new 一个场景实例
+            const sceneInstance = new JTopo.Scene(stage);
+
+            for (var key1 in scene)
+              "childs" != key1 && (sceneInstance[key1] = scene[key1]),
+              "background" == key1 && (sceneInstance.background = scene[key1]);
+
+            const nodes = scene.childs;
+
+            nodes.forEach(function (node) {
+              let c = null;
+              const d = node.elementType;
+
+              "node" == d
+                ? c = new JTopo.Node
+                : "CircleNode" == d && (c = new JTopo.CircleNode);
+
+              for (let e in node)
+                c[e] = node[e];
+
+              sceneInstance.add(c)
             })
           }),
             stage
         },
       }
+
+      // 将 Element 构造函数挂载到 JTopo 对象上
       JTopo.Element = Element
+
+      // 将 JTopo 挂载到全局对象 window 上
       window.JTopo = JTopo
     }(window),
 
       // jTopo 具体方法的实现，部分全局方法的实现
       function (JTopo) {
         // 构造函数
-        function MessageBus(a) {
-          const b = this
+        function MessageBus(name) {
+          const self = this
 
-          this.name = a
+          //
+          this.name = name
+          // 消息映射
           this.messageMap = {}
+          // 消息数量
           this.messageCount = 0
 
           // 订阅
           this.subscribe = function (a, c) {
-            const d = b.messageMap[a]
+            const d = self.messageMap[a]
 
-            null == d && (b.messageMap[a] = [])
-            b.messageMap[a].push(c)
-            b.messageCount++
+            null == d && (self.messageMap[a] = [])
+
+            self.messageMap[a].push(c)
+            self.messageCount++
           }
+
           // 取消订阅
           this.unsubscribe = function (a) {
-            const c = b.messageMap[a]
+            const c = self.messageMap[a]
 
             null != c && (
-              b.messageMap[a] = null,
-              delete b.messageMap[a],
-              b.messageCount--
+              self.messageMap[a] = null,
+                delete self.messageMap[a],
+                self.messageCount--
             )
           }
 
+          // 发布
           this.publish = function (a, c, d) {
-            const e = b.messageMap[a]
+            const e = self.messageMap[a]
 
             if (null != e) {
               for (let f = 0; f < e.length; f++) {
@@ -299,50 +370,62 @@
           }
         }
 
-        // 获取两点间的距离
-        function getDistance(a, b, c, d) {
-          let e, f
+        /**
+         * 获取两点间的距离
+         *
+         * 参数的两种传入方式：
+         * 1. 将起始点和终止点的坐标信息分别存放在前两个参数之中：p1 = {x, y}, p2 = {x, y}, null, null
+         * 2. 将起始点和终止点的横纵坐标信息分别存放在四个参数中：x1, y1, x2, y2
+         *
+         */
+        function getDistance(p1, p2, c, d) {
+          let width
+          let height
 
           return null == c && null == d
-            ? (e = b.x - a.x, f = b.y - a.y)
-            : (e = c - a, f = d - b)
-            , Math.sqrt(e * e + f * f)
+            ? (width = p2.x - p1.x, height = p2.y - p1.y)
+            : (width = c - p1, height = d - p2)
+            , Math.sqrt(width * width + height * height)
         }
 
         // 用于获取 scene 场景实例的宽高位置等信息
         function getElementsBound(a) {
           for (
-            var b = {
-            left: Number.MAX_VALUE,
-            right: Number.MIN_VALUE,
-            top: Number.MAX_VALUE,
-            bottom: Number.MIN_VALUE,
-          }, c = 0;
-            c < a.length;
-            c++
+            var obj = {
+              left: Number.MAX_VALUE,
+              right: Number.MIN_VALUE,
+              top: Number.MAX_VALUE,
+              bottom: Number.MIN_VALUE,
+            }, i = 0;
+            i < a.length;
+            i++
           ) {
-            const d = a[c]
+            const d = a[i]
 
             d instanceof JTopo.Link ||
-            (b.left > d.x && (b.left = d.x, b.leftNode = d),
-            b.right < d.x + d.width && (b.right = d.x + d.width, b.rightNode = d),
-            b.top > d.y && (b.top = d.y, b.topNode = d),
-            b.bottom < d.y + d.height && (b.bottom = d.y + d.height, b.bottomNode = d))
+            (obj.left > d.x && (obj.left = d.x, obj.leftNode = d),
+            obj.right < d.x + d.width && (obj.right = d.x + d.width, obj.rightNode = d),
+            obj.top > d.y && (obj.top = d.y, obj.topNode = d),
+            obj.bottom < d.y + d.height && (obj.bottom = d.y + d.height, obj.bottomNode = d))
           }
 
-          return b.width = b.right - b.left,
-            b.height = b.bottom - b.top,
-            b
+          return obj.width = obj.right - obj.left,
+            obj.height = obj.bottom - obj.top,
+            obj
         }
 
         // 坐标
         function mouseCoords(a) {
           return a = cloneEvent(a),
-          a.pageX || (a.pageX = a.clientX + document.body.scrollLeft - document.body.clientLeft,
-            a.pageY = a.clientY + document.body.scrollTop - document.body.clientTop),
+          a.pageX
+          || (
+            a.pageX = a.clientX + document.body.scrollLeft - document.body.clientLeft,
+            a.pageY = a.clientY + document.body.scrollTop - document.body.clientTop
+          ),
             a
         }
 
+        // 获取事件位置
         function getEventPosition(a) {
           return a = mouseCoords(a)
         }
@@ -400,83 +483,135 @@
         }
 
         // 克隆 json 对象
-        function clone(a) {
-          const b = {};
-          for (let c in a)
-            b[c] = a[c];
+        function clone(jsonObj) {
+          const b = {}
+
+          for (let key in jsonObj) {
+            b[key] = jsonObj[key]
+          }
+
           return b
         }
 
-        // 判断点是否在矩形内部
-        function isPointInRect(a, b) {
-          const c = b.x, d = b.y, e = b.width, f = b.height;
-          return a.x > c && a.x < c + e && a.y > d && a.y < d + f
+        /**
+         * 判断点是否在矩形内部
+         *
+         * @param {Object} point - 点的相关数据
+         * @param {Object} rect - 矩形的相关数据
+         * @return {Boolean}
+         */
+        function isPointInRect(point, rect) {
+          return point.x > rect.x && point.x < rect.x + rect.width && point.y > rect.y && point.y < rect.y + rect.height
         }
 
-        // 判断两个矩形是否重叠
+        /**
+         * 判断两个矩形是否重叠
+         *
+         * @param {Object} rect1
+         * @param {Object} rect2
+         * @return {Boolean}
+         */
         function isRectOverlapRect(rect1, rect2) {
           function sugar(rect1, rect2) {
-            const rect = rect1;
+            const rect = rect1
+
             const leftTop = {
               x: rect.x,
-              y: rect.y
-            };
+              y: rect.y,
+            }
             const leftBottom = {
               x: rect.x,
-              y: rect.y + rect.height
-            };
+              y: rect.y + rect.height,
+            }
             const rightTop = {
               x: rect.x + rect.width,
-              y: rect.y
-            };
+              y: rect.y,
+            }
             const rightBottom = {
               x: rect.x + rect.width,
-              y: rect.y + rect.height
-            };
+              y: rect.y + rect.height,
+            }
+
             return isPointInRect(leftTop, rect2) || isPointInRect(leftBottom, rect2) || isPointInRect(rightTop, rect2) || isPointInRect(rightBottom, rect2)
           }
 
           return sugar(rect1, rect2) || sugar(rect2, rect1)
         }
 
-        // 判断点是否在线上，很巧妙
-        function isPointInLine(a, b, c) {
-          const d = JTopo.util.getDistance(b, c), e = JTopo.util.getDistance(b, a), f = JTopo.util.getDistance(c, a),
-            g = Math.abs(e + f - d) <= .5;
-          return g
+        /**
+         * 判断点是否在线上，很巧妙
+         *
+         * @param {Object} p1 - 线段起点或终点的坐标信息
+         * @param {Object} p2 - 待判断的点的坐标信息
+         * @param {Object} p3 - 线段起点或终点的坐标信息
+         */
+        function isPointInLine(p1, p2, p3) {
+          // 获取两点间的距离
+          const d1 = JTopo.util.getDistance(p2, p3)
+          const d2 = JTopo.util.getDistance(p2, p1)
+          const d3 = JTopo.util.getDistance(p3, p1)
+
+          return Math.abs(d2 + d3 - d1) <= .5
         }
 
-        function removeFromArray(a, b) {
-          for (let c = 0; c < a.length; c++) {
-            const d = a[c];
-            if (d === b) {
-              a = a.del(c);
+        // 从指定的数组中删除指定的元素
+        function removeFromArray(arr, targetEle) {
+          for (let i = 0; i < arr.length; i++) {
+            const currentEle = arr[i]
+
+            if (currentEle === targetEle) {
+              arr = arr.del(i)
+
               break
             }
           }
-          return a
+
+          return arr
         }
 
-        // 随机产生 rgb 颜色
+        /**
+         * 随机产生 rgb 颜色:
+         *
+         * @return {String} - e.g.: '234, 23, 145'
+         */
         function randomColor() {
           return Math.floor(255 * Math.random()) + "," + Math.floor(255 * Math.random()) + "," + Math.floor(255 * Math.random())
         }
 
         function isIntsect() {}
 
-        function getProperties(a, b) {
-          for (var c = "", d = 0; d < b.length; d++) {
-            d > 0 && (c += ",");
-            let e = a[b[d]];
-            "string" == typeof e ? e = '"' + e + '"' : void 0 == e && (e = null),
-              c += b[d] + ":" + e
+        /**
+         * 获取指定对象的属性集合，用字符串表示
+         *
+         * @param {Object} obj
+         * @param {Array} keysArr
+         * @return {String} keysString - 'key1: "val1", key2: "val2", ...'
+         */
+        function getProperties(obj, keysArr) {
+          for (var keysString = "", i = 0; i < keysArr.length; i++) {
+            i > 0 && (keysString += ",")
+
+            let e = obj[keysArr[i]]
+
+            "string" == typeof e
+              ? e = '"' + e + '"'
+              : void 0 == e && (e = null), keysString += keysArr[i] + ":" + e
           }
-          return c
+
+          return keysString
         }
 
-        // 将 json 对象转换成舞台
+        /**
+         * 根据 json 数据加载舞台对象
+         *
+         * @param {Object} json
+         * @param {Object} canvas
+         * @return {Object} stage
+         *
+         */
         function loadStageFromJson(json, canvas) {
           const obj = eval(json), stage = new JTopo.Stage(canvas);
+          // TODO ? stageObj is what??
           for (let k in stageObj)
             if ("scenes" != k)
               stage[k] = obj[k];
@@ -508,192 +643,333 @@
             stage
         }
 
-        // 将舞台转换成 json 对象
-        function toJson(a) {
-          const b = "backgroundColor,visible,mode,rotate,alpha,scaleX,scaleY,shadow,translateX,translateY,areaSelect,paintAll".split(","),
-            c = "text,elementType,x,y,width,height,visible,alpha,rotate,scaleX,scaleY,fillColor,shadow,transformAble,zIndex,dragable,selected,showSelected,font,fontColor,textPosition,textOffsetX,textOffsetY".split(",");
-          let d = "{";
-          d += "frames:" + a.frames,
-            d += ", scenes:[";
-          for (let e = 0; e < a.childs.length; e++) {
-            const f = a.childs[e];
-            d += "{",
-              d += getProperties(f, b),
-              d += ", elements:[";
-            for (let g = 0; g < f.childs.length; g++) {
-              const h = f.childs[g];
-              g > 0 && (d += ","),
-                d += "{",
-                d += getProperties(h, c),
-                d += "}"
+        /**
+         * 将舞台数据转换成 json 对象
+         *
+         * @param {Object} stage
+         * @return {Object} stageJson -
+         *   stageJson: {
+         *     frames: xx,
+         *     scenes: [ {key1: "val1", key2: "val2", ..., elements: [{kkey1: "vval1", kkey2: "vval2", ...}],} ],
+         *   }
+         *
+         */
+        function toJson(stage) {
+          const sceneKeysArr = "backgroundColor,visible,mode,rotate,alpha,scaleX,scaleY,shadow,translateX,translateY,areaSelect,paintAll".split(",")
+          const nodeKeysArr = "text,elementType,x,y,width,height,visible,alpha,rotate,scaleX,scaleY,fillColor,shadow,transformAble,zIndex,dragable,selected,showSelected,font,fontColor,textPosition,textOffsetX,textOffsetY".split(",")
+
+          let stageJson = "{"
+
+          stageJson += "frames:" + stage.frames,
+            stageJson += ", scenes:[";
+
+          for (let i = 0; i < stage.childs.length; i++) {
+            const scene = stage.childs[i]
+
+            stageJson += "{",
+              stageJson += getProperties(scene, sceneKeysArr),
+              stageJson += ", elements:[";
+
+            for (let j = 0; j < scene.childs.length; j++) {
+              const node = scene.childs[j]
+
+              j > 0 && (stageJson += ","),
+                stageJson += "{",
+                stageJson += getProperties(node, nodeKeysArr),
+                stageJson += "}"
             }
-            d += "]}"
+            stageJson += "]}"
           }
-          return d += "]",
-            d += "}"
+
+          return stageJson += "]",
+            stageJson += "}"
         }
 
-        function changeColor(a, b, c, d, e, c1, d1, e1) {
+        /**
+         * 改变颜色
+         *
+         * @param {Object} ctx
+         * @param {Object} imgEle
+         * @param {Number} tarR - 目标颜色 R 值
+         * @param {Number} tarG - 目标颜色 G 值
+         * @param {Number} tarB - 目标颜色 B 值
+         * @param {Number} oriR - 原始颜色 R 值
+         * @param {Number} oriG - 原始颜色 G 值
+         * @param {Number} oriB - 原始颜色 B 值
+         * @return {url}
+         */
+        function changeColor(ctx, imgEle, tarR, tarG, tarB, oriR, oriG, oriB) {
 
-          const f = canvas.width = b.width, g = canvas.height = b.height;
-          a.clearRect(0, 0, canvas.width, canvas.height),
-            a.drawImage(b, 0, 0);
-          const h = a.getImageData(0, 0, b.width, b.height), i = h.data;
-          let j = 0;
-          for (; f > j; j++) {
-            for (let k = 0; g > k; k++) {
-              const l = 4 * (j + k * f);//第l个像素点
-              if ((c1 || d1 || e1) && (i[l + 0] == c1 && i[l + 1] == d1 && i[l + 2] == e1)) {
-                i[l + 0] = c;
-                i[l + 1] = d;
-                i[l + 2] = e;
+          const canvasW = canvas.width = imgEle.width
+          const canvasH = canvas.height = imgEle.height
+
+          // 清除画布内容
+          ctx.clearRect(0, 0, canvas.width, canvas.height),
+            ctx.drawImage(imgEle, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, imgEle.width, imgEle.height)
+          const imageInnerData = imageData.data
+
+          let i = 0
+          for (; canvasW > i; i++) {
+            for (let j = 0; canvasH > j; j++) {
+              // 第 n 个像素点
+              const n = 4 * (i + j * canvasW)
+
+              if (
+                (oriR || oriG || oriB)
+                && (
+                  imageInnerData[n + 0] == oriR
+                  && imageInnerData[n + 1] == oriG
+                  && imageInnerData[n + 2] == oriB
+                )
+              ) {
+                imageInnerData[n + 0] = tarR
+                imageInnerData[n + 1] = tarG
+                imageInnerData[n + 2] = tarB
               }
             }
-            a.putImageData(h, 0, 0, 0, 0, b.width, b.height);
-          }
-          const m = canvas.toDataURL();
-          // return alarmImageCache[b.src+nodeId] = m,
-          //     m
 
-          if (c1 !== undefined || d1 !== undefined || e1 !== undefined) {
-            JTopo.flag.alarmImageCache[b.src + 'tag' + c + d + e] = m;
+            // 参数：image_data, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight
+            ctx.putImageData(imageData, 0, 0, 0, 0, imgEle.width, imgEle.height)
           }
-          return m;
 
+          const url = canvas.toDataURL()
+          // return alarmImageCache[b.src+nodeId] = url,
+          //   url
+
+          if (oriR !== undefined || oriG !== undefined || oriB !== undefined) {
+            JTopo.flag.alarmImageCache[imgEle.src + 'tag' + tarR + tarG + tarB] = url
+          }
+
+          return url
         }
 
-        // 获取图片告警，即变色功能
-        function getImageAlarm(a, b, f, m) {
+        /**
+         * 获取图片告警，即变色功能
+         *
+         * @param {Object} imgEle
+         * @param {Number} targetColorR
+         * @param {Array} targetColor - 目标色
+         * @param {Array} originColor - 原始颜色
+         * @return {null | image}
+         */
+        function getImageAlarm(imgEle, targetColorR, targetColor, originColor) {
 
-          null == b && (b = 255);
+          null == targetColorR && (targetColorR = 255)
+
           try {
-            const c = new Image;
-            const alarmImage = JTopo.flag.alarmImageCache[a.src + 'tag' + f[0] + f[1] + f[2]];
-            if (alarmImage) {
-              c.src = alarmImage;
-              return c;
-            }
-            if (f && m) {
-              c.src = changeColor(graphics, a, f[0], f[1], f[2], m[0], m[1], m[2]);
-            } else {
-              c.src = changeColor(graphics, a, b);
-            }
-            return c;
+            const image = new Image
+            const alarmImage = JTopo.flag.alarmImageCache[imgEle.src + 'tag' + targetColor[0] + targetColor[1] + targetColor[2]]
 
-          } catch (d) {
+            if (alarmImage) {
+              image.src = alarmImage
+
+              return image
+            }
+
+            if (targetColor && originColor) {
+              image.src = changeColor(graphics, imgEle, targetColor[0], targetColor[1], targetColor[2], originColor[0], originColor[1], originColor[2])
+            } else {
+              image.src = changeColor(graphics, imgEle, targetColorR)
+            }
+
+            return image
+          } catch (e) {
+
           }
+
           return null
         }
 
-        function getOffsetPosition(a) {
-          if (!a)
+        // 获取元素的偏移位置
+        function getOffsetPosition(ele) {
+          if (!ele) {
             return {
               left: 0,
-              top: 0
-            };
-          var b = 0, c = 0;
-          if ("getBoundingClientRect" in document.documentElement)
-            var d = a.getBoundingClientRect()
-              , e = a.ownerDocument
-              , f = e.body
-              , g = e.documentElement
-              , h = g.clientTop || f.clientTop || 0
-              , i = g.clientLeft || f.clientLeft || 0
-              , b = d.top + (self.pageYOffset || g && g.scrollTop || f.scrollTop) - h
-              , c = d.left + (self.pageXOffset || g && g.scrollLeft || f.scrollLeft) - i;
-          else
-            do
-              b += a.offsetTop || 0,
-                c += a.offsetLeft || 0,
-                a = a.offsetParent;
-            while (a);
+              top: 0,
+            }
+          }
+
+          var b = 0
+          var c = 0
+
+          // IE
+          if ("getBoundingClientRect" in document.documentElement) {
+            var d = ele.getBoundingClientRect()
+            var e = ele.ownerDocument
+            var f = e.body
+            var g = e.documentElement
+            var h = g.clientTop || f.clientTop || 0
+            var i = g.clientLeft || f.clientLeft || 0
+            var b = d.top + (self.pageYOffset || g && g.scrollTop || f.scrollTop) - h
+            var c = d.left + (self.pageXOffset || g && g.scrollLeft || f.scrollLeft) - i
+          } else {
+            do {
+              b += ele.offsetTop || 0,
+                c += ele.offsetLeft || 0,
+                ele = ele.offsetParent;
+            }
+
+            while (ele)
+          }
+
           return {
             left: c,
-            top: b
+            top: b,
           }
         }
 
-        function lineF(a, b, c, d) {
-          function e(a) {
-            return a * f + g
+        /**
+         * 线条函数：一元一次方程
+         *
+         * @param {Number} x1
+         * @param {Number} y1
+         * @param {Number} x2
+         * @param {Number} y2
+         * @return {Function} f
+         */
+        function lineF(x1, y1, x2, y2) {
+          function f(x) {
+            // y = kx + b
+            return k * x + b
           }
 
-          var f = (d - b) / (c - a), g = b - a * f;
-          return e.k = f,
-            e.b = g,
-            e.x1 = a,
-            e.x2 = c,
-            e.y1 = b,
-            e.y2 = d,
-            e
+          // 线段的斜率
+          var k = (y2 - y1) / (x2 - x1)
+
+          var b = y1 - x1 * k
+
+          return f.k = k,
+            f.b = b,
+            f.x1 = x1,
+            f.x2 = x2,
+            f.y1 = y1,
+            f.y2 = y2,
+            f
         }
 
-        function inRange(a, b, c) {
-          const d = Math.abs(b - c), e = Math.abs(b - a), f = Math.abs(c - a), g = Math.abs(d - (e + f));
+        /**
+         * 判断第一个参数的值是否在第二个参数和第三个参数之间
+         *
+         * @param {Number} testVal
+         * @param {Number} val1
+         * @param {Number} val2
+         * @return {Boolean}
+         */
+        function inRange(testVal, val1, val2) {
+          const d1 = Math.abs(val1 - val2)
+          const d2 = Math.abs(val1 - testVal)
+          const d3 = Math.abs(val2 - testVal)
+          const g = Math.abs(d1 - (d2 + d3))
+
           return 1e-6 > g ? !0 : !1
         }
 
-        function isPointInLineSeg(a, b, c) {
-          return inRange(a, c.x1, c.x2) && inRange(b, c.y1, c.y2)
+        /**
+         * 判断点是否在线段上
+         *
+         * @param {Number} x - 测试点的横坐标
+         * @param {Number} y - 测试点的纵坐标
+         * @param {Object} lineObj
+         * @return {Boolean}
+         */
+        function isPointInLineSeg(x, y, lineObj) {
+          return inRange(x, lineObj.x1, lineObj.x2) && inRange(y, lineObj.y1, lineObj.y2)
         }
 
-        // 交叉
-        function intersection(a, b) {
-          let c, d;
-          return a.k == b.k ? null : (1 / 0 == a.k || a.k == -1 / 0 ? (c = a.x1,
-            d = b(a.x1)) : 1 / 0 == b.k || b.k == -1 / 0 ? (c = b.x1,
-            d = a(b.x1)) : (c = (b.b - a.b) / (a.k - b.k),
-            d = a(c)),
-            0 == isPointInLineSeg(c, d, a) ? null : 0 == isPointInLineSeg(c, d, b) ? null : {
-              x: c,
-              y: d
-            })
+        /**
+         * 判断两条线是否相交，若相交，则返回交点坐标信息；若不相交，则返回 null
+         *
+         * @param {Object} lineObj1 - 线条 1 对象
+         * @param {Object} lineObj2 - 线条 2 对象
+         * @return {null | Object} - 返回 null 或交叉点坐标信息
+         */
+        function intersection(lineObj1, lineObj2) {
+          let x
+          let y
+
+          // 如果两条线的斜率相等或为同时正无穷大或同时为负无穷大，那么该两条线不会相交，返回 null
+          return lineObj1.k == lineObj2.k ? null : (
+            1 / 0 == lineObj1.k || lineObj1.k == -1 / 0 ? (x = lineObj1.x1,
+            y = lineObj2(lineObj1.x1)) : 1 / 0 == lineObj2.k || lineObj2.k == -1 / 0 ? (x = lineObj2.x1,
+            y = lineObj1(lineObj2.x1)) : (x = (lineObj2.b - lineObj1.b) / (lineObj1.k - lineObj2.k),
+            y = lineObj1(x)),
+            0 == isPointInLineSeg(x, y, lineObj1) ? null : 0 == isPointInLineSeg(x, y, lineObj2) ? null : {x, y}
+          )
         }
 
-        // 连接两条线
-        function intersectionLineBound(a, b) {
-          let c = JTopo.util.lineF(b.left, b.top, b.left, b.bottom), d = JTopo.util.intersection(a, c);
-          return null == d && (c = JTopo.util.lineF(b.left, b.top, b.right, b.top),
-            d = JTopo.util.intersection(a, c),
-          null == d && (c = JTopo.util.lineF(b.right, b.top, b.right, b.bottom),
-            d = JTopo.util.intersection(a, c),
-          null == d && (c = JTopo.util.lineF(b.left, b.bottom, b.right, b.bottom),
-            d = JTopo.util.intersection(a, c)))),
-            d
+        /**
+         * 使两条线相交：即，尝试旋转线条角度，使两条线最终能够相交
+         *
+         * @param {Object} lineObj1 - {f: xx, b: xx, x1: xx, x2: xx, y1: xx, y2: xx}
+         * @param {Object} b - {top: xx, rihgt: xx, bottom: xx, left: xx, width: xx, height: xx}
+         * @return {false | Object} - 返回 false 或交点信息
+         */
+        function intersectionLineBound(lineObj1, b) {
+          let lineObj2 = JTopo.util.lineF(b.left, b.top, b.left, b.bottom)
+          let intersectionPointObj = JTopo.util.intersection(lineObj1, lineObj2)
+
+          // 如果两条线已经相交，返回 false；如果两条线不相交，尝试旋转线条角度，使其最终能够相交
+          return null == intersectionPointObj && (lineObj2 = JTopo.util.lineF(b.left, b.top, b.right, b.top),
+            intersectionPointObj = JTopo.util.intersection(lineObj1, lineObj2),
+          null == intersectionPointObj && (lineObj2 = JTopo.util.lineF(b.right, b.top, b.right, b.bottom),
+            intersectionPointObj = JTopo.util.intersection(lineObj1, lineObj2),
+          null == intersectionPointObj && (lineObj2 = JTopo.util.lineF(b.left, b.bottom, b.right, b.bottom),
+            intersectionPointObj = JTopo.util.intersection(lineObj1, lineObj2)))),
+            intersectionPointObj
         }
 
+        // 字符串原型对象方法扩展：获取字符串中非标准 ASCII（128个）字符的数量
         String.prototype.getChineseNum = function () {
-          let len = 0;
+          let len = 0
+
           for (let i = 0; i < this.length; i++) {
             if (this.charCodeAt(i) > 127 || this.charCodeAt(i) == 94) {
-              len += 1;
+              len += 1
             }
           }
-          return len;
+
+          return len
         },
-          Array.prototype.del = function (a) {
-            if ("number" != typeof a) {
-              for (let b = 0; b < this.length; b++)
-                if (this[b] === a)
-                  return this.slice(0, b).concat(this.slice(b + 1, this.length));
+          // 数组原型对象方法扩展：删除指定索引或指定值的数组元素
+          Array.prototype.del = function (indexOrValue) {
+            if ("number" != typeof indexOrValue) {
+              for (let i = 0; i < this.length; i++) {
+                if (this[i] === indexOrValue) {
+                  return this.slice(0, i).concat(this.slice(i + 1, this.length))
+                }
+              }
+
               return this
             }
-            return 0 > a ? this : this.slice(0, a).concat(this.slice(a + 1, this.length))
+
+            return 0 > indexOrValue
+              ? this
+              : this.slice(0, indexOrValue).concat(this.slice(indexOrValue+ 1, this.length))
           },
+          // 数组去重方法
           Array.prototype.unique = function () {
-            this.sort(); //先排序
-            const res = [this[0]];
+            // 先排序
+            this.sort()
+
+            const res = [this[0]]
+
             for (let i = 1; i < this.length; i++) {
               if (this[i] !== res[res.length - 1]) {
-                res.push(this[i]);
+                res.push(this[i])
               }
             }
-            return res;
-          }, //数组去重方法
+
+            return res
+          },
         [].indexOf || (Array.prototype.indexOf = function (a) {
-          for (let b = 0; b < this.length; b++)
-            if (this[b] === a)
-              return b;
+          for (let b = 0; b < this.length; b++) {
+            if (this[b] === a) {
+              return b
+            }
+          }
+
           return -1
         }),
         window.console || (window.console = {
@@ -712,8 +988,10 @@
         let canvas = document.createElement("canvas"),
           graphics = canvas.getContext("2d");
 
+        // JTopo 工具
         JTopo.util = {
-          // 全局通用方法
+          /** 全局通用方法 */
+
           rotatePoint,
           // 获取旋转后的位置
           rotatePoints,
@@ -749,7 +1027,7 @@
           // 获取图片告警，即变色功能
           getImageAlarm,
           getOffsetPosition,
-          //
+          // 线条函数：一元一次方程，线条的相关信息
           lineF,
           // 交叉
           intersection,
@@ -952,20 +1230,28 @@
           },
         },
           JTopo.flag = {
+            // canvas 上下文
+            graphics,
+            // 清除所有动画？？？
             clearAllAnimateT: false,
             imageUrl: "./images/",
-            graphics: graphics,
+            // 当前场景
             curScene: null,
+            // 连线配置
             linkConfigure: {
+              // 连线描述文字是否倾斜
               textIsTilt: false,
+              // 连线描述文字是否靠近终止节点端
               textIsNearToNodeZ: false,
             },
+            // 节点配置
             nodeConfigure: {
-              // 覆盖节点时,背景颜色,格式:"rgba(168,202,255, 0.5)"
+              // 覆盖节点时，背景颜色，格式:"rgba(168, 202, 255, 0.5)"
               hoverBg: "rgba(168, 202, 255, 0.5)",
             },
+            // 告警图片缓存
             alarmImageCache: {},
-            // webpack打包时,需要把所有图片引入进来,形成静态资源,然后用映射来调用图片
+            // webpack打包时，需要把所有图片引入进来，形成静态资源，然后用映射来调用图片
             topoImgMap: null,
           },
           window.$for = $for,
@@ -1485,6 +1771,7 @@
                 a.height = a.bottom - a.top,
                 a
             },
+
             this.toJson = function () {
               {
                 var b = this

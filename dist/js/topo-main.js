@@ -404,7 +404,7 @@
           stage.remove(stateManager.scene)
 
           // 重新 new 一个场景实例，并重新赋值给 stateManager.scene
-          let scene = stateManager.scene = new JTopo.Scene(stage)
+          var scene = stateManager.scene = new JTopo.Scene(stage)
 
           // 绑定画布事件
           self.initCanvasEvent()
