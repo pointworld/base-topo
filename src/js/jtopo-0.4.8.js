@@ -1736,7 +1736,9 @@
               this.graphics = canvas.getContext("2d"),
               // 场景对象列表
               this.childs = [],
-              // 帧率（每秒绘制多少次）
+              // 帧率: 设置当前舞台播放的帧数/秒
+              //   - frames 可以为 0，表示：不自动绘制，由用户手工调用 Stage 对象的 paint() 方法来触发
+              //   - 如果小于 0，表示：只有键盘、鼠标有动作时才会重绘，例如：stage.frames = -24
               this.frames = 24,
               this.messageBus = new JTopo.util.MessageBus,
               // 鹰眼对象
@@ -1809,7 +1811,7 @@
               })
             },
 
-            // 将一个 Scene 场景加入到舞台中（只有加入舞台才可以显示出来）
+            // add(Scene): 将一个 Scene 场景加入到舞台中（只有加入舞台才可以显示出来）
             this.add = function (scene) {
               for (let i = 0; i < this.childs.length; i++) {
                 if (this.childs[i] === scene) {
@@ -1821,7 +1823,7 @@
                 this.childs.push(scene)
             },
 
-            // 将一个 Scene 场景从舞台中移除（不再显示）
+            // remove(Scene): 将一个 Scene 场景从舞台中移除（不再显示）
             this.remove = function (scene) {
               if (null == scene) {
                 throw new Error("Stage.remove鍑洪敊: 鍙傛暟涓簄ull!")
@@ -1879,6 +1881,7 @@
             }
           }),
 
+            // 导出成 PNG 图片（在新打开的浏览器 Tab 页中）
             this.saveImageInfo = function (a, b) {
               const c = this.eagleEye.getImage(a, b)
                 , d = window.open("about:blank");
@@ -1886,6 +1889,7 @@
                 this
             },
 
+            // 导出成 PNG 图片（直接弹出另存为对话框或者用下载软件下载）
             this.saveAsLocalImage = function (a, b) {
               const c = this.eagleEye.getImage(a, b);
               return c.replace("image/png", "image/octet-stream"),
@@ -1893,6 +1897,7 @@
                 this
             },
 
+            // 执行一次绘制，如果 frames 设置为 0，可以手工调用此方法来通知 jtopo 进行一次重绘
             this.paint = function () {
               null != this.canvas && (this.graphics.save(),
                 this.graphics.clearRect(0, 0, this.width, this.height),
@@ -1908,18 +1913,21 @@
               this.frames < 0 && (this.needRepaint = !1)))
             },
 
+            // zoom(scale): 缩放，scale 取值范围 [0-1], 实际上本操作是调用了舞台中所有 Scene 对象的 zoom 函数
             this.zoom = function (a) {
               this.childs.forEach(function (b) {
                 0 != b.visible && b.zoom(a)
               })
             },
 
+            // zoomOut(scale): 放大，scale 取值范围 [0-1]，调用 zoom 实现
             this.zoomOut = function (a) {
               this.childs.forEach(function (b) {
                 0 != b.visible && b.zoomOut(a)
               })
             },
 
+            // zoomIn(scale): 缩小，scale 取值范围 [0-1]，调用 zoom 实现
             this.zoomIn = function (a) {
               this.childs.forEach(function (b) {
                 0 != b.visible && b.zoomIn(a)
@@ -1932,12 +1940,14 @@
               })
             },
 
+            // centerAndZoom(scale): 缩放并居中显示所有元素
             this.centerAndZoom = function () {
               this.childs.forEach(function (a) {
                 0 != a.visible && a.centerAndZoom()
               })
             },
 
+            // setCenter(x, y): 设置当前舞台的中心坐标（舞台平移）
             this.setCenter = function (a, b) {
               const c = this;
               this.childs.forEach(function (d) {
@@ -1948,6 +1958,7 @@
               })
             },
 
+            // 得到舞台中所有元素位置确定的边界大小（left、top、right、bottom）
             this.getBound = function () {
               const a = {
                 left: Number.MAX_VALUE,
@@ -1973,6 +1984,7 @@
                 a
             },
 
+            // 把当前对象的属性序列化成 json 数据
             this.toJson = function () {
               {
                 var b = this
@@ -2040,7 +2052,7 @@
           JTopo.Stage = Stage
       }(JTopo),
 
-      // 场景scene方法的具体实现（JTopo.Scene(stage) 构造器函数，参数为 stage 舞台实例）
+      // 场景 scene 方法的具体实现（JTopo.Scene(stage) 构造器函数，参数为 stage 舞台实例）
       function (a) {
         function b(c) {
           function d(a, b, c, d) {
@@ -2067,14 +2079,24 @@
               this.childs = [],
               this.zIndexMap = {},
               this.zIndexArray = [],
+              // 背景颜色，设置的时候请注意 alpha 属性
               this.backgroundColor = "255,255,255",
+              // 得到、设置场景是否可见，默认为：true
               this.visible = !0,
+              // 场景的透明度，默认为 0，即：完全透明。所以有时候即使设置了背景颜色却不起作用
               this.alpha = 0,
               this.scaleX = 1,
               this.scaleY = 1,
+              // 舞台模式，不同模式下有不同的表现：
+              //   - normal[默认]：可以点击选中单个节点（按住 Ctrl 可以选中多个），点中空白处可以拖拽整个画面
+              //   - drag: 该模式下不可以选择节点，只能拖拽整个画面
+              //   - select: 可以框选多个节点、可以点击单个节点
+              //   - edit: 在默认基础上增加了：选中节点时可以通过6个控制点来调整节点的宽、高
               this.mode = a.SceneMode.normal,
               this.translate = !0,
+              // 场景偏移量（水平方向），随鼠标拖拽变化
               this.translateX = 0,
+              // 场景偏移量（垂直方向），随鼠标拖拽变化
               this.translateY = 0,
               this.lastTranslateX = 0,
               this.lastTranslateY = 0,
@@ -2082,8 +2104,10 @@
               this.mouseDownX = null,
               this.mouseDownY = null,
               this.mouseDownEvent = null,
+              // 在 select 模式中，是否显示选择矩形框
               this.areaSelect = !0,
               this.operations = [],
+              // 当前场景中被选中的元素对象
               this.selectedElements = [],
               this.paintAll = !1;
 
@@ -2094,6 +2118,9 @@
 
             this.initialize(),
             this.setBackground = function (a) {
+              // 设置场景的背景图片
+              //  - 与 backgroundColor 冲突，一旦设置了该属性，backgroundColor 属性将失效
+              //  - 例如：scene.background = "./img/bg.png";
               this.background = a
             },
 
@@ -2105,10 +2132,12 @@
 
             this.addTo(c)),
 
+            // 显示
             this.show = function () {
               this.visible = !0
             },
 
+            // 隐藏
             this.hide = function () {
               this.visible = !1
             },
@@ -2146,6 +2175,7 @@
                 a.closePath())
             },
 
+            // 获取场景中可见并绘制出来的元素（超过 Canvas 边界）
             this.getDisplayedElements = function () {
               for (var a = [], b = 0; b < this.zIndexArray.length; b++) {
                 const c = this.zIndexArray[b], d = this.zIndexMap[c];
@@ -2158,6 +2188,7 @@
               return a
             },
 
+            // 获取场景中可见并绘制出来的 Node 对象（超过 Canvas 边界）
             this.getDisplayedNodes = function () {
               for (var b = [], c = 0; c < this.childs.length; c++) {
                 const d = this.childs[c];
@@ -2227,6 +2258,7 @@
                 b[c](a)
             },
 
+            // 查找场景中的对象，例如：findElements(function(e) {return e.x>100;});
             this.findElements = function (a) {
               for (var b = [], c = 0; c < this.childs.length; c++)
                 1 == a(this.childs[c]) && b.push(this.childs[c]);
@@ -2262,6 +2294,7 @@
               return d
             },
 
+            // add(element): 添加对象到当前场景中来，例如：scene.add(new JTopo.Node()); scene.add(new JTopo.Link(nodeA, nodeZ))
             this.add = function (a) {
               this.childs.push(a),
               null == this.zIndexMap[a.zIndex] && (this.zIndexMap[a.zIndex] = [],
@@ -2276,6 +2309,7 @@
               }, 100);
             },
 
+            // remove(element): 移除场景中的某个元素，例如：scene.remove(myNode);
             this.remove = function (b) {
               this.childs = JTopo.util.removeFromArray(this.childs, b);
               const c = this.zIndexMap[b.zIndex];
@@ -2287,6 +2321,7 @@
               }, 100);
             },
 
+            // clear(): 移除场景中的所有元素
             this.clear = function () {
               const a = this;
               this.childs.forEach(function (b) {
@@ -3126,9 +3161,9 @@
             b.prototype.initialize.apply(this, arguments),
               // 节点元素类型
               this.elementType = "node",
-              // 节点元素显示的优先级
+              // 节点元素显示的优先级，范围 [10-999]，10 以下保留占用
               this.zIndex = a.zIndex_Node,
-              // 节点的名字（显示文本）
+              // 设置节点的名字（显示文本）
               this.text = c,
               this.nodeFn = null,
               this.textBreakNumber = 5;
@@ -3155,7 +3190,7 @@
             this.showAlarmText = false;
             // true 则保持改变后的颜色不变
             this.keepChangeColor = false;
-            // 节点是否可拖动
+            // 设置节点是否可以拖动
             this.dragable = !0,
               // 节点文字位置
               this.textPosition = "Bottom_Center",
@@ -4694,11 +4729,15 @@
             c.prototype.initialize.apply(this, null),
               this.elementType = "container",
               this.zIndex = d.zIndex_Container,
+              // 容器宽度
               this.width = 100,
               this.containerPadding = 0,
+              // 容器高度
               this.height = 100,
               this.childs = [],
+              // 透明度
               this.alpha = 0,
+              // 是否可以拖动
               this.dragable = !0,
               this.childDragble = !0,
               this.visible = !0,
@@ -4719,6 +4758,7 @@
               this.topPadding = 60,//顶部间距
               this.font = "16px 微软雅黑",
               this.fontColor = "255,255,255",
+              // 名称（文本），不会显示
               this.text = b,
               this.textAlpha = 1,
               this.textPosition = "Top_Bottom",
@@ -4986,7 +5026,7 @@
         function b(c) {
           this.initialize = function (c) {
             b.prototype.initialize.apply(this, null),
-              //定制化by luozheao
+              //定制化 by luozheao
               this.elementType = "containerNode",
               this.zIndex = a.zIndex_Container,
               this.width = 100,
@@ -5181,6 +5221,7 @@
               , h = d.nodeDiameter
               , i = d.hScale || 1
               , j = d.vScale || 1;
+
             d.beginAngle || 0,
             d.endAngle || 2 * Math.PI
           }
@@ -5584,7 +5625,7 @@
             d
         }
 
-        a.layout = a.Layout = {
+        JTopo.layout = JTopo.Layout = {
           layoutNode: r,
           getNodeChilds: q,
           adjustPosition: p,
@@ -5720,6 +5761,7 @@
           }
         }
 
+        // 特效：重力效果
         function c(a, c) {
           c = c || {};
           const d = c.gravity || .1, e = c.dx || 0;
@@ -5732,6 +5774,7 @@
           return i
         }
 
+        // 动画：逐步
         function d(a, c, d, e, f) {
           //节点、属性、时间、true(是否循环)、是否逆循环
           const g = 1e3 / 24, h = {};
@@ -5770,6 +5813,7 @@
           return l
         }
 
+        // 特效：喷泉效果
         function e(a) {
           null == a && (a = {});
           const b = a.spring || .1, c = a.friction || .8, d = a.grivity || 0, e = (a.wind || 0,
@@ -5829,6 +5873,7 @@
           }
         }
 
+        // 动画：旋转效果
         function f(a, b) {
           function c() {
             return e = setInterval(function () {
@@ -5855,6 +5900,7 @@
             f
         }
 
+        // 动画：重力效果
         function g(a, b) {
           function c() {
             return window.clearInterval(g),
@@ -5883,6 +5929,7 @@
             h
         }
 
+        // 动画：dividedTwoPiece
         function h(b, c) {
           function d(c, d, e, f, g) {
             const h = new a.Node;
@@ -5949,6 +5996,7 @@
             i
         }
 
+        // 动画：repeatThrow
         function i(a, b) {
           function c(a) {
             a.visible = !0,
@@ -5986,14 +6034,17 @@
             i
         }
 
+        // 动画：停止所有
         function j() {
           o = !0
         }
 
+        // 动画：开始所有
         function k() {
           o = !1
         }
 
+        // 动画：循环效果
         function l(b, c) {
           function d() {
             return n = setInterval(function () {
@@ -6018,6 +6069,7 @@
             m
         }
 
+        // 动画：移动效果
         function m(a, b) {
           function c() {
             return h = setInterval(function () {
@@ -6049,6 +6101,7 @@
             g
         }
 
+        // 动画：缩放效果
         function n(a, b) {
           function c() {
             return j = setInterval(function () {
@@ -6078,21 +6131,35 @@
             i
         }
 
-        a.Animate = {},
-          a.Effect = {};
+        // 动画
+        JTopo.Animate = {},
+          // 特效
+          JTopo.Effect = {};
         var o = !1;
-        a.Effect.spring = e,
-          a.Effect.gravity = c,
-          a.Animate.stepByStep = d,
-          a.Animate.rotate = f,
-          a.Animate.scale = n,
-          a.Animate.move = m,
-          a.Animate.cycle = l,
-          a.Animate.repeatThrow = i,
-          a.Animate.dividedTwoPiece = h,
-          a.Animate.gravity = g,
-          a.Animate.startAll = k,
-          a.Animate.stopAll = j
+        // 特效：喷泉效果
+        JTopo.Effect.spring = e,
+          // 特效：重力效果
+          JTopo.Effect.gravity = c,
+          // 动画：逐步
+          JTopo.Animate.stepByStep = d,
+          // 动画：旋转效果
+          JTopo.Animate.rotate = f,
+          // 动画：缩放效果
+          JTopo.Animate.scale = n,
+          // 动画：移动效果
+          JTopo.Animate.move = m,
+          // 动画：循环效果
+          JTopo.Animate.cycle = l,
+          // 动画：repeatThrow
+          JTopo.Animate.repeatThrow = i,
+          // 动画：dividedTwoPiece
+          JTopo.Animate.dividedTwoPiece = h,
+          // 动画：重力效果
+          JTopo.Animate.gravity = g,
+          // 动画：开始所有
+          JTopo.Animate.startAll = k,
+          // 动画：停止所有
+          JTopo.Animate.stopAll = j
       }(JTopo),
 
       // stage 和 scene 的 find 功能
@@ -6189,8 +6256,9 @@
         }
 
         var e = "click,mousedown,mouseup,mouseover,mouseout,mousedrag,keydown,keyup".split(",");
-        a.Stage.prototype.find = d,
-          a.Scene.prototype.find = d
+
+        JTopo.Stage.prototype.find = d,
+          JTopo.Scene.prototype.find = d
       }(JTopo),
 
       // 未开发完的功能，待研究
