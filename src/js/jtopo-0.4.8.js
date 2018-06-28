@@ -324,7 +324,7 @@
 
       // jTopo 具体方法的实现，部分全局方法的实现
       function (JTopo) {
-        // 构造函数
+        // 观察者模式，其中 messageMap 为事件数组
         function MessageBus(name) {
           const self = this
 
@@ -388,7 +388,15 @@
             , Math.sqrt(width * width + height * height)
         }
 
-        // 用于获取 scene 场景实例的宽高位置等信息
+        /**
+         * 用于获取元素的宽高位置等信息
+         *
+         *
+         * @return {Object} - {
+         *   top: xx, right: xx, bottom: xx, left: xx, width: xx, height: xx, ..
+         *   topNode: xx, rightNode: xx, ..
+         * }
+         */
         function getElementsBound(a) {
           for (
             var obj = {
@@ -402,11 +410,12 @@
           ) {
             const d = a[i]
 
-            d instanceof JTopo.Link ||
-            (obj.left > d.x && (obj.left = d.x, obj.leftNode = d),
-            obj.right < d.x + d.width && (obj.right = d.x + d.width, obj.rightNode = d),
-            obj.top > d.y && (obj.top = d.y, obj.topNode = d),
-            obj.bottom < d.y + d.height && (obj.bottom = d.y + d.height, obj.bottomNode = d))
+            d instanceof JTopo.Link || (
+              obj.left > d.x && (obj.left = d.x, obj.leftNode = d),
+              obj.right < d.x + d.width && (obj.right = d.x + d.width, obj.rightNode = d),
+              obj.top > d.y && (obj.top = d.y, obj.topNode = d),
+              obj.bottom < d.y + d.height && (obj.bottom = d.y + d.height, obj.bottomNode = d)
+            )
           }
 
           return obj.width = obj.right - obj.left,
@@ -414,83 +423,120 @@
             obj
         }
 
-        // 坐标
-        function mouseCoords(a) {
-          return a = cloneEvent(a),
-          a.pageX
-          || (
-            a.pageX = a.clientX + document.body.scrollLeft - document.body.clientLeft,
-            a.pageY = a.clientY + document.body.scrollTop - document.body.clientTop
+        // 返回事件触发时鼠标的位置信息
+        function mouseCoords(e) {
+          return e = cloneEvent(e),
+          e.pageX || (
+            // e.clientX 相对于文档（或当前窗口）的水平坐标，页面滚动不会影响该值
+            // document.body.scrollLeft 元素在水平方向上滚动了多远
+            // document.body.clientLeft 元素周围边框的厚度，如果不指定一个边框或者不定位该元素，值为 0
+            e.pageX = e.clientX + document.body.scrollLeft - document.body.clientLeft,
+            e.pageY = e.clientY + document.body.scrollTop - document.body.clientTop
           ),
-            a
+            e
         }
 
-        // 获取事件位置
-        function getEventPosition(a) {
-          return a = mouseCoords(a)
+        // 返回事件触发时鼠标的位置信息
+        function getEventPosition(e) {
+          return e = mouseCoords(e)
         }
 
-        function rotatePoint(a, b, c, d, e) {
-          const f = c - a, g = d - b, h = Math.sqrt(f * f + g * g), i = Math.atan2(g, f) + e;
+        /**
+         * 旋转点，返回旋转后点的坐标信息
+         *
+         * @param {Number} x1 - 点 p1 的横坐标
+         * @param {Number} y1 - 点 p1 的纵坐标
+         * @param {Number} x2 - 点 p2 的横坐标
+         * @param {Number} y2 - 点 p2 的纵坐标
+         * @param {Number} targetRotateRadianRegion - 目标旋转弧度区间
+         * @return {Object} - 旋转后点的坐标信息
+         */
+        function rotatePoint(x1, y1, x2, y2, targetRotateRadianRegion) {
+          // 宽度，作为旋转前点的横坐标
+          const w = x2 - x1
+          // 高度，作为旋转后点的纵坐标
+          const h = y2 - y1
+          // 对角线
+          const diagonalLenth = Math.sqrt(w * w + h * h)
+          // Math.atan2(y, x) 返回其参数比值的反正切值（-pi 到 pi），表示点 (x, y) 对应的偏移角度。
+          // 这是一个逆时针角度，以弧度为单位，正 X 轴和点 (x, y) 与原点连线之间。
+          // 注意此函数接受的参数：先传递 y 坐标，然后是 x 坐标。
+          // 目标弧度 = 旋转前弧度值 + 目标旋转弧度区间值
+          const targetRadian = Math.atan2(h, w) + targetRotateRadianRegion
+
           return {
-            x: a + Math.cos(i) * h,
-            y: b + Math.sin(i) * h
+            x: x1 + Math.cos(targetRadian) * diagonalLenth,
+            y: y1 + Math.sin(targetRadian) * diagonalLenth,
           }
         }
 
-        // 获取旋转后的位置
-        function rotatePoints(a, b, c) {
-          for (var d = [], e = 0; e < b.length; e++) {
-            const f = rotatePoint(a.x, a.y, b[e].x, b[e].y, c);
-            d.push(f)
+        /**
+         * 旋转多个点，返回旋转过程中经历的旋转点的位置信息
+         *
+         */
+        function rotatePoints(p1, pointsArr, targetRotateRadianRegion) {
+          for (let tarCoordArr = [], i = 0; i < pointsArr.length; i++) {
+            const targetRotatePointCoord = rotatePoint(p1.x, p1.y, pointsArr[i].x, pointsArr[i].y, targetRotateRadianRegion)
+
+            tarCoordArr.push(targetRotatePointCoord)
           }
-          return d
+
+          return tarCoordArr
         }
 
-        function $foreach(a, b, c) {
-          function d(e) {
-            e != a.length && (b(a[e]),
+        // 遍历数组 arr，依次将数组中的每一个元素作为 函数 fn 的参数，并执行 fn 函数
+        function $foreach(arr, fn, t) {
+          function d(i) {
+            i != arr.length && (fn(arr[i]),
               setTimeout(function () {
-                d(++e)
-              }, c))
+                d(++i)
+              }, t))
           }
 
-          if (0 != a.length) {
-            var e = 0;
-            d(e)
+          if (0 != arr.length) {
+            let start = 0
+
+            d(start)
           }
         }
 
-        function $for(a, b, c, d) {
-          function e(a) {
-            a != b && (c(b),
+        // TODO ?
+        function $for(a, b, fn, t) {
+          function e(i) {
+            i != b && (fn(b),
               setTimeout(function () {
-                e(++a)
-              }, d))
+                e(++i)
+              }, t)
+            )
           }
 
           if (!(a > b)) {
-            const f = 0;
-            e(f)
+            const start = 0
+
+            e(start)
           }
         }
 
-        function cloneEvent(a) {
-          const b = {};
-          for (let c in a)
-            "returnValue" != c && "keyLocation" != c && (b[c] = a[c]);
-          return b
+        // 返回克隆的事件对象
+        function cloneEvent(e) {
+          const copyEventObj = {}
+
+          for (let key in e) {
+            "returnValue" != key && "keyLocation" != key && (copyEventObj[key] = e[key])
+          }
+
+          return copyEventObj
         }
 
-        // 克隆 json 对象
+        // 返回克隆的 json 对象
         function clone(jsonObj) {
-          const b = {}
+          const copyJsonObj = {}
 
           for (let key in jsonObj) {
-            b[key] = jsonObj[key]
+            copyJsonObj[key] = jsonObj[key]
           }
 
-          return b
+          return copyJsonObj
         }
 
         /**
@@ -577,8 +623,6 @@
         function randomColor() {
           return Math.floor(255 * Math.random()) + "," + Math.floor(255 * Math.random()) + "," + Math.floor(255 * Math.random())
         }
-
-        function isIntsect() {}
 
         /**
          * 获取指定对象的属性集合，用字符串表示
@@ -782,7 +826,7 @@
           return null
         }
 
-        // 获取元素的偏移位置
+        // 获取元素相对于其祖先元素的偏移位置
         function getOffsetPosition(ele) {
           if (!ele) {
             return {
@@ -962,28 +1006,7 @@
             }
 
             return res
-          },
-        [].indexOf || (Array.prototype.indexOf = function (a) {
-          for (let b = 0; b < this.length; b++) {
-            if (this[b] === a) {
-              return b
-            }
-          }
-
-          return -1
-        }),
-        window.console || (window.console = {
-          log: function () {
-          },
-          info: function () {
-          },
-          debug: function () {
-          },
-          warn: function () {
-          },
-          error: function () {
-          },
-        });
+          };
 
         let canvas = document.createElement("canvas"),
           graphics = canvas.getContext("2d");
@@ -992,20 +1015,22 @@
         JTopo.util = {
           /** 全局通用方法 */
 
+          // 旋转点，返回旋转后点的坐标信息
           rotatePoint,
-          // 获取旋转后的位置
+          // 旋转多个点，返回旋转过程中经历的旋转点的位置信息
           rotatePoints,
           // 获取两点间的距离
           getDistance,
+          // 返回事件触发时鼠标的位置信息
           getEventPosition,
-          // 坐标
+          // 返回事件触发时鼠标的位置信息
           mouseCoords,
           // 观察者模式，其中 messageMap 为事件数组
           MessageBus,
           isFirefox: navigator.userAgent.indexOf("Firefox") > 0,
           isIE: !(!window.attachEvent || -1 !== navigator.userAgent.indexOf("Opera")),
           isChrome: null !== navigator.userAgent.toLowerCase().match(/chrome/),
-          // 克隆 json 对象
+          // 返回克隆的 json 对象
           clone,
           // 判断点是否在矩形内部
           isPointInRect,
@@ -1013,44 +1038,51 @@
           isRectOverlapRect,
           // 判断点是否在线上，很巧妙
           isPointInLine,
+          // 从指定的数组中删除指定的元素
           removeFromArray,
+          // 返回克隆的事件对象
           cloneEvent,
           // 随机产生 rgb 颜色
           randomColor,
-          isIntsect,
           // 将舞台转换成 json 对象
           toJson,
-          // 将 json 对象转换成舞台
+          // 根据 json 数据加载舞台对象
           loadStageFromJson,
-          // 获取元素宽高位置
+          // 用于获取元素的宽高位置等信息
           getElementsBound,
           // 获取图片告警，即变色功能
           getImageAlarm,
+          // 获取元素相对于其祖先元素的偏移位置
           getOffsetPosition,
           // 线条函数：一元一次方程，线条的相关信息
           lineF,
-          // 交叉
+          // 判断两条线是否相交，若相交，则返回交点坐标信息；若不相交，则返回 null
           intersection,
-          // 连接两条线
+          // 使两条线相交：即，尝试旋转线条角度，使两条线最终能够相交
           intersectionLineBound,
-          // 拷贝一个 json
+          // 拷贝一个 json 对象
           copy(jsonObj) {
             return JSON.parse(JSON.stringify(jsonObj))
           },
           // 根据 key 获取链接中的参数 value
           getUrlParam(name) {
             // 构造一个含有目标参数的正则表达式对象
-            const reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            const reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)")
             // 匹配目标参数
-            const r = window.location.search.substr(1).match(reg);
+            const r = window.location.search.substr(1).match(reg)
+
             // 返回参数值
-            if (r != null) return unescape(r[2]);
-            return null;
+            if (r != null) {
+              return unescape(r[2])
+            }
+
+            return null
           },
           // 根据当前时间创建 Id
           creatId() {
             return "front" + (new Date).getTime() + Math.round(Math.random() * 1000000)
           },
+          // 设置鼠标光标的形状或替代的图片地址
           setImageUrl(url) {
             JTopo.flag.imageUrl = url
 
@@ -1062,59 +1094,99 @@
               JTopo.MouseCursor.closed_hand = "url(" + url + "closedhand.cur) 8 8, default"
             }
           },
+          // TODO ？
           setCurHandUrl(url) {
             JTopo.util.setCurHandUrl(url)
           },
-          // 结点本身图片闪动
+          /**
+           * 节点本身图片闪动
+           *
+           * @param {Object} node
+           * @param {Boolean} isChangeColor - 节点是否需要改变颜色
+           * @param {Boolean} isFlash - 节点是否闪动
+           * @param {any} originColor - 节点原始的颜色
+           * @param {any} changeColor - 节点需要改变的颜色
+           *
+           */
           nodeFlash(node, isChangeColor, isFlash, originColor, changeColor) {
-            node.nodeOriginColor = originColor;
-            node.alarm = isChangeColor ? "true" : null;
-            node.fillAlarmNode = changeColor;
-            node.setImage('changeColor');
-            node.flashT && clearInterval(node.flashT);
+            // 节点原始颜色
+            node.nodeOriginColor = originColor
+            // 节点是否需要改变颜色：告警
+            node.alarm = isChangeColor ? "true" : null
+            // 节点需要改变的颜色
+            node.fillAlarmNode = changeColor
+
+            node.setImage('changeColor')
+
+            // 清除计数器
+            node.flashT && clearInterval(node.flashT)
+
+            // 如果节点需要改变颜色 且 节点需要闪动
             if (isChangeColor && isFlash) {
               //闪动
-              let i = 1;
-              let tag = null;
+
+              let i = 1
+              let tag = null
+
+              // 设置计时器
               node.flashT = setInterval(function () {
-                tag = ++i % 2;
-                node.alarm = tag ? "true" : null;
+                tag = ++i % 2
+
+                node.alarm = tag ? "true" : null
+
+                // 如果 clearAllAnimateT
                 if (JTopo.flag.clearAllAnimateT) {
-                  clearInterval(node.flashT);
+                  // 清空计时器
+                  clearInterval(node.flashT)
                 }
               }, 1000)
             }
           },
           // 节点左上角图片闪动
           smallNodeFlash(node, isChangeColor, isFlash, originColor, changeColor) {
-            // node.setImage('./images/alertIcon2.png','setSmallImage');//setSmallImage 为设置小图标
-            // JTopo.util.smallNodeFlash(node,true,true,[202,202,202],[222,81,69]);//结点,是否变色,是否闪动,底色,变色
+            // setSmallImage 为设置小图标
+            // node.setImage('./images/alertIcon2.png','setSmallImage')
+            // 结点,是否变色,是否闪动,底色,变色
+            // JTopo.util.smallNodeFlash(node,true,true,[202,202,202],[222,81,69])
 
-            node.smallImageOriginColor = originColor;
-            node.smallImageChangeColor = changeColor;
-            node.smallAlarmImageTag = isChangeColor ? "true" : null;
-            node.setImage('changeSmallImageColor');
-            node.samllflashT && clearInterval(node.samllflashT);
+            node.smallImageOriginColor = originColor
+            node.smallImageChangeColor = changeColor
+            node.smallAlarmImageTag = isChangeColor ? "true" : null
+
+            // 设置节点图片
+            node.setImage('changeSmallImageColor')
+
+            node.samllflashT && clearInterval(node.samllflashT)
+
             if (isChangeColor && isFlash) {
-              //闪动
-              let i = 1;
-              let tag = null;
+              let i = 1
+              let tag = null
+
               node.samllflashT = setInterval(function () {
-                tag = ++i % 2;
-                node.smallAlarmImageTag = tag ? "true" : null;
+                tag = ++i % 2
+                node.smallAlarmImageTag = tag ? "true" : null
+
                 if (JTopo.flag.clearAllAnimateT) {
-                  clearInterval(node.samllflashT);
+                  clearInterval(node.samllflashT)
                 }
               }, 1000)
             }
           },
-          // 获取两点的连线倾斜角度
+          // 获取两点的连线倾斜弧度
           getRotateAng(nodeA, nodeZ) {
-            const xs = nodeA.x - nodeZ.x,
-              xy = nodeA.y - nodeZ.y;
-            return Math.atan(xy / xs);
+            const x = nodeA.x - nodeZ.x
+            const y = nodeA.y - nodeZ.y
+
+            return Math.atan(y / x)
           },
-          // 找到当前节点的所有上级节点和线条的id
+          /**
+           * 递归找到当前节点的所有上级节点和线条的 id
+           *
+           * @param {String} id
+           * @param {Array} linksArr
+           * @param {Object} saveObj
+           * @return {Object}
+           */
           findAllPrevNodesAndLinks(id, linksArr, saveObj) {
             let _saveObj = saveObj
 
@@ -1129,110 +1201,151 @@
               const linkObj = linksArr[j]
 
               if (linkObj.nodeZ.id == id) {
-                _saveObj.prevNodesId.push(linkObj.nodeA.id);
+                _saveObj.prevNodesId.push(linkObj.nodeA.id)
+                _saveObj.prevLinksId.push(linkObj.id)
 
-                _saveObj.prevLinksId.push(linkObj.id);
-
-                JTopo.util.findAllPrevNodesAndLinks(linkObj.nodeA.id, linksArr, _saveObj);
+                JTopo.util.findAllPrevNodesAndLinks(linkObj.nodeA.id, linksArr, _saveObj)
               }
             }
-            return _saveObj;
+
+            return _saveObj
           },
-          // 找到当前节点的所有下级节点和线条的id
+          /**
+           * 递归找到当前节点的所有下级节点和线条的 id
+           *
+           * @param {String} id
+           * @param {Array} linksArr
+           * @param {Object} saveObj
+           * @return {Object}
+           */
           findAllNextNodesAndLinks(id, linksArr, saveObj) {
-            let _saveObj = saveObj;
+            let _saveObj = saveObj
+
             if (!saveObj) {
               _saveObj = {
                 nextNodesId: [],
-                nextLinksId: []
+                nextLinksId: [],
               }
             }
 
             for (let j = 0; j < linksArr.length; j++) {
-              const linkObj = linksArr[j];
+              const linkObj = linksArr[j]
+
               if (linkObj.nodeA.id == id) {
-                _saveObj.nextNodesId.push(linkObj.nodeZ.id);
-                _saveObj.nextLinksId.push(linkObj.id);
-                JTopo.util.findAllNextNodesAndLinks(linkObj.nodeZ.id, linksArr, _saveObj);
+                _saveObj.nextNodesId.push(linkObj.nodeZ.id)
+                _saveObj.nextLinksId.push(linkObj.id)
+
+                JTopo.util.findAllNextNodesAndLinks(linkObj.nodeZ.id, linksArr, _saveObj)
               }
             }
-            return _saveObj;
+
+            return _saveObj
           },
-          // 根据id找到元素
+          // 根据 id 找到元素
           findEleById(id) {
-            const idTypeName = id.indexOf('front') >= 0 ? '_id' : 'id';
+            const idTypeName = id.indexOf('front') >= 0 ? '_id' : 'id'
+
             return JTopo.flag.curScene.childs.filter(function (child) {
               return (child[idTypeName] == id)
-            })[0];
+            })[0]
           },
           // 根据类型找到元素
           findEleByType(type) {
             return JTopo.flag.curScene.childs.filter(function (child) {
               return (child.elementType == type)
-            });
-          },
-          // 设置弹窗的位置
-          setPopPos($pop, _nodeId, subW, subH, $scroll) {
-
-            const _subW = subW || 0;//横坐标微调值
-            const _subH = subH || 0;//纵坐标微调值
-            const nodeId = _nodeId;//节点id
-            const $canvas = $('#canvas');
-            const left = $canvas.offset().left;
-            const _top = $canvas.offset().top;
-            const k = JTopo.flag.curScene.scaleX;//scene的缩放率
-            const w = $canvas.width();
-            const h = $canvas.height();
-            const $con = $pop;//弹窗jquery对象
-            let targetNode = null;//目标节点
-            let px = null;
-            let py = null;
-            const scrollTop = $scroll ? $scroll.scrollTop() : 0;
-            JTopo.flag.curScene.childs.filter(function (child, p2, p3) {
-              if (child.id == nodeId) {
-                targetNode = child;
-                if (targetNode.elementType == 'link') {
-                  px = (targetNode.nodeA.x + targetNode.nodeZ.x) * 0.5;
-                  py = (targetNode.nodeA.y + targetNode.nodeZ.y) * 0.5;
-                } else {
-                  px = targetNode.x + targetNode.width;
-                  py = targetNode.y;
-                }
-              }
-            });
-            //算法
-            const conLeft = (1 - k) * w * 0.5 + (px + JTopo.flag.curScene.translateX) * k + left + _subW;
-            const conTop = (1 - k) * h * 0.5 + (py + JTopo.flag.curScene.translateY) * k + _top + _subH + scrollTop;
-            $con.css({
-              left: conLeft,
-              top: conTop
             })
           },
-          // 根据开辟空间的宽高和坐标,移动其四周的元素
+          /**
+           * 设置弹窗的位置 TODO ?
+           *
+           * @param {Object} $pop - 弹窗 jquery 对象
+           * @param {String} _nodeId - 节点 id
+           * @param {Number} subW - 横坐标微调值
+           * @param {Number} subH - 纵坐标微调值
+           * @param {Number} $scroll
+           *
+           */
+          setPopPos($pop, _nodeId, subW, subH, $scroll) {
+            // 横坐标微调值
+            const _subW = subW || 0
+            // 纵坐标微调值
+            const _subH = subH || 0
+            // 节点 id
+            const nodeId = _nodeId
+
+            const $canvas = $('#canvas')
+            const left = $canvas.offset().left
+            const _top = $canvas.offset().top
+
+            // 当前 scene 的缩放率
+            const curSceneScaleXRate = JTopo.flag.curScene.scaleX
+            const canvasW = $canvas.width()
+            const canvasH = $canvas.height()
+
+            // 弹窗 jquery 对象
+            const $con = $pop
+
+            // 目标节点
+            let targetNode = null
+
+            let px = null
+            let py = null
+
+            const scrollTop = $scroll ? $scroll.scrollTop() : 0
+
+            JTopo.flag.curScene.childs.filter(function (child, p2, p3) {
+              if (child.id == nodeId) {
+                targetNode = child
+
+                if (targetNode.elementType == 'link') {
+                  px = (targetNode.nodeA.x + targetNode.nodeZ.x) * 0.5
+                  py = (targetNode.nodeA.y + targetNode.nodeZ.y) * 0.5
+                } else {
+                  px = targetNode.x + targetNode.width
+                  py = targetNode.y
+                }
+              }
+            })
+
+            //算法
+            const conLeft = (1 - curSceneScaleXRate) * canvasW * 0.5 + (px + JTopo.flag.curScene.translateX) * curSceneScaleXRate + left + _subW
+            const conTop = (1 - curSceneScaleXRate) * canvasH * 0.5 + (py + JTopo.flag.curScene.translateY) * curSceneScaleXRate + _top + _subH + scrollTop
+
+            $con.css({
+              left: conLeft,
+              top: conTop,
+            })
+          },
+          // 根据开辟空间的宽高和坐标,移动其四周的元素 TODO ?
           moveElePosByContainerBorder(eleObj, isOpen, callback) {
             JTopo.flag.curScene.childs.forEach(function (p) {
               if (isOpen) {
-                //1.不处理1,2,3象限
-                //2.处理4象限,且右移
-                var subValue = eleObj.width;
+                // 1.不处理 1, 2, 3 象限
+                // 2.处理 4 象限，且右移
+
+                var subValue = eleObj.width
+
                 if (p.elementType == 'node' && (p.x >= eleObj.x && p.y >= eleObj.y)) {
-                  JTopo.Animate.stepByStep(p, {x: p.x + subValue}, 300, false).start();
+                  JTopo.Animate.stepByStep(p, {x: p.x + subValue}, 300, false).start()
                 }
               } else {
-                var subValue = eleObj.width;
-                eleObj.x += subValue;
+                var subValue = eleObj.width
+
+                eleObj.x += subValue
+
                 if (p.elementType == 'node' && (p.x >= eleObj.x && p.y >= eleObj.y)) {
-                  JTopo.Animate.stepByStep(p, {x: p.x - subValue}, 300, false).start();
+                  JTopo.Animate.stepByStep(p, {x: p.x - subValue}, 300, false).start()
                 }
               }
-            });
-            callback && callback();
+            })
+
+            callback && callback()
           },
         },
           JTopo.flag = {
             // canvas 上下文
             graphics,
-            // 清除所有动画？？？
+            // 清除节点所有动画效果
             clearAllAnimateT: false,
             imageUrl: "./images/",
             // 当前场景
@@ -1260,9 +1373,11 @@
 
       // 舞台 stage 方法的具体实现（JTopo.Stage(canvas) 构造器函数，参数为一个 canvas 元素节点对象）
       function (a) {
+        // 返回鹰眼对象
         function b(a) {
           return {
             hgap: 16,
+            // 鹰眼是否可见
             visible: !1,
 
             // 创建 canvas 元素
@@ -1309,59 +1424,62 @@
               this.eagleImageDatas = this.getData(a)
             },
 
-            setSize(a, b) {
-              this.width = this.canvas.width = a
-              this.height = this.canvas.height = b
+            // 设置鹰眼的宽高和鹰眼内 canvas 的宽高
+            setSize(w, h) {
+              this.width = this.canvas.width = w
+              this.height = this.canvas.height = h
             },
 
             // 获取数据
             getData(b, c) {
               function d(a) {
                 const b = a.stage.canvas.width
-                  , c = a.stage.canvas.height
-                  , d = b / a.scaleX / 2
-                  , e = c / a.scaleY / 2;
+                const c = a.stage.canvas.height
+                const d = b / a.scaleX / 2
+                const e = c / a.scaleY / 2
 
                 return {
                   translateX: a.translateX + d - d * a.scaleX,
-                  translateY: a.translateY + e - e * a.scaleY
+                  translateY: a.translateY + e - e * a.scaleY,
                 }
               }
 
               // 获取 canvas 元素
               const canvasObj = document.getElementById('canvas')
-              // 设置容器宽度
+              // 设置鹰眼容器宽度
               const container_w = 250
-              // 设置容器高度
+              // 设置鹰眼容器高度
               const container_h = container_w * canvasObj.height / canvasObj.width
 
-              // 设置地图大小
+              // 设置鹰眼地图大小
               null != j && null != k
                 ? this.setSize(b, c)
                 : this.setSize(container_w, container_h)
 
-              var e = this.canvas.getContext("2d")
+              var ctx = this.canvas.getContext("2d")
 
               //绘制地图
               if (a.childs.length > 0) {
-                e.save(), e.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                ctx.save()
+                // 清空鹰眼内 canvas 的内容
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
                 a.childs.forEach(function (a) {
                   1 == a.visible && (
                     a.save(),
-                      a.centerAndZoom(null, null, e),
-                      a.repaint(e, 'eagleEye'),
+                      a.centerAndZoom(null, null, ctx),
+                      a.repaint(ctx, 'eagleEye'),
                       a.restore()
                   )
                 });
 
                 // a 为 stage, a.childs[0] 为大画布
                 var f = d(a.childs[0])
-                  , g = f.translateX * (this.canvas.width / a.canvas.width) * a.childs[0].scaleX
-                  , h = f.translateY * (this.canvas.height / a.canvas.height) * a.childs[0].scaleY
-                  , i = a.getBound()
-                  , j = a.canvas.width / a.childs[0].scaleX / i.width
-                  , k = a.canvas.height / a.childs[0].scaleY / i.height;
+                var g = f.translateX * (this.canvas.width / a.canvas.width) * a.childs[0].scaleX
+                var h = f.translateY * (this.canvas.height / a.canvas.height) * a.childs[0].scaleY
+                var i = a.getBound()
+                var j = a.canvas.width / a.childs[0].scaleX / i.width
+                var k = a.canvas.height / a.childs[0].scaleY / i.height
 
                 j > 1 && (j = 1),
                 k > 1 && (j = 1),
@@ -1369,15 +1487,15 @@
                   h *= k,
                 i.left < 0 && (g -= Math.abs(i.left) * (this.width / i.width)),
                 i.top < 0 && (h -= Math.abs(i.top) * (this.height / i.height)),
-                  e.save(),
-                  e.fillStyle = "rgba(168,168,168,0.3)",
+                  ctx.save(),
+                  ctx.fillStyle = "rgba(168,168,168,0.3)",
                   //  e.fillRect(-g, -h, e.canvas.width * j, e.canvas.height * k),
-                  e.fillRect(-g + 9, -h + 5, this.canvas.width - 18, this.canvas.height - 10),
-                  e.restore();
+                  ctx.fillRect(-g + 9, -h + 5, this.canvas.width - 18, this.canvas.height - 10),
+                  ctx.restore();
                 //上面绘制小地图红色边框
                 let l = null;
                 try {
-                  l = e.getImageData(0, 0, e.canvas.width, e.canvas.height);
+                  l = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
                 } catch (m) {
                 }
 
@@ -1386,6 +1504,7 @@
               return null
             },
 
+            // 绘制
             paint() {
               if (null != this.eagleImageDatas) {
                 const b = a.graphics
@@ -1412,20 +1531,26 @@
               }
             },
 
-            eventHandler(a, b, c) {
-              let d = b.x
-                , e = b.y;
+            // 事件处理器
+            eventHandler(eName, eObj, c) {
+              let eX = eObj.x
+              let eY = eObj.y
 
-              if (d > c.canvas.width - this.canvas.width && e > c.canvas.height - this.canvas.height) {
+              if (
+                eX > c.canvas.width - this.canvas.width
+                && eY > c.canvas.height - this.canvas.height
+              ) {
                 if (
-                  d = b.x - this.canvas.width,
-                    e = b.y - this.canvas.height,
-                  "mousedown" == a && (this.lastTranslateX = c.childs[0].translateX,
-                    this.lastTranslateY = c.childs[0].translateY),
-                  "mousedrag" == a && c.childs.length > 0
+                  eX = eObj.x - this.canvas.width,
+                    eY = eObj.y - this.canvas.height,
+                  "mousedown" == eName && (
+                    this.lastTranslateX = c.childs[0].translateX,
+                    this.lastTranslateY = c.childs[0].translateY
+                  ),
+                  "mousedrag" == eName && c.childs.length > 0
                 ) {
-                  const f = b.dx
-                    , g = b.dy
+                  const f = eObj.dx
+                    , g = eObj.dy
                     , h = c.getBound()
                     , i = this.canvas.width / c.childs[0].scaleX / h.width
                     , j = this.canvas.height / c.childs[0].scaleY / h.height;
@@ -1435,36 +1560,46 @@
                 }
               } else {
 
-              };
+              }
             },
           }
         }
 
-        function c(c) {
-          function d(b) {
-            const c = a.util.getEventPosition(b)
-              , d = a.util.getOffsetPosition(n.canvas);
+        function Stage(c) {
+          // 返回事件被触发时鼠标和事件源的相关信息
+          function d(e) {
+            // 返回事件触发时鼠标的位置信息
+            const eventObj = JTopo.util.getEventPosition(e)
+            // 获取元素相对于其祖先元素的偏移位置
+            const d = JTopo.util.getOffsetPosition(n.canvas)
 
-            return c.offsetLeft = c.pageX - d.left,
-              c.offsetTop = c.pageY - d.top,
-              c.x = c.offsetLeft,
-              c.y = c.offsetTop,
-              c.target = null,
-              c
+            return eventObj.offsetLeft = eventObj.pageX - d.left,
+              eventObj.offsetTop = eventObj.pageY - d.top,
+              eventObj.x = eventObj.offsetLeft,
+              eventObj.y = eventObj.offsetTop,
+              eventObj.target = null,
+              eventObj
           }
 
-          function e(a) {
+          // mouseover 事件处理程序
+          function ee(e) {
+            // 禁止选择
             document.onselectstart = function () {
               return !1
             }
-              , this.mouseOver = !0;
 
-            const b = d(a)
+            // 设置 stage.mouseOver 属性为 true
+            this.mouseOver = !0
 
-            n.dispatchEventToScenes("mouseover", b), n.dispatchEvent("mouseover", b)
+            // 返回事件被触发时鼠标和事件源的相关信息
+            const b = d(e)
+
+            n.dispatchEventToScenes("mouseover", b)
+              , n.dispatchEvent("mouseover", b)
           }
 
-          function f(a) {
+          // mouseout 事件处理程序
+          function f(e) {
             p = setTimeout(function () {
               o = !0
             }, 500),
@@ -1472,14 +1607,15 @@
                 return !0
               }
             ;
-            const b = d(a);
+            const b = d(e);
             n.dispatchEventToScenes("mouseout", b),
               n.dispatchEvent("mouseout", b),
               n.needRepaint = 0 == n.animate ? !1 : !0
           }
 
-          function g(a) {
-            const b = d(a);
+          // mousedown 事件处理程序
+          function g(e) {
+            const b = d(e);
 
             n.mouseDown = !0,
               n.mouseDownX = b.x,
@@ -1488,8 +1624,9 @@
               n.dispatchEvent("mousedown", b)
           }
 
-          function h(a) {
-            const b = d(a);
+          // mouseup 事件处理程序
+          function h(e) {
+            const b = d(e);
 
             n.dispatchEventToScenes("mouseup", b),
               n.dispatchEvent("mouseup", b),
@@ -1497,14 +1634,15 @@
               n.needRepaint = 0 == n.animate ? !1 : !0
           }
 
-          function i(a) {
+          // mousemove 事件处理程序
+          function i(e) {
             p && (window.clearTimeout(p),
               p = null),
               o = !1;
 
-            const b = d(a);
+            const b = d(e);
 
-            n.mouseDown ? 0 == a.button && (b.dx = b.x - n.mouseDownX,
+            n.mouseDown ? 0 == e.button && (b.dx = b.x - n.mouseDownX,
               b.dy = b.y - n.mouseDownY,
               n.dispatchEventToScenes("mousedrag", b),
               n.dispatchEvent("mousedrag", b),
@@ -1512,160 +1650,223 @@
               n.dispatchEvent("mousemove", b))
           }
 
-          function j(a) {
-            const b = d(a);
+          // click 事件处理程序
+          function j(e) {
+            const b = d(e);
             n.dispatchEventToScenes("click", b),
               n.dispatchEvent("click", b)
           }
 
-          function k(a) {
-            const b = d(a);
+          // dbclick 事件处理程序
+          function k(e) {
+            const b = d(e);
             n.dispatchEventToScenes("dbclick", b),
               n.dispatchEvent("dbclick", b)
           }
 
-          function l(a) {
-            const b = d(a);
+          // mousewheel 事件处理程序
+          function l(e) {
+            const b = d(e);
             n.dispatchEventToScenes("mousewheel", b),
               n.dispatchEvent("mousewheel", b),
-            null != n.wheelZoom && (a.preventDefault ? a.preventDefault() : (a = a || window.event,
-              a.returnValue = !1),
+            null != n.wheelZoom && (e.preventDefault ? e.preventDefault() : (e = e || window.event,
+              e.returnValue = !1),
             1 == n.eagleEye.visible && n.eagleEye.update())
           }
 
           // 添加事件
-          function m(b) {
-            a.util.isIE || !window.addEventListener
-              ? (b.onmouseout = f,
-                b.onmouseover = e,
-                b.onmousedown = g,
-                b.onmouseup = h,
-                b.onmousemove = i,
-                b.onclick = j,
-                b.ondblclick = k,
-                b.onmousewheel = l,
-                b.touchstart = g,
-                b.touchmove = i,
-                b.touchend = h)
-              : (b.addEventListener("mouseout", f),
-                b.addEventListener("mouseover", e),
-                b.addEventListener("mousedown", g),
-                b.addEventListener("mouseup", h),
-                b.addEventListener("mousemove", i),
-                b.addEventListener("click", j),
-                b.addEventListener("dblclick", k),
-                a.util.isFirefox
-                  ? b.addEventListener("DOMMouseScroll", l)
-                  : b.addEventListener("mousewheel", l)), window.addEventListener && (window.addEventListener("keydown", function (b) {
-              n.dispatchEventToScenes("keydown", a.util.cloneEvent(b));
+          function m(ele) {
+            JTopo.util.isIE || !window.addEventListener
+              ? (ele.onmouseout = f,
+                ele.onmouseover = ee,
+                ele.onmousedown = g,
+                ele.onmouseup = h,
+                ele.onmousemove = i,
+                ele.onclick = j,
+                ele.ondblclick = k,
+                ele.onmousewheel = l,
+                ele.touchstart = g,
+                ele.touchmove = i,
+                ele.touchend = h)
+              : (ele.addEventListener("mouseout", f),
+                ele.addEventListener("mouseover", ee),
+                ele.addEventListener("mousedown", g),
+                ele.addEventListener("mouseup", h),
+                ele.addEventListener("mousemove", i),
+                ele.addEventListener("click", j),
+                ele.addEventListener("dblclick", k),
+                JTopo.util.isFirefox
+                  ? ele.addEventListener("DOMMouseScroll", l)
+                  : ele.addEventListener("mousewheel", l)), window.addEventListener && (window.addEventListener("keydown", function (e) {
+              n.dispatchEventToScenes("keydown", JTopo.util.cloneEvent(e));
 
-              const c = b.keyCode;
+              const keyCode = e.keyCode;
 
-              (37 == c || 38 == c || 39 == c || 40 == c) && (b.preventDefault ? b.preventDefault() : (b = b || window.event,
-                b.returnValue = !1))
+              (37 == keyCode || 38 == keyCode || 39 == keyCode || 40 == keyCode) && (
+                e.preventDefault
+                  ? e.preventDefault()
+                  : (e = e || window.event, e.returnValue = !1)
+              )
             }, !0),
 
-              window.addEventListener("keyup", function (b) {
-                n.dispatchEventToScenes("keyup", a.util.cloneEvent(b));
-                const c = b.keyCode;
-                (37 == c || 38 == c || 39 == c || 40 == c) && (b.preventDefault ? b.preventDefault() : (b = b || window.event,
-                  b.returnValue = !1))
+              window.addEventListener("keyup", function (e) {
+                n.dispatchEventToScenes("keyup", JTopo.util.cloneEvent(e))
+
+                const keyCode = e.keyCode
+
+                (37 == keyCode || 38 == keyCode || 39 == keyCode || 40 == keyCode) && (
+                  e.preventDefault
+                    ? e.preventDefault()
+                    : (e = e || window.event, e.returnValue = !1)
+                )
               }, !0))
           }
 
-          a.stage = this;
+          JTopo.stage = this
 
-          var n = this;
+          var n = this
 
-          this.initialize = function (c) {
+          // 舞台初始化
+          this.initialize = function (canvas) {
             // 添加事件
-            m(c),
-              this.canvas = c,
-              this.graphics = c.getContext("2d"),
+            m(canvas),
+              // 对应的 Canvas 对象
+              this.canvas = canvas,
+              // canvas 上下文
+              this.graphics = canvas.getContext("2d"),
+              // 场景对象列表
               this.childs = [],
+              // 帧率（每秒绘制多少次）
               this.frames = 24,
-              this.messageBus = new a.util.MessageBus,
+              this.messageBus = new JTopo.util.MessageBus,
+              // 鹰眼对象
+              //   - 显示鹰眼: stage.eagleEye.visible = true
+              //   - 隐藏鹰眼: stage.eagleEye.visible = false
               this.eagleEye = b(this),
+              // 鼠标滚轮缩放操作比例，默认为 null，不显示鹰眼
+              //   - 启用鼠标滚轮缩放: stage.wheelZoom = 0.85; // 缩放比例为 0.85
+              //   - 禁用鼠标滚轮缩放: stage.wheelZoom = null;
               this.wheelZoom = null,
               this.mouseDownX = 0,
               this.mouseDownY = 0,
               this.mouseDown = !1,
               this.mouseOver = !1,
+              // 是否需要重绘
               this.needRepaint = !0,
-              this.serializedProperties = ["frames", "wheelZoom"]
+              // 序列化的属性数组
+              this.serializedProperties = ["frames", "wheelZoom"],
+              // mode: 舞台模式，不同模式下有不同的表现（设置舞台模式，例如：stage.mode = "drag"）
+              //   - normal[默认]：可以点击选中单个节点（按住 Ctrl 可以选中多个），点中空白处可以拖拽整个画面
+              //   - drag: 该模式下不可以选择节点，只能拖拽整个画面
+              //   - select: 可以框选多个节点、可以点击单个节点
+              //   - edit: 在默认基础上增加了：选中节点时可以通过6个控制点来调整节点的宽、高
+            this.mode = ''
           },
 
-          null != c && this.initialize(c);
+          null != c && this.initialize(c)
 
-          var o = !0, p = null;
+          var o = !0
+          var p = null
 
+          // 设置默认右键菜单是否可用
           document.oncontextmenu = function () {
             return o
           },
-            this.dispatchEventToScenes = function (a, b) {
+
+            /**
+             * 为场景分配事件
+             *
+             * @param {String} eName - 事件名
+             * @param {Object} eObj - 事件对象
+             *
+             */
+            this.dispatchEventToScenes = function (eName, eObj) {
               if (
                 0 != this.frames && (this.needRepaint = !0),
-                1 == this.eagleEye.visible && -1 != a.indexOf("mouse")
+                1 == this.eagleEye.visible && -1 != eName.indexOf("mouse")
               ) {
-                var c = b.x
-                  , d = b.y;
+                var eX = eObj.x
+                var eY = eObj.y
 
-                if (c > this.width - this.eagleEye.width && d > this.height - this.eagleEye.height)
-                  return void this.eagleEye.eventHandler(a, b, this)
+                if (
+                  eX > this.width - this.eagleEye.width
+                  && eY > this.height - this.eagleEye.height
+                ) {
+                  return void this.eagleEye.eventHandler(eName, eObj, this)
+                }
               }
 
               this.childs.forEach(function (c) {
                 if (1 == c.visible) {
-                  const d = c[a + "Handler"];
-                  if (null == d)
-                    throw new Error("Function not found:" + a + "Handler");
-                  d.call(c, b)
+                  const d = c[eName + "Handler"]
+
+                  if (null == d) {
+                    throw new Error("Function not found:" + eName + "Handler")
+                  }
+
+                  d.call(c, eObj)
                 }
               })
             },
 
-            this.add = function (a) {
-              for (let b = 0; b < this.childs.length; b++)
-                if (this.childs[b] === a)
-                  return;
-              a.addTo(this),
-                this.childs.push(a)
+            // 将一个 Scene 场景加入到舞台中（只有加入舞台才可以显示出来）
+            this.add = function (scene) {
+              for (let i = 0; i < this.childs.length; i++) {
+                if (this.childs[i] === scene) {
+                  return
+                }
+              }
+
+              scene.addTo(this),
+                this.childs.push(scene)
             },
 
-            this.remove = function (a) {
-              if (null == a)
-                throw new Error("Stage.remove鍑洪敊: 鍙傛暟涓簄ull!");
-              for (let b = 0; b < this.childs.length; b++)
-                if (this.childs[b] === a)
-                  return a.stage = null,
-                    this.childs = this.childs.del(b),
+            // 将一个 Scene 场景从舞台中移除（不再显示）
+            this.remove = function (scene) {
+              if (null == scene) {
+                throw new Error("Stage.remove鍑洪敊: 鍙傛暟涓簄ull!")
+              }
+
+              for (let i = 0; i < this.childs.length; i++) {
+                if (this.childs[i] === scene) {
+                  return scene.stage = null,
+                    this.childs = this.childs.del(i),
                     this;
+                }
+              }
+
               return this
             },
 
+            // 将所有 Scene 场景从舞台中移除
             this.clear = function () {
               this.childs = []
             },
 
-            this.addEventListener = function (a, b) {
-              const c = this
-                , d = function (a) {
-                b.call(c, a)
-              };
-              return this.messageBus.subscribe(a, d),
+            // 监听事件
+            this.addEventListener = function (eName, cb) {
+              const self = this
+              const d = function (a) {
+                cb.call(self, a)
+              }
+
+              return this.messageBus.subscribe(eName, d),
                 this
             },
 
-            this.removeEventListener = function (a) {
-              this.messageBus.unsubscribe(a)
+            // 移除监听事件，和 addEventListener 相对应
+            this.removeEventListener = function (eName) {
+              this.messageBus.unsubscribe(eName)
             },
 
+            // 移除所有监听事件
             this.removeAllEventListener = function () {
-              this.messageBus = new a.util.MessageBus
+              this.messageBus = new JTopo.util.MessageBus
             },
 
-            this.dispatchEvent = function (a, b) {
-              return this.messageBus.publish(a, b),
+            // 分配事件
+            this.dispatchEvent = function (eName, b) {
+              return this.messageBus.publish(eName, b),
                 this
             }
           ;
@@ -1817,7 +2018,7 @@
             }, 3e3)
         }
 
-        c.prototype = {
+        Stage.prototype = {
           get width() {
             return this.canvas.width
           },
@@ -1836,7 +2037,7 @@
             })
           }
         },
-          a.Stage = c
+          JTopo.Stage = Stage
       }(JTopo),
 
       // 场景scene方法的具体实现（JTopo.Scene(stage) 构造器函数，参数为 stage 舞台实例）
@@ -1861,7 +2062,7 @@
 
           this.initialize = function () {
             b.prototype.initialize.apply(this, arguments),
-              this.messageBus = new a.util.MessageBus,
+              this.messageBus = new JTopo.util.MessageBus,
               this.elementType = "scene",
               this.childs = [],
               this.zIndexMap = {},
@@ -2076,9 +2277,9 @@
             },
 
             this.remove = function (b) {
-              this.childs = a.util.removeFromArray(this.childs, b);
+              this.childs = JTopo.util.removeFromArray(this.childs, b);
               const c = this.zIndexMap[b.zIndex];
-              c && (this.zIndexMap[b.zIndex] = a.util.removeFromArray(c, b)),
+              c && (this.zIndexMap[b.zIndex] = JTopo.util.removeFromArray(c, b)),
                 b.removeHandler(this);
               const thisObj = this;
               setTimeout(function () {
@@ -2127,7 +2328,7 @@
             },
 
             this.toSceneEvent = function (b) {
-              const c = a.util.clone(b);
+              const c = JTopo.util.clone(b);
               if (c.x /= this.scaleX,
                   c.y /= this.scaleY,
                 1 == this.translate) {
@@ -2202,7 +2403,7 @@
                 for (let c = 0; c < this.selectedElements.length; c++) {
                   const d = this.selectedElements[c];
                   if (0 != d.dragable) {
-                    const e = a.util.clone(b);
+                    const e = JTopo.util.clone(b);
                     e.target = d,
                       d.mousedragHandler(e)
                   }
@@ -2348,7 +2549,7 @@
             },
 
             this.removeAllEventListener = function () {
-              this.messageBus = new a.util.MessageBus
+              this.messageBus = new JTopo.util.MessageBus
             },
 
             this.dispatchEvent = function (a, b) {
@@ -2397,7 +2598,7 @@
             },
 
             this.getElementsBound = function () {
-              return a.util.getElementsBound(this.childs)
+              return JTopo.util.getElementsBound(this.childs)
             },
 
             this.translateToCenter = function (a) {
@@ -2739,7 +2940,7 @@
                 , e = function (a) {
                 c.call(d, a)
               };
-              return this.messageBus || (this.messageBus = new a.util.MessageBus),
+              return this.messageBus || (this.messageBus = new JTopo.util.MessageBus),
                 this.messageBus.subscribe(b, e),
                 this
             },
@@ -2751,7 +2952,7 @@
               this.messageBus.unsubscribe(a)
             },
             this.removeAllEventListener = function () {
-              this.messageBus = new a.util.MessageBus
+              this.messageBus = new JTopo.util.MessageBus
             }
           ;
           var b = "click,dbclick,mousedown,mouseup,mouseover,mouseout,mousemove,mousedrag,touchstart,touchmove,touchend".split(","),
@@ -3242,56 +3443,65 @@
 
             // 设置节点图片
             this.setImage = function (b, c) {
-              if (null == b)
-                throw new Error("Node.setImage(): 参数Image对象为空!");
-              const d = this;
-              if (b == 'changeColor') {
-                d.image && (d.image.alarm = a.util.getImageAlarm(d.image, null, d.fillAlarmNode, d.nodeOriginColor));//目标色,底色
+              if (null == b) {
+                throw new Error("Node.setImage(): 参数Image对象为空!")
               }
-              else if (b == 'changeSmallImageColor') {
 
-                d.smallAlarmImageObj && (d.smallAlarmImageChangeObj = a.util.getImageAlarm(d.smallAlarmImageObj, null, d.smallImageChangeColor, d.smallImageOriginColor));
-              }
-              else if ("string" == typeof b && c == 'setSmallImage') {
-                var e = null;
+              const d = this
+
+              if (b == 'changeColor') {
+                d.image && (
+                  d.image.alarm = JTopo.util.getImageAlarm(d.image, null, d.fillAlarmNode, d.nodeOriginColor)
+                )
+              } else if (b == 'changeSmallImageColor') {
+                d.smallAlarmImageObj && (
+                  d.smallAlarmImageChangeObj = JTopo.util.getImageAlarm(d.smallAlarmImageObj, null, d.smallImageChangeColor, d.smallImageOriginColor)
+                )
+              } else if ("string" == typeof b && c == 'setSmallImage') {
+                var e = null
+
                 e = new Image,
                   e.src = b,
                   e.onload = function () {
+                    const f = JTopo.util.getImageAlarm(e, null, d.smallImageChangeColor, d.smallImageOriginColor)
 
-                    const f = a.util.getImageAlarm(e, null, d.smallImageChangeColor, d.smallImageOriginColor);
-                    d.smallAlarmImageChangeObj = f;
-                    d.smallAlarmImageObj = e;
+                    d.smallAlarmImageChangeObj = f
+                    d.smallAlarmImageObj = e
                   }
-              }
-              else if (c == 'imageDataFlow') {
-                var e = null;
+              } else if (c == 'imageDataFlow') {
+                var e = null
 
                 e = new Image,
                   e.src = JTopo.flag.topoImgMap[b],
                   e.onload = function () {
-                    const f = a.util.getImageAlarm(e, null, d.fillAlarmNode, d.nodeOriginColor);
-                    f && (e.alarm = f);
-                    d.image = e;
-                  }
-              }
-              else if ("string" == typeof b) {
-                //var e = j[b];//不能用缓存，j为作用域较大，每次切换都不会清空
-                var e = null;
+                    const f = JTopo.util.getImageAlarm(e, null, d.fillAlarmNode, d.nodeOriginColor)
 
-                null == e ? (e = new Image,
+                    f && (e.alarm = f)
+                    d.image = e
+                  }
+              } else if ("string" == typeof b) {
+                // 不能用缓存，j为作用域较大，每次切换都不会清空
+                // var e = j[b]
+
+                var e = null
+
+                null == e
+                  ? (
+                    e = new Image,
                     e.src = b,
                     e.onload = function () {
                       j[b] = e,
                       1 == c && d.setSize(e.width, e.height);
-                      const f = a.util.getImageAlarm(e, null, d.fillAlarmNode, d.nodeOriginColor);//告警色,指定色
+                      //告警色,指定色
+                      const f = JTopo.util.getImageAlarm(e, null, d.fillAlarmNode, d.nodeOriginColor)
 
                       f && (e.alarm = f),
                         d.image = e
-                    }
-                ) : (c && this.setSize(e.width, e.height),
+                  }
+                  )
+                  : (c && this.setSize(e.width, e.height),
                   this.image = e)
-              }
-              else {
+              } else {
                 debugger
                 this.image = b,
                 1 == c && this.setSize(b.width, b.height)
@@ -3299,8 +3509,8 @@
             },
 
             this.removeHandler = function (a) {
+              const b = this
 
-              const b = this;
               this.outLinks && (this.outLinks.forEach(function (c) {
                 c.nodeA === b && a.remove(c)
               }),
@@ -3311,13 +3521,16 @@
                 this.inLinks = null);
 
               //对父级容器处理
-              const pc = this.parentContainer;
+              const pc = this.parentContainer
+
               if (pc && pc.length > 0) {
                 for (let i = 0; i < pc.length; i++) {
-                  const pcObj = pc[i];
-                  pcObj.remove(b);
+                  const pcObj = pc[i]
+
+                  pcObj.remove(b)
+
                   if (pcObj.childs.length == 0) {
-                    JTopo.flag.curScene.remove(pcObj);
+                    JTopo.flag.curScene.remove(pcObj)
                   }
                 }
               }
@@ -3654,9 +3867,9 @@
 
         function f(b, c, g) {
           function h(b, c) {
-            const d = a.util.lineF(b.cx, b.cy, c.cx, c.cy)
+            const d = JTopo.util.lineF(b.cx, b.cy, c.cx, c.cy)
               , e = b.getBound()
-              , f = a.util.intersectionLineBound(d, e);
+              , f = JTopo.util.intersectionLineBound(d, e);
             return f
           }
 
@@ -3964,7 +4177,7 @@
                 , g = c
                 , h = d
               ;let i = Math.atan2(h.y - g.y, h.x - g.x)
-              ;const j = a.util.getDistance(g, h) - this.arrowsRadius
+              ;const j = JTopo.util.getDistance(g, h) - this.arrowsRadius
                 , k = g.x + (j + e) * Math.cos(i)
                 , l = g.y + (j + e) * Math.sin(i)
                 , m = h.x + e * Math.cos(i)
@@ -4077,7 +4290,7 @@
             this.isInBound = function (b, c) {
               if (this.nodeA === this.nodeZ) {
                 const d = this.bundleGap * (this.nodeIndex + 1) / 2
-                  , e = a.util.getDistance(this.nodeA, {
+                  , e = JTopo.util.getDistance(this.nodeA, {
                   x: b,
                   y: c
                 }) - d;
@@ -4086,7 +4299,7 @@
               for (var f = !1, g = 1; g < this.path.length; g++) {
                 const h = this.path[g - 1]
                   , i = this.path[g];
-                if (1 == a.util.isPointInLine({
+                if (1 == JTopo.util.isPointInLine({
                     x: b,
                     y: c
                   }, h, i)) {
@@ -5185,7 +5398,7 @@
             if (k.length > 0) {
               f(e.childs, k[0]);
 
-              var l = a.util.getElementsBound(e.childs)
+              var l = JTopo.util.getElementsBound(e.childs)
                 , m = e.getCenterLocation()
                 , n = m.x - (l.left + l.right) / 2
                 , o = m.y - (l.top + l.bottom) / 2;
@@ -5217,7 +5430,7 @@
             var e = a.layout.getRootNodes(c.childs);
             if (e.length > 0) {
               d(c.childs, e[0]);
-              var f = a.util.getElementsBound(c.childs)
+              var f = JTopo.util.getElementsBound(c.childs)
                 , g = c.getCenterLocation()
                 , h = g.x - (f.left + f.right) / 2
                 , i = g.y - (f.top + f.bottom) / 2;
@@ -5500,7 +5713,7 @@
                 this
             },
             onStop: function (b) {
-              return null == e && (e = new a.util.MessageBus),
+              return null == e && (e = new JTopo.util.MessageBus),
                 e.subscribe("stop", b),
                 this
             }
@@ -5798,7 +6011,7 @@
           }
 
           var f = c.p1, g = c.p2, h = (c.context,
-            f.x + (g.x - f.x) / 2), i = f.y + (g.y - f.y) / 2, j = a.util.getDistance(f, g) / 2, k = Math.atan2(i, h),
+            f.x + (g.x - f.x) / 2), i = f.y + (g.y - f.y) / 2, j = JTopo.util.getDistance(f, g) / 2, k = Math.atan2(i, h),
             l = c.speed || .2, m = {}, n = null;
           return m.run = d,
             m.stop = e,
