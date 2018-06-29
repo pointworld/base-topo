@@ -1736,7 +1736,9 @@
               this.graphics = canvas.getContext("2d"),
               // 场景对象列表
               this.childs = [],
-              // 帧率（每秒绘制多少次）
+              // 帧率: 设置当前舞台播放的帧数/秒
+              //   - frames 可以为 0，表示：不自动绘制，由用户手工调用 Stage 对象的 paint() 方法来触发
+              //   - 如果小于 0，表示：只有键盘、鼠标有动作时才会重绘，例如：stage.frames = -24
               this.frames = 24,
               this.messageBus = new JTopo.util.MessageBus,
               // 鹰眼对象
@@ -1809,7 +1811,7 @@
               })
             },
 
-            // 将一个 Scene 场景加入到舞台中（只有加入舞台才可以显示出来）
+            // add(Scene): 将一个 Scene 场景加入到舞台中（只有加入舞台才可以显示出来）
             this.add = function (scene) {
               for (let i = 0; i < this.childs.length; i++) {
                 if (this.childs[i] === scene) {
@@ -1821,7 +1823,7 @@
                 this.childs.push(scene)
             },
 
-            // 将一个 Scene 场景从舞台中移除（不再显示）
+            // remove(Scene): 将一个 Scene 场景从舞台中移除（不再显示）
             this.remove = function (scene) {
               if (null == scene) {
                 throw new Error("Stage.remove鍑洪敊: 鍙傛暟涓簄ull!")
@@ -1879,6 +1881,7 @@
             }
           }),
 
+            // 导出成 PNG 图片（在新打开的浏览器 Tab 页中）
             this.saveImageInfo = function (a, b) {
               const c = this.eagleEye.getImage(a, b)
                 , d = window.open("about:blank");
@@ -1886,6 +1889,7 @@
                 this
             },
 
+            // 导出成 PNG 图片（直接弹出另存为对话框或者用下载软件下载）
             this.saveAsLocalImage = function (a, b) {
               const c = this.eagleEye.getImage(a, b);
               return c.replace("image/png", "image/octet-stream"),
@@ -1893,6 +1897,7 @@
                 this
             },
 
+            // 执行一次绘制，如果 frames 设置为 0，可以手工调用此方法来通知 jtopo 进行一次重绘
             this.paint = function () {
               null != this.canvas && (this.graphics.save(),
                 this.graphics.clearRect(0, 0, this.width, this.height),
@@ -1908,18 +1913,21 @@
               this.frames < 0 && (this.needRepaint = !1)))
             },
 
+            // zoom(scale): 缩放，scale 取值范围 [0-1], 实际上本操作是调用了舞台中所有 Scene 对象的 zoom 函数
             this.zoom = function (a) {
               this.childs.forEach(function (b) {
                 0 != b.visible && b.zoom(a)
               })
             },
 
+            // zoomOut(scale): 放大，scale 取值范围 [0-1]，调用 zoom 实现
             this.zoomOut = function (a) {
               this.childs.forEach(function (b) {
                 0 != b.visible && b.zoomOut(a)
               })
             },
 
+            // zoomIn(scale): 缩小，scale 取值范围 [0-1]，调用 zoom 实现
             this.zoomIn = function (a) {
               this.childs.forEach(function (b) {
                 0 != b.visible && b.zoomIn(a)
@@ -1932,12 +1940,14 @@
               })
             },
 
+            // centerAndZoom(scale): 缩放并居中显示所有元素
             this.centerAndZoom = function () {
               this.childs.forEach(function (a) {
                 0 != a.visible && a.centerAndZoom()
               })
             },
 
+            // setCenter(x, y): 设置当前舞台的中心坐标（舞台平移）
             this.setCenter = function (a, b) {
               const c = this;
               this.childs.forEach(function (d) {
@@ -1948,6 +1958,7 @@
               })
             },
 
+            // 得到舞台中所有元素位置确定的边界大小（left、top、right、bottom）
             this.getBound = function () {
               const a = {
                 left: Number.MAX_VALUE,
@@ -1973,6 +1984,7 @@
                 a
             },
 
+            // 把当前对象的属性序列化成 json 数据
             this.toJson = function () {
               {
                 var b = this
@@ -2040,7 +2052,7 @@
           JTopo.Stage = Stage
       }(JTopo),
 
-      // 场景scene方法的具体实现（JTopo.Scene(stage) 构造器函数，参数为 stage 舞台实例）
+      // 场景 scene 方法的具体实现（JTopo.Scene(stage) 构造器函数，参数为 stage 舞台实例）
       function (a) {
         function b(c) {
           function d(a, b, c, d) {
@@ -2067,14 +2079,24 @@
               this.childs = [],
               this.zIndexMap = {},
               this.zIndexArray = [],
+              // 背景颜色，设置的时候请注意 alpha 属性
               this.backgroundColor = "255,255,255",
+              // 得到、设置场景是否可见，默认为：true
               this.visible = !0,
+              // 场景的透明度，默认为 0，即：完全透明。所以有时候即使设置了背景颜色却不起作用
               this.alpha = 0,
               this.scaleX = 1,
               this.scaleY = 1,
+              // 舞台模式，不同模式下有不同的表现：
+              //   - normal[默认]：可以点击选中单个节点（按住 Ctrl 可以选中多个），点中空白处可以拖拽整个画面
+              //   - drag: 该模式下不可以选择节点，只能拖拽整个画面
+              //   - select: 可以框选多个节点、可以点击单个节点
+              //   - edit: 在默认基础上增加了：选中节点时可以通过6个控制点来调整节点的宽、高
               this.mode = a.SceneMode.normal,
               this.translate = !0,
+              // 场景偏移量（水平方向），随鼠标拖拽变化
               this.translateX = 0,
+              // 场景偏移量（垂直方向），随鼠标拖拽变化
               this.translateY = 0,
               this.lastTranslateX = 0,
               this.lastTranslateY = 0,
@@ -2082,8 +2104,10 @@
               this.mouseDownX = null,
               this.mouseDownY = null,
               this.mouseDownEvent = null,
+              // 在 select 模式中，是否显示选择矩形框
               this.areaSelect = !0,
               this.operations = [],
+              // 当前场景中被选中的元素对象
               this.selectedElements = [],
               this.paintAll = !1;
 
@@ -2094,6 +2118,9 @@
 
             this.initialize(),
             this.setBackground = function (a) {
+              // 设置场景的背景图片
+              //  - 与 backgroundColor 冲突，一旦设置了该属性，backgroundColor 属性将失效
+              //  - 例如：scene.background = "./img/bg.png";
               this.background = a
             },
 
@@ -2105,10 +2132,12 @@
 
             this.addTo(c)),
 
+            // 显示
             this.show = function () {
               this.visible = !0
             },
 
+            // 隐藏
             this.hide = function () {
               this.visible = !1
             },
@@ -2146,6 +2175,7 @@
                 a.closePath())
             },
 
+            // 获取场景中可见并绘制出来的元素（超过 Canvas 边界）
             this.getDisplayedElements = function () {
               for (var a = [], b = 0; b < this.zIndexArray.length; b++) {
                 const c = this.zIndexArray[b], d = this.zIndexMap[c];
@@ -2158,6 +2188,7 @@
               return a
             },
 
+            // 获取场景中可见并绘制出来的 Node 对象（超过 Canvas 边界）
             this.getDisplayedNodes = function () {
               for (var b = [], c = 0; c < this.childs.length; c++) {
                 const d = this.childs[c];
@@ -2227,6 +2258,7 @@
                 b[c](a)
             },
 
+            // 查找场景中的对象，例如：findElements(function(e) {return e.x>100;});
             this.findElements = function (a) {
               for (var b = [], c = 0; c < this.childs.length; c++)
                 1 == a(this.childs[c]) && b.push(this.childs[c]);
@@ -2262,6 +2294,7 @@
               return d
             },
 
+            // add(element): 添加对象到当前场景中来，例如：scene.add(new JTopo.Node()); scene.add(new JTopo.Link(nodeA, nodeZ))
             this.add = function (a) {
               this.childs.push(a),
               null == this.zIndexMap[a.zIndex] && (this.zIndexMap[a.zIndex] = [],
@@ -2276,6 +2309,7 @@
               }, 100);
             },
 
+            // remove(element): 移除场景中的某个元素，例如：scene.remove(myNode);
             this.remove = function (b) {
               this.childs = JTopo.util.removeFromArray(this.childs, b);
               const c = this.zIndexMap[b.zIndex];
@@ -2287,6 +2321,7 @@
               }, 100);
             },
 
+            // clear(): 移除场景中的所有元素
             this.clear = function () {
               const a = this;
               this.childs.forEach(function (b) {
@@ -2717,41 +2752,63 @@
 
       // displayElement 的具体实现,包含所有元素默认展示属性，挂载在 jTopo 上
       function (a) {
+        // b - DisplayElement
         function b() {
           this.initialize = function () {
             b.prototype.initialize.apply(this, arguments),
+              // 元素类型
               this.elementType = "displayElement",
               this.x = 0,
               this.y = 0,
+              // 元素宽
               this.width = 32,
+              // 元素高
               this.height = 32,
+              // 元素是否可见
               this.visible = !0,
+              // 元素透明度
               this.alpha = 1,
+              // 元素旋转
               this.rotate = 0,
+              // 元素横向缩放
               this.scaleX = 1,
-              this.scaleY = 1,
-              this.strokeColor = "22,124,255",
-              this.borderColor = "22,124,255",
-              this.fillColor = "255,255,255",
+              // 元素纵向缩放
+              this.scaleY = 1
+              // 元素描边颜色
+              this.strokeColor = "22, 124, 255",
+              // 元素边框颜色
+              this.borderColor = "22, 124, 255",
+                // 元素填充颜色
+              this.fillColor = "255, 255, 255",
+              // 元素是否有阴影
               this.shadow = !1,
+              // 元素阴影模糊度
               this.shadowBlur = 5,
-              this.shadowColor = "rgba(0,0,0,0.5)",
+              // 元素阴影颜色
+              this.shadowColor = "rgba(0, 0, 0, 0.5)",
+              // 元素阴影横向偏移量
               this.shadowOffsetX = 3,
+              // 元素阴影纵向偏移量
               this.shadowOffsetY = 6,
+              // 元素是否可转换
               this.transformAble = !1,
+              // 元素显示级别
               this.zIndex = 0;
-            const a = "x,y,width,height,visible,alpha,rotate,scaleX,scaleY,strokeColor,fillColor,shadow,shadowColor,shadowOffsetX,shadowOffsetY,transformAble,zIndex".split(",");
-            this.serializedProperties = this.serializedProperties.concat(a);
+
+            const a = "x,y,width,height,visible,alpha,rotate,scaleX,scaleY,strokeColor,fillColor,shadow,shadowColor,shadowOffsetX,shadowOffsetY,transformAble,zIndex".split(",")
+
+            // 元素序列化属性
+            this.serializedProperties = this.serializedProperties.concat(a)
           },
             this.initialize(),
 
-            this.paint = function (a) {
-              a.beginPath(),
-                a.fillStyle = "rgba(" + this.fillColor + "," + this.alpha + ")",
-                a.rect(-this.width / 2, -this.height / 2, this.width, this.height),
-                a.fill(),
-                a.stroke(),
-                a.closePath()
+            this.paint = function (ctx) {
+              ctx.beginPath(),
+                ctx.fillStyle = "rgba(" + this.fillColor + "," + this.alpha + ")",
+                ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height),
+                ctx.fill(),
+                ctx.stroke(),
+                ctx.closePath()
             },
 
             this.getLocation = function () {
@@ -2761,10 +2818,10 @@
               }
             },
 
-            this.setLocation = function (a, b) {
-              //画布上鼠标移动时激活
-              return this.x = a,
-                this.y = b,
+            this.setLocation = function (x, y) {
+              // 画布上鼠标移动时激活
+              return this.x = x,
+                this.y = y,
                 this
             },
 
@@ -2775,9 +2832,9 @@
               }
             },
 
-            this.setCenterLocation = function (a, b) {
-              return this.x = a - this.width / 2,
-                this.y = b - this.height / 2,
+            this.setCenterLocation = function (x, y) {
+              return this.x = x - this.width / 2,
+                this.y = y - this.height / 2,
                 this
             },
 
@@ -2788,9 +2845,9 @@
               }
             },
 
-            this.setSize = function (a, b) {
-              return this.width = a,
-                this.height = b,
+            this.setSize = function (w, h) {
+              return this.width = w,
+                this.height = h,
                 this
             },
 
@@ -2805,9 +2862,9 @@
               }
             },
 
-            this.setBound = function (a, b, c, d) {
-              return this.setLocation(a, b),
-                this.setSize(c, d),
+            this.setBound = function (x, y, w, h) {
+              return this.setLocation(x, y),
+                this.setSize(w, h),
                 this
             },
 
@@ -2827,44 +2884,45 @@
               }
             },
 
-            this.getPosition = function (a) {
-              let b;
-              const c = this.getBound();
-              return "Top_Left" == a ? b = {
+            this.getPosition = function (posDesc) {
+              let posObj
+              const c = this.getBound()
+
+              return "Top_Left" == posDesc ? posObj = {
                 x: c.left,
                 y: c.top
-              } : "Top_Center" == a ? b = {
+              } : "Top_Center" == posDesc ? posObj = {
                 x: this.cx,
                 y: c.top
-              } : "Top_Right" == a ? b = {
+              } : "Top_Right" == posDesc ? posObj = {
                 x: c.right,
                 y: c.top
-              } : "Middle_Left" == a ? b = {
+              } : "Middle_Left" == posDesc ? posObj = {
                 x: c.left,
                 y: this.cy
-              } : "Middle_Center" == a ? b = {
+              } : "Middle_Center" == posDesc ? posObj = {
                 x: this.cx,
                 y: this.cy
-              } : "Middle_Right" == a ? b = {
+              } : "Middle_Right" == posDesc ? posObj = {
                 x: c.right,
                 y: this.cy
-              } : "Bottom_Left" == a ? b = {
+              } : "Bottom_Left" == posDesc ? posObj = {
                 x: c.left,
                 y: c.bottom
-              } : "Bottom_Center" == a ? b = {
+              } : "Bottom_Center" == posDesc ? posObj = {
                 x: this.cx,
                 y: c.bottom
-              } : "Bottom_Top" == a ? b = {
+              } : "Bottom_Top" == posDesc ? posObj = {
                 x: this.cx,
                 y: c.bottom
-              } : "Bottom_Right" == a && (b = {
+              } : "Bottom_Right" == posDesc && (posObj = {
                 x: c.right,
                 y: c.bottom
               }),
-                b
+                posObj
             }
         }
-
+        // c - InteractiveElement
         function c() {
           this.initialize = function () {
             c.prototype.initialize.apply(this, arguments),
@@ -2963,7 +3021,7 @@
             }
           })
         }
-
+        // d - EditableElement
         function d() {
           this.initialize = function () {
             d.prototype.initialize.apply(this, arguments),
@@ -3093,8 +3151,9 @@
             }
         }
 
-        b.prototype = new a.Element,
+        b.prototype = new JTopo.Element,
           Object.defineProperties(b.prototype, {
+            // 获取或设置元素中心点的横坐标
             cx: {
               get: function () {
                 return this.x + this.width / 2
@@ -3103,6 +3162,7 @@
                 this.x = a - this.width / 2
               }
             },
+            // 获取或设置元素中心点的纵坐标
             cy: {
               get: function () {
                 return this.y + this.height / 2
@@ -3114,21 +3174,22 @@
           }),
           c.prototype = new b,
           d.prototype = new c,
-          a.DisplayElement = b,
-          a.InteractiveElement = c,
-          a.EditableElement = d
+          JTopo.DisplayElement = b,
+          JTopo.InteractiveElement = c,
+          JTopo.EditableElement = d
       }(JTopo),
 
       // node 的具体实现（包括 textNode 和 linkNode、CircleNode、AnimateNode）
       function (a) {
+        // new b -
         function b(c) {
           this.initialize = function (c) {
             b.prototype.initialize.apply(this, arguments),
               // 节点元素类型
               this.elementType = "node",
-              // 节点元素显示的优先级
+              // 节点元素显示的优先级，范围 [10-999]，10 以下保留占用
               this.zIndex = a.zIndex_Node,
-              // 节点的名字（显示文本）
+              // 设置节点的名字（显示文本）
               this.text = c,
               this.nodeFn = null,
               this.textBreakNumber = 5;
@@ -3155,7 +3216,7 @@
             this.showAlarmText = false;
             // true 则保持改变后的颜色不变
             this.keepChangeColor = false;
-            // 节点是否可拖动
+            // 设置节点是否可以拖动
             this.dragable = !0,
               // 节点文字位置
               this.textPosition = "Bottom_Center",
@@ -3537,10 +3598,12 @@
             }
         }
 
+        // new c -
         function c() {
           c.prototype.initialize.apply(this, arguments)
         }
 
+        // d - TextNode
         function d(a) {
           this.initialize(),
             this.text = a,
@@ -3569,6 +3632,7 @@
             }
         }
 
+        // e - LinkNode
         function e(a, b, c) {
           this.initialize(),
 
@@ -3667,6 +3731,7 @@
             })
         }
 
+        // f - CircleNode
         function f(a) {
           this.initialize(arguments),
 
@@ -3702,6 +3767,7 @@
             }
         }
 
+        // g -
         function g(a, b, c) {
           this.initialize(),
             this.frameImages = a || [],
@@ -3769,6 +3835,8 @@
             }
         }
 
+        // i - AnimateNode
+        // 可能参数：图片地址，行，列，时间间隔，行偏移量
         function i() {
           let a = null;
           return a = arguments.length <= 3 ? new g(arguments[0], arguments[1], arguments[2]) : new h(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]),
@@ -3784,7 +3852,7 @@
         }
 
         var j = {};
-        b.prototype = new a.EditableElement,
+        b.prototype = new JTopo.EditableElement,
           c.prototype = new b,
           d.prototype = new c,
           e.prototype = new d,
@@ -3824,11 +3892,11 @@
           g.prototype = new c,
           h.prototype = new c,
           i.prototype = new c,
-          a.Node = c,
-          a.TextNode = d,
-          a.LinkNode = e,
-          a.CircleNode = f,
-          a.AnimateNode = i
+          JTopo.Node = c,
+          JTopo.TextNode = d,
+          JTopo.LinkNode = e,
+          JTopo.CircleNode = f,
+          JTopo.AnimateNode = i
       }(JTopo),
 
       // link 的具体实现
@@ -3865,6 +3933,7 @@
           return c(a, b).length
         }
 
+        // f -- Link
         function f(b, c, g) {
           function h(b, c) {
             const d = JTopo.util.lineF(b.cx, b.cy, c.cx, c.cy)
@@ -4502,189 +4571,298 @@
             }
         }
 
-        function jk(imgurl, scene, rate, speed, width, height, row, col, time, offsetRow) {
-          //rate计时器周期,speed距离
-          const w = width || 16;
-          const h = height || 16;
-          const thislink = this;
+        /**
+         * 在线条上绘制动画图片
+         *
+         * @param {String} imgurl - 图片地址
+         * @param {Object} scene - 当前场景实例
+         * @param {Number} rate - 计时器周期
+         * @param {Number} speed - 距离
+         * @param {Number} width - 节点宽度
+         * @param {Number} height - 节点高度
+         * @param {Number} row - 行
+         * @param {Number} col - 列
+         * @param {Number} time - 时间间隔
+         * @param {Number} offsetRow - 行偏移量
+         * @return {Object} - 图片节点
+         */
+        function drawanimepic(imgurl, scene, rate, speed, width, height, row, col, time, offsetRow) {
+          const w = width || 16
+          const h = height || 16
+          const thislink = this
 
-          const imgnode = new JTopo.AnimateNode(imgurl, row, col, time, offsetRow);// 1行4列，1000毫秒播放一轮，行偏移量
+          /**
+           * 创建动画节点
+           *
+           * 参数：图片地址，1 行，4 列，1000 毫秒播放一轮，行偏移量
+           * 返回：动画节点实例
+           */
+          const imgnode = new JTopo.AnimateNode(imgurl, row, col, time, offsetRow)
+
+          // 节点宽高
           imgnode.setSize(w, h)
-          imgnode.zIndex = 2.5;
-          imgnode.isNeedSave = false;
-          imgnode.repeatPlay = true;
+          // 节点显示级别
+          imgnode.zIndex = 2.5
+          // 节点是否需要保存
+          imgnode.isNeedSave = false
+          // 节点是否重复播放
+          imgnode.repeatPlay = true
 
-          imgnode.elementType = 'linkAnimateNode';
-          imgnode.dragable = false;
-          imgnode.selected = false;
-          imgnode.paintMouseover = function () {
+          // 节点元素类型
+          imgnode.elementType = 'linkAnimateNode'
+          // 节点是否可拖拽
+          imgnode.dragable = false
+          // 节点是否被选中
+          imgnode.selected = false
 
-          };
+          imgnode.paintMouseover = function () {}
+          // 节点绑定鼠标松开事件
           imgnode.addEventListener('mouseup', function (e) {
-            imgnode.selected = false;
-          });
-          imgnode.play();
-          imgnode.visible = true;
+            imgnode.selected = false
+          })
+          // 节点开始播放
+          imgnode.play()
+          // 节点是否可见
+          imgnode.visible = true
 
+          // 如果存在动画节点
           if (thislink.animateNode) {
-            clearInterval(thislink.animateT);
-            JTopo.flag.curScene.remove(thislink.animateNode);
-            delete thislink.animateNode;
+            // 清除计时器
+            clearInterval(thislink.animateT)
+            // 移除动画节点
+            JTopo.flag.curScene.remove(thislink.animateNode)
+            // 删除动画节点指向
+            delete thislink.animateNode
           }
 
-          thislink.animateNode = imgnode;
+          // 设置动画节点的值为 imgnode
+          thislink.animateNode = imgnode
 
-          let timeT = 0;
-          thislink.animateT = null;
-          thislink.endAnimate = false;
-          thislink.animateCallback = null;
-          let currentPathIndex = 0;
-          const _rate = rate || 200;
-          const _speed = speed || 10;
-          this.isremove = false;
+          // 动画次数
+          let timeT = 0
 
-          function b(a, b) {
-            const c = [];
-            if (null == a || null == b) return c;
-            if (a && b && a.outLinks && b.inLinks) for (let d = 0; d < a.outLinks.length; d++) {
-              const e = a.outLinks[d];
-              let f = 0;
-              for (; f < b.inLinks.length; f++) {
-                const g = b.inLinks[f];
-                e === g && c.push(g)
+          // 清空定时器
+          thislink.animateT = null
+          // 是否结束动画
+          thislink.endAnimate = false
+          // 动画回调
+          thislink.animateCallback = null
+
+          // 当前路径索引
+          let currentPathIndex = 0
+          // 计时器周期
+          const _rate = rate || 200
+          // 距离
+          const _speed = speed || 10
+          // 是否已移除
+          this.isremove = false
+
+          // 返回起始与终止节点中进线和出线相等的线条
+          function b(nodeA, nodeZ) {
+            const equalLinksArr = []
+
+            if (null == nodeA || null == nodeZ) {
+              return equalLinksArr
+            }
+
+            if (nodeA && nodeZ && nodeA.outLinks && nodeZ.inLinks) {
+              for (let i = 0; i < nodeA.outLinks.length; i++) {
+
+                const nodeAoutLink = nodeA.outLinks[i]
+                let j = 0
+
+                for (; j < nodeZ.inLinks.length; j++) {
+                  const nodeZinLink = nodeZ.inLinks[j]
+
+                  nodeAoutLink === nodeZinLink && equalLinksArr.push(nodeZinLink)
+                }
               }
             }
-            return c
+
+            return equalLinksArr
           }
 
-          function c(a, c) {
-            const d = b(a, c),
-              e = b(c, a),
-              f = d.concat(e);
-            return f
+          // 返回起始与终止节点（或终止节点与起始节点）中进线和出线相等的所有线条
+          function c(nodeA, nodeZ) {
+            const aToZequalLinksArr = b(nodeA, nodeZ)
+            const zToAequalLinksArr = b(nodeZ, nodeA)
+            const allEqualLinksArr = aToZequalLinksArr.concat(zToAequalLinksArr)
+
+            return allEqualLinksArr
           }
 
-          function d(a) {
-            let b = c(a.nodeA, a.nodeZ);
-            return b = b.filter(function (b) {
-              return a !== b
+          // 返回与当前连线对象不等的所有相等连线（出线与入线相等）
+          function d(thislink) {
+            let allEqualLinksArr = c(thislink.nodeA, thislink.nodeZ)
+
+            return allEqualLinksArr = allEqualLinksArr.filter(function (equalLink) {
+              return thislink !== equalLink
             })
           }
 
+          // 移除处理器
           thislink.removeHandler = function () {
-            this.isremove = true;
-            const a = this;
-            this.nodeA && this.nodeA.outLinks && (this.nodeA.outLinks = this.nodeA.outLinks.filter(function (b) {
-              return b !== a
-            })),
-            this.nodeZ && this.nodeZ.inLinks && (this.nodeZ.inLinks = this.nodeZ.inLinks.filter(function (b) {
-              return b !== a
-            }));
-            var b = d(this);
-            b.forEach(function (a, b) {
-              a.nodeIndex = b
-            })
-          };
+            this.isremove = true
 
+            const thisLink = this
+
+            this.nodeA
+            && this.nodeA.outLinks
+            && (this.nodeA.outLinks = this.nodeA.outLinks.filter(function (outLink) {
+              return outLink !== thisLink
+            })),
+
+            this.nodeZ
+            && this.nodeZ.inLinks
+            && (this.nodeZ.inLinks = this.nodeZ.inLinks.filter(function (inLink) {
+              return inLink !== thisLink
+            }));
+
+            // 返回与当前连线对象不等的所有相等连线（出线与入线相等）
+            var allEqualLinksArr = d(this)
+
+            allEqualLinksArr.forEach(function (equalLink, index) {
+              // 为出线与入线相等的连线设置节点索引
+              equalLink.nodeIndex = index
+            })
+          }
+
+          // 图片节点动画函数：图片在连线上的运动
           function imgnodeanime() {
+            // 如果未移除
             if (!thislink.isremove) {
               if (thislink.nodeA.outLinks) {
+                // 如果存在动画节点路径 且 动画节点路径数组的长度大于 0
                 if (thislink.animateNodePath && thislink.animateNodePath.length > 0) {
-                  thislink.path = thislink.animateNodePath;
+                  // 将动画节点路径赋值给路径
+                  thislink.path = thislink.animateNodePath
                 }
-                const nodeA = thislink.path[currentPathIndex];
-                const nodeZ = thislink.path[currentPathIndex + 1];
+
+                // 设置起始节点为当前路径索引对应的元素值
+                const nodeA = thislink.path[currentPathIndex]
+                // 设置终止节点为当前路径索引 + 1 后对应的元素值
+                const nodeZ = thislink.path[currentPathIndex + 1]
+
+                // 如果需要跳过当前终止节点
                 if (nodeZ.jump) {
-                  ++currentPathIndex;
-                  imgnodeanime();
-                  debugger;
-                  return;
+                  ++currentPathIndex
+                  imgnodeanime()
+                  debugger
+                  return
                 }
-                let L;
-                let subX;
-                let subY;
-                let xl;
-                let yl;
-                const xs = nodeA.x - nodeZ.x,
-                  xy = nodeA.y - nodeZ.y,
-                  l = Math.floor(Math.sqrt(xs * xs + xy * xy));
-                ++timeT;
+
+                let L
+                // 横向微调
+                let subX
+                // 纵向微调
+                let subY
+                // sin(a) or cos(a)
+                let xl
+                // sin(a) or cos(a)
+                let yl
+                // 起始节点和终止节点的横坐标差值
+                const xs = nodeA.x - nodeZ.x
+                // 起始节点和终止节点的纵坐标差值
+                const xy = nodeA.y - nodeZ.y
+                // 起始节点到终止节点的长度
+                const l = Math.floor(Math.sqrt(xs * xs + xy * xy))
+
+                ++timeT
 
                 if (thislink.path.length == 2) {
-                  L = l;
-                  xl = xs / L;
-                  yl = xy / L;
-                  subX = 0;
-                  subY = 0;
-                }
-                else {
+                  L = l
+                  xl = xs / L
+                  yl = xy / L
+                  subX = 0
+                  subY = 0
+                } else {
                   if (currentPathIndex == 0) {
-                    //起点
-                    L = l;
-                    xl = xs / L;
-                    yl = xy / L;
-                    subX = 0;
-                    subY = 0;
+                    // 起点
+                    L = l
+                    xl = xs / L
+                    yl = xy / L
+                    subX = 0
+                    subY = 0
                   }
                   else if (currentPathIndex == thislink.path.length - 2) {
-                    //末点
-                    L = l;
-                    xl = xs / L;
-                    yl = xy / L;
-                    subX = 0;
-                    subY = 0;
+                    // 末点
+                    L = l
+                    xl = xs / L
+                    yl = xy / L
+                    subX = 0
+                    subY = 0
                   }
                   else {
-                    //中间
-                    L = l;
-                    xl = xs / L;
-                    yl = xy / L;
-                    subX = 0;
-                    subY = 0;
+                    // 中间
+                    L = l
+                    xl = xs / L
+                    yl = xy / L
+                    subX = 0
+                    subY = 0
                   }
                 }
-                const lenX = timeT * xl * _speed;
-                const lenY = timeT * yl * _speed;
-                imgnode.rotate = (Math.atan(xy / xs)) + (xs > 0 ? Math.PI : 0);//todo:算法有问题
-                imgnode.cx = nodeA.x - lenX - subX;
-                imgnode.cy = nodeA.y - lenY - subY;
+
+                // 动画在横轴移动的总长度
+                const lenX = timeT * xl * _speed
+                // 动画在纵轴移动的总长度
+                const lenY = timeT * yl * _speed
+
+                // 节点旋转弧度 todo: 算法有问题 ？？
+                imgnode.rotate = (Math.atan(xy / xs)) + (xs > 0 ? Math.PI : 0)
+
+                imgnode.cx = nodeA.x - lenX - subX
+                imgnode.cy = nodeA.y - lenY - subY
+
                 if (L <= Math.floor(Math.sqrt(lenX * lenX + lenY * lenY))) {
-                  timeT = 0;
-                  ++currentPathIndex;
+                  timeT = 0
+                  ++currentPathIndex
+
                   if (currentPathIndex == thislink.path.length - 1) {
-                    currentPathIndex = 0;
-                    thislink.endAnimate = false;
-                    thislink.endCallback && thislink.endCallback();
+                    currentPathIndex = 0
+                    thislink.endAnimate = false
+                    thislink.endCallback && thislink.endCallback()
                   }
-                  imgnode.cx = thislink.path[currentPathIndex].x;
-                  imgnode.cy = thislink.path[currentPathIndex].y;
+                  imgnode.cx = thislink.path[currentPathIndex].x
+                  imgnode.cy = thislink.path[currentPathIndex].y
                 }
               }
             } else {
-              clearInterval(thislink.animateT);
+              // 清除动画计时器
+              clearInterval(thislink.animateT)
+              // 移除动画节点
               scene.remove(imgnode)
             }
           }
 
+          // 设置定时器
           thislink.animateT = setInterval(function () {
-            imgnodeanime();
+            // 执行图片节点动画函数：图片在连线上的运动
+            imgnodeanime()
+            // 如果需要清除所有动画
             if (JTopo.flag.clearAllAnimateT) {
-              clearInterval(thislink.animateT);
+              // 清除动画计时器
+              clearInterval(thislink.animateT)
             }
-          }, _rate);
+          }, _rate)
 
-          scene.add(imgnode);
-          return imgnode;
-        };
-        f.prototype = new a.InteractiveElement,
-          f.prototype.drawanimepic = jk;
+          // 将图片节点添加到场景中
+          scene.add(imgnode)
+          // 返回图片节点
+          return imgnode
+        }
+        f.prototype = new JTopo.InteractiveElement,
+          // 连线构造函数原型上绑定函数：在线条上绘制动画图片
+          f.prototype.drawanimepic = drawanimepic;
         g.prototype = new f,
           h.prototype = new f,
           i.prototype = new f,
-          a.Link = f,
-          a.FoldLink = g,//1次折线
-          a.FlexionalLink = h,//2次折线
-          a.CurveLink = i //曲线
+          JTopo.Link = f,
+          // 1次折线
+          JTopo.FoldLink = g,
+          // 2次折线
+          JTopo.FlexionalLink = h,
+          // 曲线
+          JTopo.CurveLink = i
       }(JTopo),
 
       // container 的具体实现 ,container不能使用layout布局,如果要用,需要自己实现
@@ -4694,11 +4872,15 @@
             c.prototype.initialize.apply(this, null),
               this.elementType = "container",
               this.zIndex = d.zIndex_Container,
+              // 容器宽度
               this.width = 100,
               this.containerPadding = 0,
+              // 容器高度
               this.height = 100,
               this.childs = [],
+              // 透明度
               this.alpha = 0,
+              // 是否可以拖动
               this.dragable = !0,
               this.childDragble = !0,
               this.visible = !0,
@@ -4719,6 +4901,7 @@
               this.topPadding = 60,//顶部间距
               this.font = "16px 微软雅黑",
               this.fontColor = "255,255,255",
+              // 名称（文本），不会显示
               this.text = b,
               this.textAlpha = 1,
               this.textPosition = "Top_Bottom",
@@ -4986,7 +5169,7 @@
         function b(c) {
           this.initialize = function (c) {
             b.prototype.initialize.apply(this, null),
-              //定制化by luozheao
+              //定制化 by luozheao
               this.elementType = "containerNode",
               this.zIndex = a.zIndex_Container,
               this.width = 100,
@@ -5181,6 +5364,7 @@
               , h = d.nodeDiameter
               , i = d.hScale || 1
               , j = d.vScale || 1;
+
             d.beginAngle || 0,
             d.endAngle || 2 * Math.PI
           }
@@ -5584,7 +5768,7 @@
             d
         }
 
-        a.layout = a.Layout = {
+        JTopo.layout = JTopo.Layout = {
           layoutNode: r,
           getNodeChilds: q,
           adjustPosition: p,
@@ -5720,6 +5904,7 @@
           }
         }
 
+        // 特效：重力效果
         function c(a, c) {
           c = c || {};
           const d = c.gravity || .1, e = c.dx || 0;
@@ -5732,6 +5917,7 @@
           return i
         }
 
+        // 动画：逐步
         function d(a, c, d, e, f) {
           //节点、属性、时间、true(是否循环)、是否逆循环
           const g = 1e3 / 24, h = {};
@@ -5770,6 +5956,7 @@
           return l
         }
 
+        // 特效：喷泉效果
         function e(a) {
           null == a && (a = {});
           const b = a.spring || .1, c = a.friction || .8, d = a.grivity || 0, e = (a.wind || 0,
@@ -5829,6 +6016,7 @@
           }
         }
 
+        // 动画：旋转效果
         function f(a, b) {
           function c() {
             return e = setInterval(function () {
@@ -5855,6 +6043,7 @@
             f
         }
 
+        // 动画：重力效果
         function g(a, b) {
           function c() {
             return window.clearInterval(g),
@@ -5883,6 +6072,7 @@
             h
         }
 
+        // 动画：dividedTwoPiece
         function h(b, c) {
           function d(c, d, e, f, g) {
             const h = new a.Node;
@@ -5949,6 +6139,7 @@
             i
         }
 
+        // 动画：repeatThrow
         function i(a, b) {
           function c(a) {
             a.visible = !0,
@@ -5986,14 +6177,17 @@
             i
         }
 
+        // 动画：停止所有
         function j() {
           o = !0
         }
 
+        // 动画：开始所有
         function k() {
           o = !1
         }
 
+        // 动画：循环效果
         function l(b, c) {
           function d() {
             return n = setInterval(function () {
@@ -6018,6 +6212,7 @@
             m
         }
 
+        // 动画：移动效果
         function m(a, b) {
           function c() {
             return h = setInterval(function () {
@@ -6049,6 +6244,7 @@
             g
         }
 
+        // 动画：缩放效果
         function n(a, b) {
           function c() {
             return j = setInterval(function () {
@@ -6078,21 +6274,35 @@
             i
         }
 
-        a.Animate = {},
-          a.Effect = {};
+        // 动画
+        JTopo.Animate = {},
+          // 特效
+          JTopo.Effect = {};
         var o = !1;
-        a.Effect.spring = e,
-          a.Effect.gravity = c,
-          a.Animate.stepByStep = d,
-          a.Animate.rotate = f,
-          a.Animate.scale = n,
-          a.Animate.move = m,
-          a.Animate.cycle = l,
-          a.Animate.repeatThrow = i,
-          a.Animate.dividedTwoPiece = h,
-          a.Animate.gravity = g,
-          a.Animate.startAll = k,
-          a.Animate.stopAll = j
+        // 特效：喷泉效果
+        JTopo.Effect.spring = e,
+          // 特效：重力效果
+          JTopo.Effect.gravity = c,
+          // 动画：逐步
+          JTopo.Animate.stepByStep = d,
+          // 动画：旋转效果
+          JTopo.Animate.rotate = f,
+          // 动画：缩放效果
+          JTopo.Animate.scale = n,
+          // 动画：移动效果
+          JTopo.Animate.move = m,
+          // 动画：循环效果
+          JTopo.Animate.cycle = l,
+          // 动画：repeatThrow
+          JTopo.Animate.repeatThrow = i,
+          // 动画：dividedTwoPiece
+          JTopo.Animate.dividedTwoPiece = h,
+          // 动画：重力效果
+          JTopo.Animate.gravity = g,
+          // 动画：开始所有
+          JTopo.Animate.startAll = k,
+          // 动画：停止所有
+          JTopo.Animate.stopAll = j
       }(JTopo),
 
       // stage 和 scene 的 find 功能
@@ -6189,8 +6399,9 @@
         }
 
         var e = "click,mousedown,mouseup,mouseover,mouseout,mousedrag,keydown,keyup".split(",");
-        a.Stage.prototype.find = d,
-          a.Scene.prototype.find = d
+
+        JTopo.Stage.prototype.find = d,
+          JTopo.Scene.prototype.find = d
       }(JTopo),
 
       // 未开发完的功能，待研究
