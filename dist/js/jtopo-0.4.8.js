@@ -5905,7 +5905,7 @@
         }
 
         // 特效：重力效果
-        function c(a, c) {
+        function gravity(a, c) {
           c = c || {};
           const d = c.gravity || .1, e = c.dx || 0;
           let f = c.dy || 5;
@@ -5918,7 +5918,7 @@
         }
 
         // 动画：逐步
-        function d(a, c, d, e, f) {
+        function stepByStep(a, c, d, e, f) {
           //节点、属性、时间、true(是否循环)、是否逆循环
           const g = 1e3 / 24, h = {};
           for (let i in c) {
@@ -5957,7 +5957,7 @@
         }
 
         // 特效：喷泉效果
-        function e(a) {
+        function spring(a) {
           null == a && (a = {});
           const b = a.spring || .1, c = a.friction || .8, d = a.grivity || 0, e = (a.wind || 0,
           a.minLength || 0);
@@ -6017,7 +6017,7 @@
         }
 
         // 动画：旋转效果
-        function f(a, b) {
+        function rotate(a, b) {
           function c() {
             return e = setInterval(function () {
               return o ? void f.stop() : (a.rotate += g || .2,
@@ -6044,7 +6044,7 @@
         }
 
         // 动画：重力效果
-        function g(a, b) {
+        function animateGravity(a, b) {
           function c() {
             return window.clearInterval(g),
             h.onStop && h.onStop(a),
@@ -6073,7 +6073,7 @@
         }
 
         // 动画：dividedTwoPiece
-        function h(b, c) {
+        function dividedTwoPiece(b, c) {
           function d(c, d, e, f, g) {
             const h = new a.Node;
             return h.setImage(b.image),
@@ -6140,7 +6140,7 @@
         }
 
         // 动画：repeatThrow
-        function i(a, b) {
+        function repeatThrow(a, b) {
           function c(a) {
             a.visible = !0,
               a.rotate = Math.random();
@@ -6178,17 +6178,17 @@
         }
 
         // 动画：停止所有
-        function j() {
+        function stopAll() {
           o = !0
         }
 
         // 动画：开始所有
-        function k() {
+        function startAll() {
           o = !1
         }
 
         // 动画：循环效果
-        function l(b, c) {
+        function cycle(b, c) {
           function d() {
             return n = setInterval(function () {
               if (o)
@@ -6213,7 +6213,7 @@
         }
 
         // 动画：移动效果
-        function m(a, b) {
+        function move(a, b) {
           function c() {
             return h = setInterval(function () {
               if (o)
@@ -6245,7 +6245,7 @@
         }
 
         // 动画：缩放效果
-        function n(a, b) {
+        function scale(a, b) {
           function c() {
             return j = setInterval(function () {
               a.scaleX += f,
@@ -6280,45 +6280,51 @@
           JTopo.Effect = {};
         var o = !1;
         // 特效：喷泉效果
-        JTopo.Effect.spring = e,
+        JTopo.Effect.spring = spring,
           // 特效：重力效果
-          JTopo.Effect.gravity = c,
+          JTopo.Effect.gravity = gravity,
           // 动画：逐步
-          JTopo.Animate.stepByStep = d,
+          JTopo.Animate.stepByStep = stepByStep,
           // 动画：旋转效果
-          JTopo.Animate.rotate = f,
+          JTopo.Animate.rotate = rotate,
           // 动画：缩放效果
-          JTopo.Animate.scale = n,
+          JTopo.Animate.scale = scale,
           // 动画：移动效果
-          JTopo.Animate.move = m,
+          JTopo.Animate.move = move,
           // 动画：循环效果
-          JTopo.Animate.cycle = l,
+          JTopo.Animate.cycle = cycle,
           // 动画：repeatThrow
-          JTopo.Animate.repeatThrow = i,
+          JTopo.Animate.repeatThrow = repeatThrow,
           // 动画：dividedTwoPiece
-          JTopo.Animate.dividedTwoPiece = h,
+          JTopo.Animate.dividedTwoPiece = dividedTwoPiece,
           // 动画：重力效果
-          JTopo.Animate.gravity = g,
+          JTopo.Animate.gravity = animateGravity,
           // 动画：开始所有
-          JTopo.Animate.startAll = k,
+          JTopo.Animate.startAll = startAll,
           // 动画：停止所有
-          JTopo.Animate.stopAll = j
+          JTopo.Animate.stopAll = stopAll
       }(JTopo),
 
       // stage 和 scene 的 find 功能
-      function (a) {
+      function (JTopo) {
         function b(a, b) {
-          let c = [];
-          if (0 == a.length)
-            return c;
-          let d = b.match(/^\s*(\w+)\s*$/);
+          let c = []
+
+          if (0 == a.length) {
+            return c
+          }
+
+          let d = b.match(/^\s*(\w+)\s*$/)
+
           if (null != d) {
             var e = a.filter(function (a) {
               return a.elementType == d[1]
-            });
+            })
+
             null != e && e.length > 0 && (c = c.concat(e))
           } else {
-            let f = !1;
+            let f = !1
+
             if (d = b.match(/\s*(\w+)\s*\[\s*(\w+)\s*([>=<])\s*['"](\S+)['"]\s*\]\s*/),
               (null == d || d.length < 5) && (d = b.match(/\s*(\w+)\s*\[\s*(\w+)\s*([>=<])\s*(\d+(\.\d+)?)\s*\]\s*/),
                 f = !0),
@@ -6337,6 +6343,7 @@
               null != e && e.length > 0 && (c = c.concat(e))
             }
           }
+
           return c
         }
 
@@ -6386,14 +6393,17 @@
         }
 
         function d(d) {
-          let e = [], f = [];
-          this instanceof a.Stage ? (e = this.childs, f = f.concat(e))
-            : this instanceof a.Scene
-            ? e = [this] : f = this,
-            e.forEach(function (a) {
+          let e = []
+          let f = []
+
+          this instanceof JTopo.Stage
+            ? (e = this.childs, f = f.concat(e))
+            : this instanceof JTopo.Scene ? e = [this] : f = this, e.forEach(function (a) {
               f = f.concat(a.childs)
             });
-          let g = null;
+
+          let g = null
+
           return g = "function" == typeof d ? f.filter(d) : b(f, d),
             g = c(g)
         }
@@ -6405,128 +6415,157 @@
       }(JTopo),
 
       // 未开发完的功能，待研究
-      function (a) {
-        function b(a, b) {
-          this.x = a,
-            this.y = b
+      function (window) {
+        function Point(x, y) {
+          this.x = x
+          this.y = y
         }
 
-        function c(a) {
-          this.p = new b(0, 0),
-            this.w = new b(1, 0),
-            this.paint = a
+        // Logo.Tortoise
+        function Tortoise(paint) {
+          this.p = new Point(0, 0)
+          this.w = new Point(1, 0)
+          this.paint = paint
         }
 
-        function d(a, b, c) {
+        // Logo.shift
+        function shift(a, b, c) {
+          return function (tortoise) {
+            for (let i = 0; i < b; i++) {
+              a()
+            }
+
+            c && tortoise.turn(c),
+              tortoise.move(3)
+          }
+        }
+
+        // Logo.spin
+        function spin(a, b) {
+          const c = 2 * Math.PI
+
           return function (d) {
-            for (let e = 0; b > e; e++)
-              a(),
-              c && d.turn(c),
-                d.move(3)
+            for (let i = 0; b > i; i++) {
+              a()
+            }
+
+            d.turn(c / b)
           }
         }
 
-        function e(a, b) {
-          const c = 2 * Math.PI;
+        // Logo.scale
+        function scale(a, b, c) {
           return function (d) {
-            for (let e = 0; b > e; e++)
-              a(),
-                d.turn(c / b)
+            for (let i = 0; b > i; i++) {
+              a()
+            }
+
+            d.resize(c)
           }
         }
 
-        function f(a, b, c) {
-          return function (d) {
-            for (let e = 0; b > e; e++)
-              a(),
-                d.resize(c)
+        // Logo.polygon
+        function polygon(sides) {
+          const rad = 2 * Math.PI
+
+          return function (tortoise) {
+            for (let i = 0; i < sides; i++) {
+              tortoise.forward(1)
+            }
+
+            tortoise.turn(rad / sides)
           }
         }
 
-        function g(a) {
-          const b = 2 * Math.PI;
-          return function (c) {
-            for (let d = 0; a > d; d++)
-              c.forward(1),
-                c.turn(b / a)
+        // Logo.star
+        function star(a) {
+          const rad = 4 * Math.PI
+
+          return function (tortoise) {
+            for (let i = 0; i < a; i++) {
+              tortoise.forward(1)
+            }
+
+            tortoise.turn(rad / a)
           }
         }
 
-        function h(a) {
-          const b = 4 * Math.PI;
-          return function (c) {
-            for (let d = 0; a > d; d++)
-              c.forward(1),
-                c.turn(b / a)
+        // Logo.spiral
+        function spiral(a, b, c, d) {
+          return function (tortoise) {
+            for (let i = 0; i < b; i++) {
+              a()
+            }
+
+            tortoise.forward(1),
+              tortoise.turn(c),
+              tortoise.resize(d)
           }
         }
 
-        function i(a, b, c, d) {
-          return function (e) {
-            for (let f = 0; b > f; f++)
-              a(),
-                e.forward(1),
-                e.turn(c),
-                e.resize(d)
-          }
-        }
+        const Logo = {}
 
-        const j = {};
-        c.prototype.forward = function (a) {
-          const b = this.p, c = this.w;
-          return b.x = b.x + a * c.x,
-            b.y = b.y + a * c.y,
-          this.paint && this.paint(b.x, b.y),
+        Tortoise.prototype.forward = function (a) {
+          const p = this.p
+          const w = this.w
+
+          return p.x = p.x + a * w.x,
+            p.y = p.y + a * w.y,
+          this.paint && this.paint(p.x, p.y),
             this
         },
-          c.prototype.move = function (a) {
-            const b = this.p
-              , c = this.w;
-            return b.x = b.x + a * c.x,
-              b.y = b.y + a * c.y,
+          Tortoise.prototype.move = function (a) {
+            const p = this.p
+            const w = this.w
+
+            return p.x = p.x + a * w.x,
+              p.y = p.y + a * w.y,
               this
           },
-          c.prototype.moveTo = function (a, b) {
-            return this.p.x = a,
-              this.p.y = b,
+          Tortoise.prototype.moveTo = function (x, y) {
+            return this.p.x = x,
+              this.p.y = y,
               this
           },
-          c.prototype.turn = function (a) {
-            const b = (this.p,
-              this.w)
-              , c = Math.cos(a) * b.x - Math.sin(a) * b.y
-              , d = Math.sin(a) * b.x + Math.cos(a) * b.y;
-            return b.x = c,
-              b.y = d,
+          Tortoise.prototype.turn = function (a) {
+            const w = (this.p, this.w)
+            const x = Math.cos(a) * w.x - Math.sin(a) * w.y
+            const y = Math.sin(a) * w.x + Math.cos(a) * w.y
+
+            return w.x = x,
+              w.y = y,
               this
           },
-          c.prototype.resize = function (a) {
-            const b = this.w;
-            return b.x = b.x * a,
-              b.y = b.y * a,
+          Tortoise.prototype.resize = function (a) {
+            const w = this.w
+
+            return w.x = w.x * a,
+              w.y = w.y * a,
               this
           },
-          c.prototype.save = function () {
+          Tortoise.prototype.save = function () {
             return null == this._stack && (this._stack = []),
               this._stack.push([this.p, this.w]),
               this
           },
-          c.prototype.restore = function () {
+          Tortoise.prototype.restore = function () {
             if (null != this._stack && this._stack.length > 0) {
-              const a = this._stack.pop();
+              const a = this._stack.pop()
+
               this.p = a[0],
                 this.w = a[1]
             }
             return this
           },
-          j.Tortoise = c,
-          j.shift = d,
-          j.spin = e,
-          j.polygon = g, //多边形
-          j.spiral = i,
-          j.star = h,
-          j.scale = f,
-          a.Logo = j
+          Logo.Tortoise = Tortoise,
+          Logo.shift = shift,
+          Logo.spin = spin,
+          // 多边形
+          Logo.polygon = polygon,
+          Logo.spiral = spiral,
+          Logo.star = star,
+          Logo.scale = scale,
+          window.Logo = Logo
       }(window);
 
     return JTopo
