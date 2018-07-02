@@ -1,3 +1,9 @@
+/**
+ *
+ * canvas - stage - scene - node
+ *
+ */
+
 ;define(
   [],
   function () {
@@ -5,7 +11,7 @@
     // 全局
     !function (window) {
 
-      // 构造函数 - 可以看作是基类，通过该构造函数可以构造出 Scene、Node、Link、Text 等对象
+      // 构造函数
       function Element() {
         /** this 可以是 scene、node、link、... */
 
@@ -15,7 +21,13 @@
           this.elementType = "element"
           // 元素的序列化属性
           this.serializedProperties = ["elementType"]
-          // 元素的属性 - 堆: [{}, {}, ...]
+          // 元素的属性 - 堆:
+          // propertiesStack = [
+          //   data,
+          //   { elementType: "scene", background: xx, backgroundColor: xx, mode: "normal",  ... }
+          //   data,
+          //   ...
+          // ]
           this.propertiesStack = []
           // 元素的 id
           // this._id: 'front1530013168481849489'
@@ -27,86 +39,157 @@
         this.removeHandler = function () {}
 
         // 设置或返回元素特性的值
-        this.attr = function (a, b) {
-          if (null != a && null != b) {
-            this[a] = b
-          } else if (null != a) {
-            return this[a]
+        this.attr = function (k, v) {
+          if (null != k && null != v) {
+            this[k] = v
+          } else if (null != k) {
+            return this[k]
           }
 
           return this
         }
 
-        // 保存，每次 save 只保留自身的数据，创建时的状态不能保存
+        // 保存，保存当前数据到一个属性堆 propertiesStack 的末尾，每次 save 只保留自身的数据，创建时的状态不能保存
         this.save = function () {
           const that = this
-          // { elementType: "scene", background: undefined, backgroundColor: "255,255,255", mode: "normal", paintAll: false, scaleX: 1, scaleY: 1, translate: true, translateX: 0, translateY: 0, visible: true, ... }
-          const obj = {}
+          // data: { elementType: "scene", background: undefined, backgroundColor: "255,255,255", mode: "normal", paintAll: false, scaleX: 1, scaleY: 1, translate: true, translateX: 0, translateY: 0, visible: true, ... }
+          const data = {}
 
           this.serializedProperties.forEach(function (attr) {
-            // obj["elementType"] = that["elementType"]
-            obj[attr] = that[attr]
+            // data["elementType"] = that["elementType"]
+            data[attr] = that[attr]
           })
-          // TODO: ? this.propertiesStack = []
-          this.propertiesStack.push(obj)
+
+          this.propertiesStack.push(data)
         }
 
-        // 恢复
+        // 恢复上一次保存的数据，取属性堆 propertiesStack 的末尾元素
         this.restore = function () {
+          // 如果存在属性堆 且 该属性堆的元素长度不为 0
           if (
             null != this.propertiesStack
             && 0 != this.propertiesStack.length
           ) {
             const that = this
-            // TODO: ? this.propertiesStack = []
-            const obj = this.propertiesStack.pop()
+
+            const  data = this.propertiesStack.pop()
 
             this.serializedProperties.forEach(function (attr) {
-              that[attr] = obj[attr]
+              that[attr] =  data[attr]
             })
           }
         }
 
-        // 转换为 JSON 对象
+        // 转换为 JSON 对象 TODO: 返回的不是 JSON 字符串吗？
         this.toJson = function () {
           const that = this
           const len = this.serializedProperties.length
-          // b: '{"key": value, ...}'
+          // b: '{"key": "value", ...}'
           let b = "{"
 
-          return this.serializedProperties.forEach(function (attr, index) {
-            let value = that[attr];
+          return this.serializedProperties.forEach(function (key, index) {
+            let value = that[key]
 
             "string" == typeof value && (value = '"' + value + '"'),
-              b += '"' + attr + '":' + value, len > index + 1 && (b += ",")
+              b += '"' + key + '":' + value, len > index + 1 && (b += ",")
           }),
             b += "}"
         }
       }
 
+      // 扩展 CanvasRenderingContext2D 对象的原型方法
+      /** CanvasRenderingContext2D.prototype: {
+            JTopoDashedLineTo: ƒ (x1, y1, x2, y2, dashedLineSpacing),
+            JTopoRoundRect: ƒ (x, y, w, h, dashedLineSpacing, borderType),
+            JtopoDrawPointPath: ƒ (a, b, c, d, e, f),
+
+            arc: ƒ arc(),
+            arcTo: ƒ arcTo(),
+            beginPath: ƒ beginPath(),
+            bezierCurveTo: ƒ bezierCurveTo(),
+            canvas: (...),
+            clearRect: ƒ clearRect(),
+            clip: ƒ clip(),
+            closePath: ƒ closePath(),
+            createImageData: ƒ createImageData(),
+            createLinearGradient: ƒ createLinearGradient(),
+            createPattern: ƒ createPattern(),
+            createRadialGradient: ƒ createRadialGradient(),
+            drawFocusIfNeeded: ƒ drawFocusIfNeeded(),
+            drawImage: ƒ drawImage(),
+            ellipse: ƒ ellipse(),
+            fill: ƒ fill(),
+            fillRect: ƒ fillRect(),
+            fillStyle: (...),
+            fillText: ƒ fillText(),
+            filter: (...),
+            font: (...),
+            getImageData: ƒ getImageData(),
+            getLineDash: ƒ getLineDash(),
+            globalAlpha: (...),
+            globalCompositeOperation: (...),
+            imageSmoothingEnabled: (...),
+            imageSmoothingQuality: (...),
+            isPointInPath: ƒ isPointInPath(),
+            isPointInStroke: ƒ isPointInStroke(),
+            lineCap: (...),
+            lineDashOffset: (...),
+            lineJoin: (...),
+            lineTo: ƒ lineTo(),
+            lineWidth: (...),
+            measureText: ƒ measureText(),
+            miterLimit: (...),
+            moveTo: ƒ moveTo(),
+            putImageData: ƒ putImageData(),
+            quadraticCurveTo: ƒ quadraticCurveTo(),
+            rect: ƒ rect(),
+            resetTransform: ƒ resetTransform(),
+            restore: ƒ restore(),
+            rotate: ƒ rotate(),
+            save: ƒ save(),
+            scale: ƒ scale(),
+            setLineDash: ƒ setLineDash(),
+            setTransform: ƒ setTransform(),
+            shadowBlur: (...),
+            shadowColor: (...),
+            shadowOffsetX: (...),
+            shadowOffsetY: (...),
+            stroke: ƒ stroke(),
+            strokeRect: ƒ strokeRect(),
+            strokeStyle: (...),
+            strokeText: ƒ strokeText(),
+            textAlign: (...),
+            textBaseline: (...),
+            transform: ƒ transform(),
+            translate: ƒ translate(),
+          }
+       */
+
       /**
        * 绘制圆角矩形
        *
-       * @param {Number} x - 起点横坐标
-       * @param {Number} y - 起点纵坐标
-       * @param {Number} w - 宽度
-       * @param {Number} h - 高度
-       * @param {Number} dashedLineSpacing - 虚线的间隔
-       * @param {String} borderType - 边框线的类型
+       * 绘制思路：直接读代码
+       * FIXME: 该方法存在一个缺陷，当绘制边框为虚线的圆角矩形时，矩形四个角的弧线并不是虚线
+       *
+       * @param {Number} x - 矩形左下角的横坐标
+       * @param {Number} y - 矩形左下角的纵坐标
+       * @param {Number} w - 矩形宽度
+       * @param {Number} h - 矩形高度
+       * @param {Number} borderRadius - 边框圆弧半径
+       * @param {String} borderDashed - 边框线的是否为虚线
        */
-      CanvasRenderingContext2D.prototype.JTopoRoundRect = function (x, y, w, h, dashedLineSpacing, borderType) {
-        // borderType 表示边框为虚线
-        if (borderType) {
-          "undefined" == typeof dashedLineSpacing && (dashedLineSpacing = 5)
+      CanvasRenderingContext2D.prototype.JTopoRoundRect = function (x, y, w, h, borderRadius, borderDashed) {
+
+        if (borderDashed) {
+          /** borderDashed 表示边框为虚线 */
+
+          "undefined" == typeof borderRadius && (borderRadius = 5)
 
           this.beginPath()
 
-          // this.moveTo(x + dashedLineSpacing, y)
-          // this.lineTo(x + w - dashedLineSpacing, y)
-
           // 绘制虚线
           // 参数：起点横坐标，起点纵坐标，终点横坐标，终点纵坐标，虚线的间隔
-          this.JTopoDashedLineTo(x + dashedLineSpacing, y, x + w - dashedLineSpacing, y)
+          this.JTopoDashedLineTo(x + borderRadius, y, x + w - borderRadius, y)
 
           /**
            * quadraticCurveTo() 方法通过使用表示二次贝塞尔曲线的指定控制点，向当前路径添加一个点
@@ -115,40 +198,39 @@
            * 曲线的开始点是当前路径中最后一个点。
            * 如果路径不存在，那么请使用 beginPath() 和 moveTo() 方法来定义开始点。
            *
-           * 参数：控制点坐标（x + w, y），结束点坐标（x + w, y + dashedLineSpacing）
+           * 参数：控制点坐标（x + w, y），结束点坐标（x + w, y + borderRadius）
            */
-          this.quadraticCurveTo(x + w, y, x + w, y + dashedLineSpacing)
+          this.quadraticCurveTo(x + w, y, x + w, y + borderRadius)
 
-          // this.lineTo(x + w, y + h - dashedLineSpacing)
+          this.JTopoDashedLineTo(x + w, y + borderRadius, x + w, y + h - borderRadius)
+          this.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h)
 
-          this.JTopoDashedLineTo(x + w, y + dashedLineSpacing, x + w, y + h - dashedLineSpacing)
-          this.quadraticCurveTo(x + w, y + h, x + w - dashedLineSpacing, y + h)
+          this.JTopoDashedLineTo(x + w - borderRadius, y + h, x + borderRadius, y + h)
+          this.quadraticCurveTo(x, y + h, x, y + h - borderRadius)
 
-          // this.lineTo(x + dashedLineSpacing, y + h)
-
-          this.JTopoDashedLineTo(x + w - dashedLineSpacing, y + h, x + dashedLineSpacing, y + h)
-          this.quadraticCurveTo(x, y + h, x, y + h - dashedLineSpacing)
-
-          // this.lineTo(x, y + dashedLineSpacing)
-
-          this.JTopoDashedLineTo(x, y + h - dashedLineSpacing, x, y + dashedLineSpacing)
-          this.quadraticCurveTo(x, y, x + dashedLineSpacing, y)
-          this.JTopoDashedLineTo(x, y, x + dashedLineSpacing, y)
+          this.JTopoDashedLineTo(x, y + h - borderRadius, x, y + borderRadius)
+          this.quadraticCurveTo(x, y, x + borderRadius, y)
+          this.JTopoDashedLineTo(x, y, x + borderRadius, y)
 
           this.closePath()
         } else {
-          "undefined" == typeof dashedLineSpacing && (dashedLineSpacing = 5)
+          /** 如果不存在 borderDashed，即边框不为虚线 */
+
+          "undefined" == typeof borderRadius && (borderRadius = 5)
 
           this.beginPath()
-          this.moveTo(x + dashedLineSpacing, y)
-          this.lineTo(x + w - dashedLineSpacing, y)
-          this.quadraticCurveTo(x + w, y, x + w, y + dashedLineSpacing)
-          this.lineTo(x + w, y + h - dashedLineSpacing)
-          this.quadraticCurveTo(x + w, y + h, x + w - dashedLineSpacing, y + h)
-          this.lineTo(x + dashedLineSpacing, y + h)
-          this.quadraticCurveTo(x, y + h, x, y + h - dashedLineSpacing)
-          this.lineTo(x, y + dashedLineSpacing)
-          this.quadraticCurveTo(x, y, x + dashedLineSpacing, y)
+          this.moveTo(x + borderRadius, y)
+          this.lineTo(x + w - borderRadius, y)
+          // 二次贝塞尔曲线，起点坐标 startP: (x1, y1), 控制点坐标controlP: (x, y), 终点坐标 endP: (x2, y2)
+          // quadraticCurveTo(x, y, x2, y2)
+          // 当 |x1 - x| === |x1 - x2| === |y2 - y| === |y2 - y1| 时，绘制的是以 borderRadius 为半径的 1/4 圆弧
+          this.quadraticCurveTo(x + w, y, x + w, y + borderRadius)
+          this.lineTo(x + w, y + h - borderRadius)
+          this.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h)
+          this.lineTo(x + borderRadius, y + h)
+          this.quadraticCurveTo(x, y + h, x, y + h - borderRadius)
+          this.lineTo(x, y + borderRadius)
+          this.quadraticCurveTo(x, y, x + borderRadius, y)
           this.closePath()
         }
       }
@@ -170,18 +252,20 @@
         const w = x2 - x1
         const h = y2 - y1
 
-        // 斜边长度：直角三角形的斜边长度
-        const hypotenuseLength = Math.floor(Math.sqrt(w * w + h * h))
+        // 当 w 和 h 都不为 0 时，len 为 Math.floor(Math.sqrt(w * w + h * h)): 即直角三角形的斜边长度
+        // 当 w 为 0 时，len 为 h
+        // 当 h 为 0 时，len 为 w
+        const len = Math.floor(Math.sqrt(w * w + h * h))
 
         // 虚线间隔数量
         const dashedLineSpacingAmount = 0 >= dashedLineSpacing
-          ? hypotenuseLength
-          : hypotenuseLength / dashedLineSpacing
+          ? len
+          : len / dashedLineSpacing
 
         // 虚线间隔线作为对角线时矩形的高
-        const dashedLineSpacingH = h / hypotenuseLength * dashedLineSpacing
+        const dashedLineSpacingH = h / len * dashedLineSpacing
         // 虚线间隔线作为对角线时矩形的宽
-        const dashedLineSpacingW = w / hypotenuseLength * dashedLineSpacing
+        const dashedLineSpacingW = w / len * dashedLineSpacing
 
         this.beginPath()
 
@@ -195,41 +279,60 @@
         this.stroke()
       }
 
-      // 拓展 by luozheao
-      CanvasRenderingContext2D.prototype.JtopoDrawPointPath = function (a, b, c, d, e, f) {
+      /**
+       * 拓展 by luozheao
+       *
+       * 不断调用该函数的结果就是一个短的指定颜色的线段在另一条长的指定颜色的线段上运动
+       *
+       * @param {Number} x1 - 长线段起点的横坐标
+       * @param {Number} y1 - 长线段起点的纵坐标
+       * @param {Number} x2 - 长线段终点的横坐标
+       * @param {Number} y2 - 长线段终点的纵坐标
+       * @param {String} strokeStyle - 长线段的颜色
+       * @param {String} PointPathColor - 短线段的颜色
+       */
+      CanvasRenderingContext2D.prototype.JtopoDrawPointPath = function (x1, y1, x2, y2, strokeStyle, PointPathColor) {
+        // 153051618849
         const animespeed = (new Date()) / 10
-        const xs = c - a
-        const xy = d - b
 
-        let xl
-        let yl
+        const w = x2 - x1
+        const h = y2 - y1
 
-        const l = Math.floor(Math.sqrt(xs * xs + xy * xy))
-        const colorlength = 50
-        const j = l
+        // 当 w 和 h 都不为 0 时，len 为 Math.floor(Math.sqrt(w * w + h * h)): 即直角三角形的斜边长度
+        // 当 w 为 0 时，len 为 h
+        // 当 h 为 0 时，len 为 w
+        const len = Math.floor(Math.sqrt(w * w + h * h))
 
-        if (l === 0) {
-          xl = 0
-          yl = 0
+        const pointPathLength = 50
+
+        // 存储 sin 或 cos 值
+        let wLen
+        let hLen
+
+        const j = len
+
+        if (len === 0) {
+          wLen = 0
+          hLen = 0
         } else {
-          xl = xs / l
-          yl = xy / l
+          wLen = w / len
+          hLen = h / len
         }
 
-        const colorpoint = animespeed % (l + colorlength) - colorlength
+        const colorpoint = animespeed % (len + pointPathLength) - pointPathLength
 
         for (let i = 0; i < j; i++) {
-          if (((i) > colorpoint) && ((i) < (colorpoint + colorlength))) {
+          if (((i) > colorpoint) && ((i) < (colorpoint + pointPathLength))) {
             this.beginPath()
-            this.strokeStyle = e
-            this.moveTo(a + (i - 1) * xl, b + (i - 1) * yl)
-            this.lineTo(a + i * xl, b + i * yl)
+            this.strokeStyle = strokeStyle
+            this.moveTo(x1 + (i - 1) * wLen, y1 + (i - 1) * hLen)
+            this.lineTo(x1 + i * wLen, y1 + i * hLen)
             this.stroke()
           } else {
             this.beginPath()
-            this.strokeStyle = f
-            this.moveTo(a + (i - 1) * xl, b + (i - 1) * yl)
-            this.lineTo(a + i * xl, b + i * yl)
+            this.strokeStyle = PointPathColor
+            this.moveTo(x1 + (i - 1) * wLen, y1 + (i - 1) * hLen)
+            this.lineTo(x1 + i * wLen, y1 + i * hLen)
             this.stroke()
           }
         }
@@ -272,43 +375,78 @@
           open_hand: "url(./images/openhand.cur) 8 8, default",
           closed_hand: "url(./images/closedhand.cur) 8 8, default",
         },
-        // 通过 JSON 数据创建舞台
+        /**
+         * 通过 JSON 数据创建舞台对象，即，将 JSON 中的数据绑定到舞台对象 stage 中
+         *
+         * @param {String} jsonStr
+         * @param {Object} canvas
+         * @return {Object} stage
+         */
         createStageFromJson(jsonStr, canvas) {
-          eval("var jsonObj = " + jsonStr);
+          // 会自动将 json 字符串转换为 json 对象
+          // jsonObj = {
+          //   ..,
+          //   childs: [
+          //     scene,
+          //     {
+          //       childs: [node, {elementType: xx, ..}, node, ..],
+          //       background: xx,
+          //     },
+          //     scene,
+          //     ..,
+          //   ],
+          //   ..,
+          // }
+          eval("var jsonObj = " + jsonStr)
 
           // new 一个舞台实例
-          const stage = new JTopo.Stage(canvas);
+          const stage = new JTopo.Stage(canvas)
 
           for (let key in jsonObj) {
-            "childs" !== key && (stage[key] = jsonObj[key]);
+            "childs" !== key && (stage[key] = jsonObj[key])
           }
 
           // 获取舞台下的所有子场景
-          const scenes = jsonObj.childs;
+          // childs: [
+          //   scene,
+          //   {
+          //     childs: [node, {elementType: xx, ..}, node, ..],
+          //     background: xx,
+          //   },
+          //   scene,
+          //   ..,
+          // ],
+          const scenes = jsonObj.childs
 
           // 返回舞台对象
           return scenes.forEach(function (scene) {
             // new 一个场景实例
-            const sceneInstance = new JTopo.Scene(stage);
+            const sceneInstance = new JTopo.Scene(stage)
 
-            for (var key1 in scene)
-              "childs" != key1 && (sceneInstance[key1] = scene[key1]),
-              "background" == key1 && (sceneInstance.background = scene[key1]);
+            for (var key1 in scene) {
+              "childs" != key1 && (sceneInstance[key1] = scene[key1])
+              "background" == key1 && (sceneInstance.background = scene[key1])
+            }
 
-            const nodes = scene.childs;
+            // 获取场景下的所有子节点
+            // childs: [node, {elementType: xx, ..}, node, ..]
+            const nodes = scene.childs
 
             nodes.forEach(function (node) {
-              let c = null;
-              const d = node.elementType;
+              let newNode = null
+              const elementType = node.elementType
 
-              "node" == d
-                ? c = new JTopo.Node
-                : "CircleNode" == d && (c = new JTopo.CircleNode);
+              // new 一个新节点实例
+              "node" == elementType
+                ? newNode = new JTopo.Node
+                : "CircleNode" == elementType && (newNode = new JTopo.CircleNode)
 
-              for (let e in node)
-                c[e] = node[e];
+              // 拷贝当前所遍历节点的所有属性到新的节点实例上，原型链上的所有属性都将被访问
+              for (let i in node) {
+                newNode[i] = node[i]
+              }
 
-              sceneInstance.add(c)
+              sceneInstance.add(newNode)
             })
           }),
             stage
@@ -324,7 +462,7 @@
 
       // jTopo 具体方法的实现，部分全局方法的实现
       function (JTopo) {
-        // 观察者模式，其中 messageMap 为事件数组
+        // JTopo.util.MessageBus - 观察者模式，其中 messageMap 为事件数组
         function MessageBus(name) {
           const self = this
 
@@ -371,6 +509,8 @@
         }
 
         /**
+         * JTopo.util.getDistance
+         *
          * 获取两点间的距离
          *
          * 参数的两种传入方式：
@@ -389,8 +529,9 @@
         }
 
         /**
-         * 用于获取元素的宽高位置等信息
+         * JTopo.util.getElementsBound
          *
+         * 用于获取元素的宽高位置等信息
          *
          * @return {Object} - {
          *   top: xx, right: xx, bottom: xx, left: xx, width: xx, height: xx, ..
@@ -423,7 +564,7 @@
             obj
         }
 
-        // 返回事件触发时鼠标的位置信息
+        // JTopo.util.mouseCoords - 返回事件触发时鼠标的位置信息
         function mouseCoords(e) {
           return e = cloneEvent(e),
           e.pageX || (
@@ -436,27 +577,29 @@
             e
         }
 
-        // 返回事件触发时鼠标的位置信息
+        // JTopo.util.getEventPosition - 返回事件触发时鼠标的位置信息
         function getEventPosition(e) {
           return e = mouseCoords(e)
         }
 
         /**
-         * 旋转点，返回旋转后点的坐标信息
+         * JTopo.util.rotatePoint
+         *
+         * 旋转点，返回旋转后点 p2 的坐标信息
          *
          * @param {Number} x1 - 点 p1 的横坐标
          * @param {Number} y1 - 点 p1 的纵坐标
          * @param {Number} x2 - 点 p2 的横坐标
          * @param {Number} y2 - 点 p2 的纵坐标
          * @param {Number} targetRotateRadianRegion - 目标旋转弧度区间
-         * @return {Object} - 旋转后点的坐标信息
+         * @return {Object} - 旋转后点 p2 的坐标信息
          */
         function rotatePoint(x1, y1, x2, y2, targetRotateRadianRegion) {
           // 宽度，作为旋转前点的横坐标
           const w = x2 - x1
-          // 高度，作为旋转后点的纵坐标
+          // 高度，作为旋转前点的纵坐标
           const h = y2 - y1
-          // 对角线
+          // 对角线，即点(x1, y1) 到点(x2, y2) 的距离
           const diagonalLenth = Math.sqrt(w * w + h * h)
           // Math.atan2(y, x) 返回其参数比值的反正切值（-pi 到 pi），表示点 (x, y) 对应的偏移角度。
           // 这是一个逆时针角度，以弧度为单位，正 X 轴和点 (x, y) 与原点连线之间。
@@ -471,8 +614,14 @@
         }
 
         /**
-         * 旋转多个点，返回旋转过程中经历的旋转点的位置信息
+         * JTopo.util.rotatePoints
          *
+         * 旋转多个点，返回旋转过程中经历的旋转点 p2 的所有位置信息
+         *
+         * @param {Object} p1 - 点 p1 的坐标
+         * @param {Array} pointsArr
+         * @param {Number} targetRotateRadianRegion - 目标旋转弧度区间
+         * @return {Array} tarCoordArr
          */
         function rotatePoints(p1, pointsArr, targetRotateRadianRegion) {
           for (let tarCoordArr = [], i = 0; i < pointsArr.length; i++) {
@@ -484,28 +633,44 @@
           return tarCoordArr
         }
 
-        // 遍历数组 arr，依次将数组中的每一个元素作为 函数 fn 的参数，并执行 fn 函数
+        /**
+         * window.$foreach - 遍历数组 arr，依次将数组中的每一个元素作为 函数 fn 的参数，并执行 fn 函数
+         *
+         * @param {Array} arr - 待遍历的数组
+         * @param {Function} fn - 对数组中的元素所进行的操作
+         * @param {Number} t - 定时器的时间，确定 fn 函数什么时候执行
+         *
+         */
         function $foreach(arr, fn, t) {
-          function d(i) {
+          function wrapper(i) {
             i != arr.length && (fn(arr[i]),
               setTimeout(function () {
-                d(++i)
+                wrapper(++i)
               }, t))
           }
 
           if (0 != arr.length) {
             let start = 0
 
-            d(start)
+            wrapper(start)
           }
         }
 
-        // TODO ?
+        /**
+         * window.$for TODO ?
+         *
+         * @param {Number} a -
+         * @param {Number} b -
+         * @param {Function} fn -
+         * @param {Number} t - 定时器的时间，确定 fn 函数什么时候执行
+         *
+         */
         function $for(a, b, fn, t) {
-          function e(i) {
-            i != b && (fn(b),
+          function wrapper(i) {
+            i != b && (
+              fn(b),
               setTimeout(function () {
-                e(++i)
+                wrapper(++i)
               }, t)
             )
           }
@@ -513,11 +678,11 @@
           if (!(a > b)) {
             const start = 0
 
-            e(start)
+            wrapper(start)
           }
         }
 
-        // 返回克隆的事件对象
+        // JTopo.util.cloneEvent - 返回克隆的事件对象
         function cloneEvent(e) {
           const copyEventObj = {}
 
@@ -528,7 +693,7 @@
           return copyEventObj
         }
 
-        // 返回克隆的 json 对象
+        // JTopo.util.clone - 返回克隆的 json 对象
         function clone(jsonObj) {
           const copyJsonObj = {}
 
@@ -540,6 +705,8 @@
         }
 
         /**
+         * JTopo.util.isPointInRect
+         *
          * 判断点是否在矩形内部
          *
          * @param {Object} point - 点的相关数据
@@ -551,6 +718,8 @@
         }
 
         /**
+         * JTopo.util.isRectOverlapRect
+         *
          * 判断两个矩形是否重叠
          *
          * @param {Object} rect1
@@ -585,6 +754,8 @@
         }
 
         /**
+         * JTopo.util.isPointInLine
+         *
          * 判断点是否在线上，很巧妙
          *
          * @param {Object} p1 - 线段起点或终点的坐标信息
@@ -600,7 +771,7 @@
           return Math.abs(d2 + d3 - d1) <= .5
         }
 
-        // 从指定的数组中删除指定的元素
+        // JTopo.util.removeFromArray - 从指定的数组中删除指定的元素
         function removeFromArray(arr, targetEle) {
           for (let i = 0; i < arr.length; i++) {
             const currentEle = arr[i]
@@ -616,6 +787,8 @@
         }
 
         /**
+         * JTopo.util.randomColorv
+         *
          * 随机产生 rgb 颜色:
          *
          * @return {String} - e.g.: '234, 23, 145'
@@ -625,6 +798,8 @@
         }
 
         /**
+         * JTopo.util.getProperties
+         *
          * 获取指定对象的属性集合，用字符串表示
          *
          * @param {Object} obj
@@ -646,6 +821,8 @@
         }
 
         /**
+         * JTopo.util.loadStageFromJson
+         *
          * 根据 json 数据加载舞台对象
          *
          * @param {Object} json
@@ -654,40 +831,57 @@
          *
          */
         function loadStageFromJson(json, canvas) {
-          const obj = eval(json), stage = new JTopo.Stage(canvas);
-          // TODO ? stageObj is what??
-          for (let k in stageObj)
-            if ("scenes" != k)
-              stage[k] = obj[k];
-            else {
-              const scenes = obj.scenes;
-              let i = 0;
+          const obj = eval(json)
+          const stage = new JTopo.Stage(canvas)
+
+          // TODO ? stageObj is what?? is it the obj??
+          // for (let k in stageObj) {
+          for (let k in obj) {
+            if ("scenes" != k) {
+              stage[k] = obj[k]
+            } else {
+              const scenes = obj.scenes
+              let i = 0
+
               for (; i < scenes.length; i++) {
                 const sceneObj = scenes[i]
-                  , scene = new JTopo.Scene(stage);
-                for (let p in sceneObj)
-                  if ("elements" != p)
-                    scene[p] = sceneObj[p];
-                  else {
-                    const nodeMap = {}, elements = sceneObj.elements;
-                    let m = 0;
+                const scene = new JTopo.Scene(stage)
+
+                for (let p in sceneObj) {
+                  if ("elements" != p) {
+                    scene[p] = sceneObj[p]
+                  } else {
+                    const nodeMap = {}
+                    const elements = sceneObj.elements
+                    let m = 0
+
                     for (; m < elements.length; m++) {
-                      const elementObj = elements[m], type = elementObj.elementType;
-                      let element;
-                      "Node" == type && (element = new JTopo.Node);
-                      for (let mk in elementObj)
-                        element[mk] = elementObj[mk];
+                      const elementObj = elements[m]
+                      const type = elementObj.elementType
+                      let element
+
+                      "Node" == type && (element = new JTopo.Node)
+
+                      for (let mk in elementObj) {
+                        element[mk] = elementObj[mk]
+                      }
+
                       nodeMap[element.text] = element,
                         scene.add(element)
                     }
                   }
+                }
               }
             }
+          }
+
           return console.log(stage),
             stage
         }
 
         /**
+         * JTopo.util.toJson
+         *
          * 将舞台数据转换成 json 对象
          *
          * @param {Object} stage
@@ -730,9 +924,11 @@
         }
 
         /**
-         * 改变颜色
+         * JTopo.util.changeColor
          *
-         * @param {Object} ctx
+         * 改变颜色，返回一个包含图片（即相当于 canvas 的截图）展示的 data URI
+         *
+         * @param {Object} ctx - canvas 上下文
          * @param {Object} imgEle
          * @param {Number} tarR - 目标颜色 R 值
          * @param {Number} tarG - 目标颜色 G 值
@@ -743,20 +939,38 @@
          * @return {url}
          */
         function changeColor(ctx, imgEle, tarR, tarG, tarB, oriR, oriG, oriB) {
-
+          // 设置 canvas 宽高等于图片元素的宽高
           const canvasW = canvas.width = imgEle.width
           const canvasH = canvas.height = imgEle.height
 
           // 清除画布内容
-          ctx.clearRect(0, 0, canvas.width, canvas.height),
-            ctx.drawImage(imgEle, 0, 0);
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+          /**
+           * context.drawImage(img,sx,sy,swidth,sheight,x,y,width,height)
+           * drawImage() 方法在画布上绘制图像、画布或视频
+           * drawImage() 方法也能够绘制图像的某些部分，以及/或者增加或减少图像的尺寸
+           *
+           * 参数:
+           *   img 规定要使用的图像、画布或视频
+           *   sx 可选。开始剪切的 x 坐标位置
+           *   sy 可选。开始剪切的 y 坐标位置
+           *   swidth	可选。被剪切图像的宽度
+           *   sheight 可选。被剪切图像的高度
+           *   x 在画布上放置图像的 x 坐标位置
+           *   y 在画布上放置图像的 y 坐标位置
+           *   width 可选。要使用的图像的宽度。（伸展或缩小图像）
+           *   height	可选。要使用的图像的高度。（伸展或缩小图像）
+           */
+          ctx.drawImage(imgEle, 0, 0)
 
+          // 通过 getImageData() 复制画布上指定矩形的像素数据
+          // imageData: {data: Uint8ClampedArray(360000), height: xx, width: xx}
           const imageData = ctx.getImageData(0, 0, imgEle.width, imgEle.height)
           const imageInnerData = imageData.data
 
           let i = 0
-          for (; canvasW > i; i++) {
-            for (let j = 0; canvasH > j; j++) {
+          for (; i < canvasW; i++) {
+            for (let j = 0; j < canvasH; j++) {
               // 第 n 个像素点
               const n = 4 * (i + j * canvasW)
 
@@ -774,15 +988,21 @@
               }
             }
 
+            // 通过 putImageData() 将图像数据放回画布
             // 参数：image_data, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight
             ctx.putImageData(imageData, 0, 0, 0, 0, imgEle.width, imgEle.height)
           }
 
+          // HTMLCanvasElement.toDataURL() 方法返回一个包含图片展示的 data URI
+          // canvas.toDataURL(type, encoderOptions);
+          // 参数
+          //   type: 可选，图片格式，默认为 image/png
+          //   encoderOptions: 可选，在指定图片格式为 image/jpeg 或 image/webp的情况下，可以从 0 到 1 的区间内选择图片的质量。如果超出取值范围，将会使用默认值 0.92。其他参数会被忽略
+          // 返回值 - 包含 data URI 的 DOMString
           const url = canvas.toDataURL()
-          // return alarmImageCache[b.src+nodeId] = url,
-          //   url
 
           if (oriR !== undefined || oriG !== undefined || oriB !== undefined) {
+            // 告警图片缓存
             JTopo.flag.alarmImageCache[imgEle.src + 'tag' + tarR + tarG + tarB] = url
           }
 
@@ -790,17 +1010,19 @@
         }
 
         /**
-         * 获取图片告警，即变色功能
+         * JTopo.util.getImageAlarm
+         *
+         * 获取图片告警，即变色功能，返回 null 或图片元素
          *
          * @param {Object} imgEle
-         * @param {Number} targetColorR
+         * @param {Object | null} b - TODO: ？？
          * @param {Array} targetColor - 目标色
          * @param {Array} originColor - 原始颜色
          * @return {null | image}
          */
-        function getImageAlarm(imgEle, targetColorR, targetColor, originColor) {
+        function getImageAlarm(imgEle, b, targetColor, originColor) {
 
-          null == targetColorR && (targetColorR = 255)
+          null == b && (b = 255)
 
           try {
             const image = new Image
@@ -815,18 +1037,17 @@
             if (targetColor && originColor) {
               image.src = changeColor(graphics, imgEle, targetColor[0], targetColor[1], targetColor[2], originColor[0], originColor[1], originColor[2])
             } else {
-              image.src = changeColor(graphics, imgEle, targetColorR)
+              // 不对图片做任何改变
+              image.src = changeColor(graphics, imgEle, b)
             }
 
             return image
-          } catch (e) {
-
-          }
+          } catch (e) {}
 
           return null
         }
 
-        // 获取元素相对于其祖先元素的偏移位置
+        // JTopo.util.getOffsetPosition - 获取元素相对于其祖先元素的偏移位置
         function getOffsetPosition(ele) {
           if (!ele) {
             return {
@@ -865,24 +1086,26 @@
         }
 
         /**
-         * 线条函数：一元一次方程
+         * JTopo.util.lineF
+         *
+         * 线条函数：一元一次方程 y = kx + b
          *
          * @param {Number} x1
          * @param {Number} y1
          * @param {Number} x2
          * @param {Number} y2
-         * @return {Function} f
+         * @return {Function} f - 还携带了两个点的横纵坐标，线段的斜率和截距
          */
         function lineF(x1, y1, x2, y2) {
+          // 线段的斜率
+          let k = (y2 - y1) / (x2 - x1)
+          // y 轴截距
+          let b = y1 - x1 * k
+
           function f(x) {
             // y = kx + b
             return k * x + b
           }
-
-          // 线段的斜率
-          var k = (y2 - y1) / (x2 - x1)
-
-          var b = y1 - x1 * k
 
           return f.k = k,
             f.b = b,
@@ -894,6 +1117,8 @@
         }
 
         /**
+         * JTopo.util.inRange
+         *
          * 判断第一个参数的值是否在第二个参数和第三个参数之间
          *
          * @param {Number} testVal
@@ -911,6 +1136,8 @@
         }
 
         /**
+         * JTopo.util.isPointInLineSeg
+         *
          * 判断点是否在线段上
          *
          * @param {Number} x - 测试点的横坐标
@@ -923,6 +1150,8 @@
         }
 
         /**
+         * JTopo.util.intersection
+         *
          * 判断两条线是否相交，若相交，则返回交点坐标信息；若不相交，则返回 null
          *
          * @param {Object} lineObj1 - 线条 1 对象
@@ -944,6 +1173,8 @@
         }
 
         /**
+         * JTopo.util.intersectionLineBound
+         *
          * 使两条线相交：即，尝试旋转线条角度，使两条线最终能够相交
          *
          * @param {Object} lineObj1 - {f: xx, b: xx, x1: xx, x2: xx, y1: xx, y2: xx}
@@ -1008,8 +1239,8 @@
             return res
           };
 
-        let canvas = document.createElement("canvas"),
-          graphics = canvas.getContext("2d");
+        let canvas = document.createElement("canvas")
+        let graphics = canvas.getContext("2d")
 
         // JTopo 工具
         JTopo.util = {
@@ -1065,13 +1296,14 @@
             return JSON.parse(JSON.stringify(jsonObj))
           },
           // 根据 key 获取链接中的参数 value
-          getUrlParam(name) {
+          getUrlParam(key) {
             // 构造一个含有目标参数的正则表达式对象
-            const reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)")
+            const reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)")
             // 匹配目标参数
+            // window.location.search.substr(1): key1=val1&key2=val2&...
             const r = window.location.search.substr(1).match(reg)
 
-            // 返回参数值
+            // 返回 key 对应的参数值
             if (r != null) {
               return unescape(r[2])
             }
@@ -1104,8 +1336,8 @@
            * @param {Object} node
            * @param {Boolean} isChangeColor - 节点是否需要改变颜色
            * @param {Boolean} isFlash - 节点是否闪动
-           * @param {any} originColor - 节点原始的颜色
-           * @param {any} changeColor - 节点需要改变的颜色
+           * @param {String} originColor - 节点原始的颜色
+           * @param {String} changeColor - 节点需要改变的颜色
            *
            */
           nodeFlash(node, isChangeColor, isFlash, originColor, changeColor) {
@@ -1342,11 +1574,13 @@
             callback && callback()
           },
         },
+          // JTopo.flag
           JTopo.flag = {
             // canvas 上下文
             graphics,
             // 清除节点所有动画效果
             clearAllAnimateT: false,
+            // 设置鼠标光标的形状或替代的图片地址
             imageUrl: "./images/",
             // 当前场景
             curScene: null,
@@ -5882,15 +6116,20 @@
       // Animate 和 Effect 的具体实现
       function (a) {
         function b(b, c) {
-          let d, e = null;
+          let d
+          let e = null
+
           return {
             stop: function () {
-              return d ? (window.clearInterval(d),
-              e && e.publish("stop"),
-                this) : this
+              return d ? (
+                window.clearInterval(d),
+                e && e.publish("stop"),
+                this
+              ) : this
             },
             start: function () {
-              const a = this;
+              const a = this
+
               return d = setInterval(function () {
                 b.call(a)
               }, c),
@@ -5906,61 +6145,82 @@
 
         // 特效：重力效果
         function gravity(a, c) {
-          c = c || {};
-          const d = c.gravity || .1, e = c.dx || 0;
-          let f = c.dy || 5;
-          const g = c.stop, h = c.interval || 30, i = new b(function () {
-            g && g() ? (f = .5,
-              this.stop()) : (f += d,
-              a.setLocation(a.x + e, a.y + f))
-          }, h);
+          c = c || {}
+
+          const d = c.gravity || .1
+          const e = c.dx || 0
+          let f = c.dy || 5
+          const g = c.stop
+          const h = c.interval || 30
+          const i = new b(function () {
+            g && g()
+              ? (f = .5, this.stop())
+              : (f += d, a.setLocation(a.x + e, a.y + f))
+          }, h)
+
           return i
         }
 
         // 动画：逐步
         function stepByStep(a, c, d, e, f) {
           //节点、属性、时间、true(是否循环)、是否逆循环
-          const g = 1e3 / 24, h = {};
+          const g = 1e3 / 24
+          const h = {}
+
           for (let i in c) {
             const j = c[i]
-              , k = j - a[i];
+            const k = j - a[i]
+
             h[i] = {
               oldValue: a[i],
               targetValue: j,
               step: k / d * g,
               isDone: function (b) {
-                const c = this.step > 0 && a[b] >= this.targetValue || this.step < 0 && a[b] <= this.targetValue;
+                const c = this.step > 0 && a[b] >= this.targetValue || this.step < 0 && a[b] <= this.targetValue
+
                 return c
               }
             }
           }
           const l = new b(function () {
-            let b = !0;
-            for (var d in c)
-              h[d].isDone(d) || (a[d] += h[d].step,
-                b = !1);
+            let b = !0
+
+            for (var d in c) {
+              h[d].isDone(d) || (a[d] += h[d].step, b = !1)
+            }
+
             if (b) {
-              if (!e)
-                return this.stop();
-              for (var d in c)
+              if (!e) {
+                return this.stop()
+              }
+
+              for (var d in c) {
                 if (f) {
                   const g = h[d].targetValue;
                   h[d].targetValue = h[d].oldValue,
                     h[d].oldValue = g,
                     h[d].step = -h[d].step
-                } else
+                } else {
                   a[d] = h[d].oldValue
+                }
+              }
             }
+
             return this
-          }, g);
+          }, g)
+
           return l
         }
 
         // 特效：喷泉效果
         function spring(a) {
-          null == a && (a = {});
-          const b = a.spring || .1, c = a.friction || .8, d = a.grivity || 0, e = (a.wind || 0,
-          a.minLength || 0);
+          null == a && (a = {})
+
+          const b = a.spring || .1
+          const c = a.friction || .8
+          const d = a.grivity || 0
+          const e = (a.wind || 0, a.minLength || 0)
+
           return {
             items: [],
             timer: null,
@@ -5971,14 +6231,17 @@
                 target: b,
                 vx: 0,
                 vy: 0
-              };
+              }
+
               return this.items.push(c),
                 this
             },
             play: function (a) {
               this.stop(),
                 a = null == a ? 1e3 / 24 : a;
-              const b = this;
+
+              const b = this
+
               this.timer = setInterval(function () {
                 b.nextFrame()
               }, a)
@@ -5989,16 +6252,18 @@
             nextFrame: function () {
               for (let a = 0; a < this.items.length; a++) {
                 const f = this.items[a]
-                  , g = f.node
-                  , h = f.target
-                ;let i = f.vx
-                  , j = f.vy
-                ;const k = h.x - g.x
-                  , l = h.y - g.y
-                  , m = Math.atan2(l, k);
+                const g = f.node
+                const h = f.target
+                let i = f.vx
+                let j = f.vy
+                const k = h.x - g.x
+                const l = h.y - g.y
+                const m = Math.atan2(l, k)
+
                 if (0 != e) {
                   const n = h.x - Math.cos(m) * e
-                    , o = h.y - Math.sin(m) * e;
+                  const o = h.y - Math.sin(m) * e
+
                   i += (n - g.x) * b,
                     j += (o - g.y) * b
                 } else
@@ -6570,4 +6835,18 @@
 
     return JTopo
   });
+
+/**
+ *
+ * eval() 函数的特点和作用
+ *
+ *　　作用：它的作用是把对应的字符串解析成js代码并运行（将json的字符串解析成为JSON对象）；
+ *　　特点：它是一个全局函数；
+ *　　缺点：1> 在该函数内部申明的变量都是全局变量，且申明的变量不会提升
+ *         2> 可读性非常差
+ *　　　　  3> 耗性能，执行2次，一次解析成js语句，一次执行js代码
+ *　　　　  4> 不好再做优化和编译
+ *　　　　  5> 不安全，比如 eval input 的值
+ *
+ */
 
