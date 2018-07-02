@@ -474,35 +474,35 @@
           this.messageCount = 0
 
           // 订阅
-          this.subscribe = function (a, c) {
-            const d = self.messageMap[a]
+          this.subscribe = function (eName, c) {
+            const d = self.messageMap[eName]
 
-            null == d && (self.messageMap[a] = [])
+            null == d && (self.messageMap[eName] = [])
 
-            self.messageMap[a].push(c)
+            self.messageMap[eName].push(c)
             self.messageCount++
           }
 
           // 取消订阅
-          this.unsubscribe = function (a) {
-            const c = self.messageMap[a]
+          this.unsubscribe = function (eName) {
+            const c = self.messageMap[eName]
 
             null != c && (
-              self.messageMap[a] = null,
-                delete self.messageMap[a],
+              self.messageMap[eName] = null,
+                delete self.messageMap[eName],
                 self.messageCount--
             )
           }
 
           // 发布
-          this.publish = function (a, c, d) {
-            const e = self.messageMap[a]
+          this.publish = function (eName, eObj, d) {
+            const e = self.messageMap[eName]
 
             if (null != e) {
               for (let f = 0; f < e.length; f++) {
                 d
-                  ? !function (a, b) { setTimeout(function () { a(b) }, 10) }(e[f], c)
-                  : e[f](c)
+                  ? !function (a, b) { setTimeout(function () { a(b) }, 10) }(e[f], eObj)
+                  : e[f](eObj)
               }
             }
           }
@@ -1802,13 +1802,16 @@
         function Stage(c) {
           // 返回事件被触发时鼠标和事件源的相关信息
           function d(e) {
-            // 返回事件触发时鼠标的位置信息
+            // 返回事件触发时鼠标的位置信息: {
+            //   x: xx, y: xx, target: xx, offsetLeft: xx, offsetTop: xx,
+            //   pageX: xx, pageY: xx, clientX: xx, clientY: xx, ..
+            // }
             const eventObj = JTopo.util.getEventPosition(e)
-            // 获取元素相对于其祖先元素的偏移位置
-            const d = JTopo.util.getOffsetPosition(n.canvas)
+            // 获取元素相对于其祖先元素的偏移位置: { left: xx, right: xx, }
+            const offsetPosObj = JTopo.util.getOffsetPosition(n.canvas)
 
-            return eventObj.offsetLeft = eventObj.pageX - d.left,
-              eventObj.offsetTop = eventObj.pageY - d.top,
+            return eventObj.offsetLeft = eventObj.pageX - offsetPosObj.left,
+              eventObj.offsetTop = eventObj.pageY - offsetPosObj.top,
               eventObj.x = eventObj.offsetLeft,
               eventObj.y = eventObj.offsetTop,
               eventObj.target = null,
@@ -1816,7 +1819,7 @@
           }
 
           // mouseover 事件处理程序
-          function ee(e) {
+          function mouseover(e) {
             // 禁止选择
             document.onselectstart = function () {
               return !1
@@ -1826,14 +1829,14 @@
             this.mouseOver = !0
 
             // 返回事件被触发时鼠标和事件源的相关信息
-            const b = d(e)
+            const eventObj = d(e)
 
-            n.dispatchEventToScenes("mouseover", b)
-              , n.dispatchEvent("mouseover", b)
+            n.dispatchEventToScenes("mouseover", eventObj)
+              , n.dispatchEvent("mouseover", eventObj)
           }
 
           // mouseout 事件处理程序
-          function f(e) {
+          function mouseout(e) {
             p = setTimeout(function () {
               o = !0
             }, 500),
@@ -1848,7 +1851,7 @@
           }
 
           // mousedown 事件处理程序
-          function g(e) {
+          function mousedown(e) {
             const b = d(e);
 
             n.mouseDown = !0,
@@ -1859,7 +1862,7 @@
           }
 
           // mouseup 事件处理程序
-          function h(e) {
+          function mouseup(e) {
             const b = d(e);
 
             n.dispatchEventToScenes("mouseup", b),
@@ -1869,7 +1872,7 @@
           }
 
           // mousemove 事件处理程序
-          function i(e) {
+          function mousemove(e) {
             p && (window.clearTimeout(p),
               p = null),
               o = !1;
@@ -1885,21 +1888,21 @@
           }
 
           // click 事件处理程序
-          function j(e) {
+          function click(e) {
             const b = d(e);
             n.dispatchEventToScenes("click", b),
               n.dispatchEvent("click", b)
           }
 
           // dbclick 事件处理程序
-          function k(e) {
+          function dblclick(e) {
             const b = d(e);
             n.dispatchEventToScenes("dbclick", b),
               n.dispatchEvent("dbclick", b)
           }
 
           // mousewheel 事件处理程序
-          function l(e) {
+          function mousewheel(e) {
             const b = d(e);
             n.dispatchEventToScenes("mousewheel", b),
               n.dispatchEvent("mousewheel", b),
@@ -1911,32 +1914,36 @@
           // 添加事件
           function m(ele) {
             JTopo.util.isIE || !window.addEventListener
-              ? (ele.onmouseout = f,
-                ele.onmouseover = ee,
-                ele.onmousedown = g,
-                ele.onmouseup = h,
-                ele.onmousemove = i,
-                ele.onclick = j,
-                ele.ondblclick = k,
-                ele.onmousewheel = l,
-                ele.touchstart = g,
-                ele.touchmove = i,
-                ele.touchend = h)
-              : (ele.addEventListener("mouseout", f),
-                ele.addEventListener("mouseover", ee),
-                ele.addEventListener("mousedown", g),
-                ele.addEventListener("mouseup", h),
-                ele.addEventListener("mousemove", i),
-                ele.addEventListener("click", j),
-                ele.addEventListener("dblclick", k),
+              ? (
+                ele.onmouseout = mouseout,
+                ele.onmouseover = mouseover,
+                ele.onmousedown = mousedown,
+                ele.onmouseup = mouseup,
+                ele.onmousemove = mousemove,
+                ele.onclick = click,
+                ele.ondblclick = dblclick,
+                ele.onmousewheel = mousewheel,
+                ele.touchstart = mousedown,
+                ele.touchmove = mousemove,
+                ele.touchend = mouseup
+              )
+              : (
+                ele.addEventListener("mouseout", mouseout),
+                ele.addEventListener("mouseover", mouseover),
+                ele.addEventListener("mousedown", mousedown),
+                ele.addEventListener("mouseup", mouseup),
+                ele.addEventListener("mousemove", mousemove),
+                ele.addEventListener("click", click),
+                ele.addEventListener("dblclick", dblclick),
                 JTopo.util.isFirefox
-                  ? ele.addEventListener("DOMMouseScroll", l)
-                  : ele.addEventListener("mousewheel", l)), window.addEventListener && (window.addEventListener("keydown", function (e) {
-              n.dispatchEventToScenes("keydown", JTopo.util.cloneEvent(e));
+                  ? ele.addEventListener("DOMMouseScroll", mousewheel)
+                  : ele.addEventListener("mousewheel", mousewheel)), window.addEventListener && (window.addEventListener("keydown", function (e) {
+              n.dispatchEventToScenes("keydown", JTopo.util.cloneEvent(e)
+              );
 
-              const keyCode = e.keyCode;
+              const keyCode = e.keyCode
 
-              (37 == keyCode || 38 == keyCode || 39 == keyCode || 40 == keyCode) && (
+              ;(37 == keyCode || 38 == keyCode || 39 == keyCode || 40 == keyCode) && (
                 e.preventDefault
                   ? e.preventDefault()
                   : (e = e || window.event, e.returnValue = !1)
@@ -2032,15 +2039,15 @@
                 }
               }
 
-              this.childs.forEach(function (c) {
-                if (1 == c.visible) {
-                  const d = c[eName + "Handler"]
+              this.childs.forEach(function (scene) {
+                if (1 == scene.visible) {
+                  const eHandler = scene[eName + "Handler"]
 
-                  if (null == d) {
+                  if (null == eHandler) {
                     throw new Error("Function not found:" + eName + "Handler")
                   }
 
-                  d.call(c, eObj)
+                  eHandler.call(scene, eObj)
                 }
               })
             },
@@ -2101,8 +2108,8 @@
             },
 
             // 分配事件
-            this.dispatchEvent = function (eName, b) {
-              return this.messageBus.publish(eName, b),
+            this.dispatchEvent = function (eName, eObj) {
+              return this.messageBus.publish(eName, eObj),
                 this
             }
           ;
@@ -2271,15 +2278,15 @@
           get height() {
             return this.canvas.height
           },
-          set cursor(a) {
-            this.canvas.style.cursor = a
+          set cursor(shape) {
+            this.canvas.style.cursor = shape
           },
           get cursor() {
             return this.canvas.style.cursor
           },
-          set mode(a) {
-            this.childs.forEach(function (b) {
-              b.mode = a
+          set mode(m) {
+            this.childs.forEach(function (stage) {
+              stage.mode = m
             })
           }
         },
