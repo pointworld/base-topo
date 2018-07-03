@@ -951,11 +951,10 @@
             stageJson += "}"
         }
 
-        // TODO: 20180703
         /**
          * JTopo.util.changeColor
          *
-         * 改变颜色，返回一个包含图片（即相当于 canvas 的截图）展示的 data URI
+         * 改变颜色，返回一个图片（即相当于 canvas 的截图）的 data URI
          *
          * @param {Object} ctx - canvas 上下文
          * @param {Object} imgEle
@@ -974,6 +973,7 @@
 
           // 清除画布内容
           ctx.clearRect(0, 0, canvas.width, canvas.height)
+          // 将图片绘制到 canvas 上
           /**
            * context.drawImage(img,sx,sy,swidth,sheight,x,y,width,height)
            * drawImage() 方法在画布上绘制图像、画布或视频
@@ -1001,6 +1001,7 @@
           for (; i < canvasW; i++) {
             for (let j = 0; j < canvasH; j++) {
               // 第 n 个像素点
+              // 由于 rgba 是 4 个值为一个数组所以 i 要 *4
               const n = 4 * (i + j * canvasW)
 
               if (
@@ -1030,6 +1031,7 @@
           // 返回值 - 包含 data URI 的 DOMString
           const url = canvas.toDataURL()
 
+          // 如果参数 oriR 或 oriG 或 oriB 存在，则对该改变过的图片进行缓存
           if (oriR !== undefined || oriG !== undefined || oriB !== undefined) {
             // 告警图片缓存
             JTopo.flag.alarmImageCache[imgEle.src + 'tag' + tarR + tarG + tarB] = url
@@ -1044,7 +1046,7 @@
          * 获取图片告警，即变色功能，返回 null 或图片元素
          *
          * @param {Object} imgEle
-         * @param {Object | null} b - TODO: ？？
+         * @param {Object | null} b -
          * @param {Array} targetColor - 目标色
          * @param {Array} originColor - 原始颜色
          * @return {null | image}
@@ -1285,7 +1287,7 @@
           getEventPosition,
           // 返回事件触发时鼠标的位置信息
           mouseCoords,
-          // 观察者模式，其中 messageMap 为事件数组
+          // 观察者模式，其中 messageMap 为消息映射
           MessageBus,
           isFirefox: navigator.userAgent.indexOf("Firefox") > 0,
           isIE: !(!window.attachEvent || -1 !== navigator.userAgent.indexOf("Opera")),
@@ -1367,7 +1369,6 @@
            * @param {Boolean} isFlash - 节点是否闪动
            * @param {String} originColor - 节点原始的颜色
            * @param {String} changeColor - 节点需要改变的颜色
-           *
            */
           nodeFlash(node, isChangeColor, isFlash, originColor, changeColor) {
             // 节点原始颜色
@@ -1376,7 +1377,7 @@
             node.alarm = isChangeColor ? "true" : null
             // 节点需要改变的颜色
             node.fillAlarmNode = changeColor
-
+            // 设置节点图片
             node.setImage('changeColor')
 
             // 清除计数器
@@ -1446,7 +1447,10 @@
            * @param {String} id
            * @param {Array} linksArr
            * @param {Object} saveObj
-           * @return {Object}
+           * @return {Object} - _saveObj = {
+           *   prevNodesId: [],
+           *   prevLinksId: [],
+           * }
            */
           findAllPrevNodesAndLinks(id, linksArr, saveObj) {
             let _saveObj = saveObj
@@ -1517,7 +1521,7 @@
             })
           },
           /**
-           * 设置弹窗的位置 TODO ?
+           * 设置弹窗的位置
            *
            * @param {Object} $pop - 弹窗 jquery 对象
            * @param {String} _nodeId - 节点 id
@@ -1577,7 +1581,7 @@
               top: conTop,
             })
           },
-          // 根据开辟空间的宽高和坐标,移动其四周的元素 TODO ?
+          // 根据开辟空间的宽高和坐标,移动其四周的元素
           moveElePosByContainerBorder(eleObj, isOpen, callback) {
             JTopo.flag.curScene.childs.forEach(function (p) {
               if (isOpen) {
@@ -1590,7 +1594,7 @@
                   JTopo.Animate.stepByStep(p, {x: p.x + subValue}, 300, false).start()
                 }
               } else {
-                var subValue = eleObj.width
+                subValue = eleObj.width
 
                 eleObj.x += subValue
 
@@ -1634,8 +1638,9 @@
           window.$foreach = $foreach
       }(JTopo),
 
+      // TODO: 20180703
       // 舞台 stage 方法的具体实现（JTopo.Stage(canvas) 构造器函数，参数为一个 canvas 元素节点对象）
-      function (a) {
+      function (JTopo) {
         // 返回鹰眼对象
         function eagleEye(stage) {
           return {
