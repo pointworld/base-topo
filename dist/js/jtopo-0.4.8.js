@@ -2,26 +2,31 @@
  *
  * canvas - stage - scene - node
  *
+ * canvas:
+ *
+ * stage:
+ *
+ * scene:
+ *
+ * node: container, node, line, ...(text, attribute)
+ *
  */
 
 ;define(
   [],
   function () {
     let JTopo = {}
-    // 全局
+    // Global
     !function (window) {
 
-      // 构造函数
+      // Constructor
       function Element() {
-        /** this 可以是 scene、node、link、... */
+        /** 'this' can be scene, node, link, ... */
 
-        // 初始化元素属性
+        // initialize Element instance properties
         this.initialize = function () {
-          // 元素的类型
           this.elementType = "element"
-          // 元素的序列化属性
           this.serializedProperties = ["elementType"]
-          // 元素的属性 - 堆:
           // propertiesStack = [
           //   data,
           //   { elementType: "scene", background: xx, backgroundColor: xx, mode: "normal",  ... }
@@ -29,7 +34,6 @@
           //   ...
           // ]
           this.propertiesStack = []
-          // 元素的 id
           // this._id: 'front1530013168481849489'
           this._id = JTopo.util.creatId()
         }
@@ -38,7 +42,7 @@
 
         this.removeHandler = function () {}
 
-        // 设置或返回元素特性的值
+        // set or get Element instance properties' value
         this.attr = function (k, v) {
           if (null != k && null != v) {
             this[k] = v
@@ -49,10 +53,18 @@
           return this
         }
 
-        // 保存，保存当前数据到一个属性堆 propertiesStack 的末尾，每次 save 只保留自身的数据，创建时的状态不能保存
+        // push current data to propertiesStack, to every save():
+        // it just saves the data of current state, can't save the data of creation state
         this.save = function () {
+          /** 'this' can be scene, node, link, ... */
+
           const that = this
-          // data: { elementType: "scene", background: undefined, backgroundColor: "255,255,255", mode: "normal", paintAll: false, scaleX: 1, scaleY: 1, translate: true, translateX: 0, translateY: 0, visible: true, ... }
+
+          // data: {
+          //   elementType: "scene", background: undefined, backgroundColor: "255,255,255", mode: "normal",
+          //   paintAll: false, scaleX: 1, scaleY: 1, translate: true, translateX: 0, translateY: 0,
+          //   visible: true, ...
+          // }
           const data = {}
 
           this.serializedProperties.forEach(function (attr) {
@@ -63,9 +75,8 @@
           this.propertiesStack.push(data)
         }
 
-        // 恢复上一次保存的数据，取属性堆 propertiesStack 的末尾元素
+        // restore saved data of last time, that is: use the last element from propertiesStack
         this.restore = function () {
-          // 如果存在属性堆 且 该属性堆的元素长度不为 0
           if (
             null != this.propertiesStack
             && 0 != this.propertiesStack.length
@@ -80,24 +91,25 @@
           }
         }
 
-        // 转换为 JSON 对象 TODO: 返回的不是 JSON 字符串吗？
+        // 将当前的 Element 实例对象转换为 JSON 字符串
         this.toJson = function () {
           const that = this
           const len = this.serializedProperties.length
-          // b: '{"key": "value", ...}'
-          let b = "{"
+
+          // dataJsonStr: '{"key1": "value1", "key2": "value2", ...}'
+          let dataJsonStr = "{"
 
           return this.serializedProperties.forEach(function (key, index) {
             let value = that[key]
 
             "string" == typeof value && (value = '"' + value + '"'),
-              b += '"' + key + '":' + value, len > index + 1 && (b += ",")
+              dataJsonStr += '"' + key + '":' + value, len > index + 1 && (dataJsonStr += ",")
           }),
-            b += "}"
+            dataJsonStr += "}"
         }
       }
 
-      // 扩展 CanvasRenderingContext2D 对象的原型方法
+      // extends prototype methods of  CanvasRenderingContext2D
       /** CanvasRenderingContext2D.prototype: {
             JTopoDashedLineTo: ƒ (x1, y1, x2, y2, dashedLineSpacing),
             JTopoRoundRect: ƒ (x, y, w, h, dashedLineSpacing, borderType),
@@ -339,26 +351,16 @@
       }
 
       JTopo = {
-        // JTopo 版本
         version: "0.4.8",
-        // 容器的显示级别
         zIndex_Container: 1,
-        // 连线的显示级别
         zIndex_Link: 2,
-        // 节点的显示级别
         zIndex_Node: 3,
-        // 场景模式
         SceneMode: {
-          // 正常模式
           normal: "normal",
-          // 拖拽模式
           drag: "drag",
-          // 编辑模式
           edit: "edit",
-          // 选择模式
           select: "select",
         },
-        // 鼠标光标
         MouseCursor: {
           normal: "default",
           pointer: "pointer",
@@ -383,7 +385,7 @@
          * @return {Object} stage
          */
         createStageFromJson(jsonStr, canvas) {
-          // 会自动将 json 字符串转换为 json 对象
+          // eval 函数会自动将 json 字符串转换为 json 对象
           // jsonObj = {
           //   ..,
           //   childs: [
@@ -399,7 +401,6 @@
           // }
           eval("var jsonObj = " + jsonStr)
 
-          // new 一个舞台实例
           const stage = new JTopo.Stage(canvas)
 
           for (let key in jsonObj) {
@@ -420,7 +421,6 @@
 
           // 返回舞台对象
           return scenes.forEach(function (scene) {
-            // new 一个场景实例
             const sceneInstance = new JTopo.Scene(stage)
 
             for (var key1 in scene) {
@@ -462,47 +462,59 @@
 
       // jTopo 具体方法的实现，部分全局方法的实现
       function (JTopo) {
-        // JTopo.util.MessageBus - 观察者模式，其中 messageMap 为事件数组
+        /**
+         * JTopo.util.MessageBus - 观察者模式
+         *
+         * 可以将 MessageBus 理解为一个全局的消息通道，你可以将自己的加上标识字的消息放到这个通道上，
+         * 别的模块就可以通过这个标识字来拿到你的消息
+         *
+         * @param {String} name - 消息标识名
+         *
+         */
         function MessageBus(name) {
           const self = this
 
-          //
+          // 消息标识名
           this.name = name
-          // 消息映射
+          // messageMap 为消息映射: {
+          //   eName1 => [fn1, fn2, ..],
+          //   eName2 => [..],
+          //   ...
+          // }
           this.messageMap = {}
           // 消息数量
           this.messageCount = 0
 
-          // 订阅
-          this.subscribe = function (eName, c) {
-            const d = self.messageMap[eName]
+          // 订阅：注册一个事件
+          this.subscribe = function (eName, fn) {
+            const fnArr = self.messageMap[eName]
 
-            null == d && (self.messageMap[eName] = [])
+            null == fnArr && (self.messageMap[eName] = [])
 
-            self.messageMap[eName].push(c)
+            self.messageMap[eName].push(fn)
             self.messageCount++
           }
 
-          // 取消订阅
+          // 取消订阅: 取消事件注册
           this.unsubscribe = function (eName) {
-            const c = self.messageMap[eName]
+            const fnArr = self.messageMap[eName]
 
-            null != c && (
+            null != fnArr && (
               self.messageMap[eName] = null,
                 delete self.messageMap[eName],
                 self.messageCount--
             )
           }
 
-          // 发布
+          // 发布: 触发事件 TODO: 参数 d 的用途？
           this.publish = function (eName, eObj, d) {
-            const e = self.messageMap[eName]
+            const fnArr = self.messageMap[eName]
 
-            if (null != e) {
-              for (let f = 0; f < e.length; f++) {
+            if (null != fnArr) {
+              for (let i = 0; i < fnArr.length; i++) {
                 d
-                  ? !function (a, b) { setTimeout(function () { a(b) }, 10) }(e[f], eObj)
-                  : e[f](eObj)
+                  ? !function (fn, eObj) { setTimeout(function () { fn(eObj) }, 10) }(fnArr[i], eObj)
+                  : fnArr[i](eObj)
               }
             }
           }
@@ -531,40 +543,47 @@
         /**
          * JTopo.util.getElementsBound
          *
-         * 用于获取元素的宽高位置等信息
+         * 获取（当前场景下）所有元素的宽高位置等信息
          *
+         * @param {Array} nodesArr - 节点数组
          * @return {Object} - {
          *   top: xx, right: xx, bottom: xx, left: xx, width: xx, height: xx, ..
          *   topNode: xx, rightNode: xx, ..
          * }
          */
-        function getElementsBound(a) {
+        function getElementsBound(nodesArr) {
           for (
-            var obj = {
+            var eleBoundaryObj = {
               left: Number.MAX_VALUE,
               right: Number.MIN_VALUE,
               top: Number.MAX_VALUE,
               bottom: Number.MIN_VALUE,
             }, i = 0;
-            i < a.length;
+            i < nodesArr.length;
             i++
           ) {
-            const d = a[i]
+            const node = nodesArr[i]
 
-            d instanceof JTopo.Link || (
-              obj.left > d.x && (obj.left = d.x, obj.leftNode = d),
-              obj.right < d.x + d.width && (obj.right = d.x + d.width, obj.rightNode = d),
-              obj.top > d.y && (obj.top = d.y, obj.topNode = d),
-              obj.bottom < d.y + d.height && (obj.bottom = d.y + d.height, obj.bottomNode = d)
+            // 如果节点为线条节点，不做特殊处理
+            node instanceof JTopo.Link || (
+              eleBoundaryObj.left > node.x && (eleBoundaryObj.left = node.x, eleBoundaryObj.leftNode = node),
+              eleBoundaryObj.right < node.x + node.width && (eleBoundaryObj.right = node.x + node.width, eleBoundaryObj.rightNode = node),
+              eleBoundaryObj.top > node.y && (eleBoundaryObj.top = node.y, eleBoundaryObj.topNode = node),
+              eleBoundaryObj.bottom < node.y + node.height && (eleBoundaryObj.bottom = node.y + node.height, eleBoundaryObj.bottomNode = node)
             )
           }
 
-          return obj.width = obj.right - obj.left,
-            obj.height = obj.bottom - obj.top,
-            obj
+          return eleBoundaryObj.width = eleBoundaryObj.right - eleBoundaryObj.left,
+            eleBoundaryObj.height = eleBoundaryObj.bottom - eleBoundaryObj.top,
+            eleBoundaryObj
         }
 
-        // JTopo.util.mouseCoords - 返回事件触发时鼠标的位置信息
+        /**
+         * JTopo.util.mouseCoords - 返回鼠标的位置信息
+         *
+         * @param {Object} e
+         * @return {Object} e
+         */
         function mouseCoords(e) {
           return e = cloneEvent(e),
           e.pageX || (
@@ -578,6 +597,7 @@
         }
 
         // JTopo.util.getEventPosition - 返回事件触发时鼠标的位置信息
+        // TODO: 和 mouseCoords 函数有什么区别？调用时传入的参数值的区别？
         function getEventPosition(e) {
           return e = mouseCoords(e)
         }
@@ -667,6 +687,7 @@
          */
         function $for(a, b, fn, t) {
           function wrapper(i) {
+            // 重复执行 b 次
             i != b && (
               fn(b),
               setTimeout(function () {
@@ -682,11 +703,15 @@
           }
         }
 
-        // JTopo.util.cloneEvent - 返回克隆的事件对象
+        /**
+         * JTopo.util.cloneEvent - 返回克隆的事件对象
+         * 不拷贝 "returnValue" 和 "keyLocation" 属性
+         */
         function cloneEvent(e) {
           const copyEventObj = {}
 
           for (let key in e) {
+            // 不拷贝 "returnValue" 和 "keyLocation"
             "returnValue" != key && "keyLocation" != key && (copyEventObj[key] = e[key])
           }
 
@@ -787,11 +812,11 @@
         }
 
         /**
-         * JTopo.util.randomColorv
+         * JTopo.util.randomColor
          *
          * 随机产生 rgb 颜色:
          *
-         * @return {String} - e.g.: '234, 23, 145'
+         * @return {String} - e.g.: '234,23,145'
          */
         function randomColor() {
           return Math.floor(255 * Math.random()) + "," + Math.floor(255 * Math.random()) + "," + Math.floor(255 * Math.random())
@@ -800,21 +825,24 @@
         /**
          * JTopo.util.getProperties
          *
-         * 获取指定对象的属性集合，用字符串表示
+         * 获取指定对象的指定属性键值的集合，用字符串表示
          *
          * @param {Object} obj
          * @param {Array} keysArr
-         * @return {String} keysString - 'key1: "val1", key2: "val2", ...'
+         * @return {String} keysString - 'key1:val1,key2:val2, ...'
          */
         function getProperties(obj, keysArr) {
           for (var keysString = "", i = 0; i < keysArr.length; i++) {
+            // i = 0 时，不做处理
             i > 0 && (keysString += ",")
 
-            let e = obj[keysArr[i]]
+            let value = obj[keysArr[i]]
 
-            "string" == typeof e
-              ? e = '"' + e + '"'
-              : void 0 == e && (e = null), keysString += keysArr[i] + ":" + e
+            "string" == typeof value
+              ? value = '"' + value + '"'
+              : void 0 == value && (value = null)
+
+            keysString += keysArr[i] + ":" + value
           }
 
           return keysString
@@ -882,14 +910,14 @@
         /**
          * JTopo.util.toJson
          *
-         * 将舞台数据转换成 json 对象
+         * 将舞台数据转换成 json 字符串
          *
          * @param {Object} stage
          * @return {Object} stageJson -
-         *   stageJson: {
+         *   stageJson: '{
          *     frames: xx,
          *     scenes: [ {key1: "val1", key2: "val2", ..., elements: [{kkey1: "vval1", kkey2: "vval2", ...}],} ],
-         *   }
+         *   }'
          *
          */
         function toJson(stage) {
@@ -923,6 +951,7 @@
             stageJson += "}"
         }
 
+        // TODO: 20180703
         /**
          * JTopo.util.changeColor
          *
@@ -1608,8 +1637,9 @@
       // 舞台 stage 方法的具体实现（JTopo.Stage(canvas) 构造器函数，参数为一个 canvas 元素节点对象）
       function (a) {
         // 返回鹰眼对象
-        function b(a) {
+        function eagleEye(stage) {
           return {
+            // TODO: ?
             hgap: 16,
             // 鹰眼是否可见
             visible: !1,
@@ -1617,37 +1647,62 @@
             // 创建 canvas 元素
             exportCanvas: document.createElement("canvas"),
 
-            getImage(b, c) {
-              const d = a.getBound()
-              let e = 1, f = 1
+            /**
+             *
+             * 返回一个图片的 data URL
+             */
+            getImage(width, height) {
+              // 获取舞台中元素的边界位置 boundary: {
+              //   left: xx, top: xx, right: xx, bottom: xx,
+              //   leftNode: xx, topNode: xx, ..,
+              //   width: xx, height: xx,
+              // }
+              const boundary = stage.getBound()
+              // 宽度缩放比
+              let scaleWidth = 1
+              // 高度缩放比
+              let scaleHeight = 1
 
-              this.exportCanvas.width = a.canvas.width,
-                this.exportCanvas.height = a.canvas.height,
-                null != b && null != c ? (this.exportCanvas.width = b,
-                  this.exportCanvas.height = c,
-                  e = b / d.width,
-                  f = c / d.height) : (d.width > a.canvas.width && (this.exportCanvas.width = d.width),
-                d.height > a.canvas.height && (this.exportCanvas.height = d.height));
+              this.exportCanvas.width = stage.canvas.width,
+                this.exportCanvas.height = stage.canvas.height,
+                null != width && null != height
+                  ? (
+                    this.exportCanvas.width = width,
+                    this.exportCanvas.height = height,
+                    scaleWidth = width / boundary.width,
+                      scaleHeight = height / boundary.height
+                  )
+                  : (
+                    boundary.width > stage.canvas.width && (this.exportCanvas.width = boundary.width),
+                    boundary.height > stage.canvas.height && (this.exportCanvas.height = boundary.height)
+                  );
 
-              const g = this.exportCanvas.getContext("2d");
+              const ctx = this.exportCanvas.getContext("2d")
 
-              return a.childs.length > 0 && (g.save(),
-                g.clearRect(0, 0, this.exportCanvas.width, this.exportCanvas.height),
-                a.childs.forEach(function (a) {
-                  1 == a.visible && (a.save(),
-                    a.translateX = 0,
-                    a.translateY = 0,
-                    a.scaleX = 1,
-                    a.scaleY = 1,
-                    g.scale(e, f),
-                  d.left < 0 && (a.translateX = Math.abs(d.left)),
-                  d.top < 0 && (a.translateY = Math.abs(d.top)),
-                    a.paintAll = !0,
-                    a.repaint(g),
-                    a.paintAll = !1,
-                    a.restore())
+              return stage.childs.length > 0 && (
+                ctx.save(),
+                ctx.clearRect(0, 0, this.exportCanvas.width, this.exportCanvas.height),
+                stage.childs.forEach(function (scene) {
+                  1 == scene.visible && (
+                    scene.save(),
+                      // 场景偏移量（水平方向），随鼠标拖拽变化
+                    scene.translateX = 0,
+                      // 场景偏移量（垂直方向），随鼠标拖拽变化
+                    scene.translateY = 0,
+                    scene.scaleX = 1,
+                    scene.scaleY = 1,
+                    ctx.scale(scaleWidth, scaleHeight),
+                  boundary.left < 0 && (scene.translateX = Math.abs(boundary.left)),
+                  boundary.top < 0 && (
+                    scene.translateY = Math.abs(boundary.top)),
+                    scene.paintAll = !0,
+                    scene.repaint(ctx),
+                    scene.paintAll = !1,
+                    scene.restore()
+                  )
                 }),
-                g.restore()),
+                ctx.restore()
+              ),
                 this.exportCanvas.toDataURL("image/png")
             },
 
@@ -1655,26 +1710,36 @@
             canvas: document.createElement("canvas"),
 
             update() {
-              this.eagleImageDatas = this.getData(a)
+              this.eagleImageDatas = this.getData(stage)
             },
 
-            // 设置鹰眼的宽高和鹰眼内 canvas 的宽高
+            /**
+             * 设置鹰眼的宽高和鹰眼内 canvas 的宽高
+             *
+             */
             setSize(w, h) {
               this.width = this.canvas.width = w
               this.height = this.canvas.height = h
             },
 
-            // 获取数据
-            getData(b, c) {
-              function d(a) {
-                const b = a.stage.canvas.width
-                const c = a.stage.canvas.height
-                const d = b / a.scaleX / 2
-                const e = c / a.scaleY / 2
+            /**
+             * 获取数据
+             *
+             * @param {Number} w
+             * @param {Number} h
+             *
+             */
+            getData(w, h) {
+              // return { translateX: xx, translateY: xx }
+              function d(scene) {
+                const canvasW = scene.stage.canvas.width
+                const canvasH = scene.stage.canvas.height
+                const d = canvasW / scene.scaleX / 2
+                const e = canvasH / scene.scaleY / 2
 
                 return {
-                  translateX: a.translateX + d - d * a.scaleX,
-                  translateY: a.translateY + e - e * a.scaleY,
+                  translateX: scene.translateX + d - d * scene.scaleX,
+                  translateY: scene.translateY + e - e * scene.scaleY,
                 }
               }
 
@@ -1687,33 +1752,35 @@
 
               // 设置鹰眼地图大小
               null != j && null != k
-                ? this.setSize(b, c)
+                ? this.setSize(w, h)
                 : this.setSize(container_w, container_h)
 
               var ctx = this.canvas.getContext("2d")
 
-              //绘制地图
-              if (a.childs.length > 0) {
+              // 绘制地图
+              if (stage.childs.length > 0) {
                 ctx.save()
                 // 清空鹰眼内 canvas 的内容
                 ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
-                a.childs.forEach(function (a) {
+                stage.childs.forEach(function (a) {
                   1 == a.visible && (
                     a.save(),
                       a.centerAndZoom(null, null, ctx),
                       a.repaint(ctx, 'eagleEye'),
                       a.restore()
                   )
-                });
+                })
 
-                // a 为 stage, a.childs[0] 为大画布
-                var f = d(a.childs[0])
-                var g = f.translateX * (this.canvas.width / a.canvas.width) * a.childs[0].scaleX
-                var h = f.translateY * (this.canvas.height / a.canvas.height) * a.childs[0].scaleY
-                var i = a.getBound()
-                var j = a.canvas.width / a.childs[0].scaleX / i.width
-                var k = a.canvas.height / a.childs[0].scaleY / i.height
+                // 返回数据: {translateX: 0, translateY: 0}
+                var translateObj = d(stage.childs[0])
+
+                var g = translateObj.translateX * (this.canvas.width / stage.canvas.width) * stage.childs[0].scaleX
+                var h = translateObj.translateY * (this.canvas.height / stage.canvas.height) * stage.childs[0].scaleY
+                // return { top:xx, right: xx, bottom: xx, left: xx, width: xx, height: xx }
+                var i = stage.getBound()
+                var j = stage.canvas.width / stage.childs[0].scaleX / i.width
+                var k = stage.canvas.height / stage.childs[0].scaleY / i.height
 
                 j > 1 && (j = 1),
                 k > 1 && (j = 1),
@@ -1722,18 +1789,21 @@
                 i.left < 0 && (g -= Math.abs(i.left) * (this.width / i.width)),
                 i.top < 0 && (h -= Math.abs(i.top) * (this.height / i.height)),
                   ctx.save(),
-                  ctx.fillStyle = "rgba(168,168,168,0.3)",
+                  ctx.fillStyle = "rgba(168, 168, 168, 0.3)",
                   //  e.fillRect(-g, -h, e.canvas.width * j, e.canvas.height * k),
                   ctx.fillRect(-g + 9, -h + 5, this.canvas.width - 18, this.canvas.height - 10),
                   ctx.restore();
+
                 //上面绘制小地图红色边框
-                let l = null;
+                let imgData = null
+
                 try {
-                  l = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-                } catch (m) {
+                  imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
+                } catch (err) {
+
                 }
 
-                return l;
+                return imgData
               }
               return null
             },
@@ -1741,56 +1811,57 @@
             // 绘制
             paint() {
               if (null != this.eagleImageDatas) {
-                const b = a.graphics
+                const ctx = stage.graphics
                 const w = 4
 
-                b.save(),
-                  b.lineWidth = 1,
-                  b.strokeStyle = "rgba(43, 43, 43, 0.8)",
-                  b.strokeRect(
-                    a.canvas.width - this.canvas.width - w,
-                    a.canvas.height - this.canvas.height - w,
+                ctx.save(),
+                  ctx.lineWidth = 1,
+                  // 上述，strokeStyle 为小地图边框
+                  ctx.strokeStyle = "rgba(43, 43, 43, 0.8)",
+                  ctx.strokeRect(
+                    stage.canvas.width - this.canvas.width - w,
+                    stage.canvas.height - this.canvas.height - w,
                     this.canvas.width + w - 1,
                     this.canvas.height + w
                   ),
-                  b.putImageData(
+                  ctx.putImageData(
                     this.eagleImageDatas,
-                    a.canvas.width - this.canvas.width - w,
-                    a.canvas.height - this.canvas.height - 1
+                    stage.canvas.width - this.canvas.width - w,
+                    stage.canvas.height - this.canvas.height - 1
                   ),
-                  b.restore()
-                //上述,strokeStyle为小地图边框
+                  ctx.restore()
+
               } else {
-                this.eagleImageDatas = this.getData(a)
+                this.eagleImageDatas = this.getData(stage)
               }
             },
 
             // 事件处理器
-            eventHandler(eName, eObj, c) {
+            eventHandler(eName, eObj, stage) {
               let eX = eObj.x
               let eY = eObj.y
 
               if (
-                eX > c.canvas.width - this.canvas.width
-                && eY > c.canvas.height - this.canvas.height
+                eX > stage.canvas.width - this.canvas.width
+                && eY > stage.canvas.height - this.canvas.height
               ) {
                 if (
                   eX = eObj.x - this.canvas.width,
                     eY = eObj.y - this.canvas.height,
                   "mousedown" == eName && (
-                    this.lastTranslateX = c.childs[0].translateX,
-                    this.lastTranslateY = c.childs[0].translateY
+                    this.lastTranslateX = stage.childs[0].translateX,
+                    this.lastTranslateY = stage.childs[0].translateY
                   ),
-                  "mousedrag" == eName && c.childs.length > 0
+                  "mousedrag" == eName && stage.childs.length > 0
                 ) {
                   const f = eObj.dx
-                    , g = eObj.dy
-                    , h = c.getBound()
-                    , i = this.canvas.width / c.childs[0].scaleX / h.width
-                    , j = this.canvas.height / c.childs[0].scaleY / h.height;
+                  const g = eObj.dy
+                  const h = stage.getBound()
+                  const i = this.canvas.width / stage.childs[0].scaleX / h.width
+                  const j = this.canvas.height / stage.childs[0].scaleY / h.height
 
-                  c.childs[0].translateX = this.lastTranslateX - f / i,
-                    c.childs[0].translateY = this.lastTranslateY - g / j
+                  stage.childs[0].translateX = this.lastTranslateX - f / i,
+                    stage.childs[0].translateY = this.lastTranslateY - g / j
                 }
               } else {
 
@@ -1831,6 +1902,7 @@
             // 返回事件被触发时鼠标和事件源的相关信息
             const eventObj = d(e)
 
+            // n - stage: 将事件分派给场景
             n.dispatchEventToScenes("mouseover", eventObj)
               , n.dispatchEvent("mouseover", eventObj)
           }
@@ -1981,11 +2053,12 @@
               //   - frames 可以为 0，表示：不自动绘制，由用户手工调用 Stage 对象的 paint() 方法来触发
               //   - 如果小于 0，表示：只有键盘、鼠标有动作时才会重绘，例如：stage.frames = -24
               this.frames = 24,
+              // 事件：观察者模式
               this.messageBus = new JTopo.util.MessageBus,
               // 鹰眼对象
               //   - 显示鹰眼: stage.eagleEye.visible = true
               //   - 隐藏鹰眼: stage.eagleEye.visible = false
-              this.eagleEye = b(this),
+              this.eagleEye = eagleEye(this),
               // 鼠标滚轮缩放操作比例，默认为 null，不显示鹰眼
               //   - 启用鼠标滚轮缩放: stage.wheelZoom = 0.85; // 缩放比例为 0.85
               //   - 禁用鼠标滚轮缩放: stage.wheelZoom = null;
@@ -2019,11 +2092,14 @@
             /**
              * 为场景分配事件
              *
+             * this - stage
+             *
              * @param {String} eName - 事件名
              * @param {Object} eObj - 事件对象
              *
              */
             this.dispatchEventToScenes = function (eName, eObj) {
+              // 如果鹰眼可见 且 eName 中存在 'mouse'
               if (
                 0 != this.frames && (this.needRepaint = !0),
                 1 == this.eagleEye.visible && -1 != eName.indexOf("mouse")
@@ -2089,11 +2165,11 @@
             // 监听事件
             this.addEventListener = function (eName, cb) {
               const self = this
-              const d = function (a) {
-                cb.call(self, a)
+              const fn = function (eObj) {
+                cb.call(self, eObj)
               }
 
-              return this.messageBus.subscribe(eName, d),
+              return this.messageBus.subscribe(eName, fn),
                 this
             },
 
@@ -2199,37 +2275,45 @@
               })
             },
 
-            // 得到舞台中所有元素位置确定的边界大小（left、top、right、bottom）
+            // 获取舞台中元素的边界位置 boundary: {
+            //   left: xx, top: xx, right: xx, bottom: xx,
+            //   leftNode: xx, topNode: xx, ..,
+            //   width: xx, height: xx,
+            // }
             this.getBound = function () {
-              const a = {
+              const boundary = {
+                // left 为最大值
                 left: Number.MAX_VALUE,
+                // right 为最小值
                 right: Number.MIN_VALUE,
+                // top 为最大值
                 top: Number.MAX_VALUE,
-                bottom: Number.MIN_VALUE
-              };
+                // bottom 为最小值
+                bottom: Number.MIN_VALUE,
+              }
 
-              return this.childs.forEach(function (b) {
-                const c = b.getElementsBound();
+              return this.childs.forEach(function (a) {
+                const eleBoundary = a.getElementsBound()
 
-                c.left < a.left && (a.left = c.left,
-                  a.leftNode = c.leftNode),
-                c.top < a.top && (a.top = c.top,
-                  a.topNode = c.topNode),
-                c.right > a.right && (a.right = c.right,
-                  a.rightNode = c.rightNode),
-                c.bottom > a.bottom && (a.bottom = c.bottom,
-                  a.bottomNode = c.bottomNode)
+                eleBoundary.left < boundary.left && (boundary.left = eleBoundary.left,
+                  boundary.leftNode = eleBoundary.leftNode),
+                eleBoundary.top < boundary.top && (boundary.top = eleBoundary.top,
+                  boundary.topNode = eleBoundary.topNode),
+                eleBoundary.right > boundary.right && (boundary.right = eleBoundary.right,
+                  boundary.rightNode = eleBoundary.rightNode),
+                eleBoundary.bottom > boundary.bottom && (boundary.bottom = eleBoundary.bottom,
+                  boundary.bottomNode = eleBoundary.bottomNode)
               }),
-                a.width = a.right - a.left,
-                a.height = a.bottom - a.top,
-                a
+                boundary.width = boundary.right - boundary.left,
+                boundary.height = boundary.bottom - boundary.top,
+                boundary
             },
 
             // 把当前对象的属性序列化成 json 数据
             this.toJson = function () {
               {
                 var b = this
-                  , c = '{"version":"' + a.version + '",';
+                  , c = '{"version":"' + JTopo.version + '",';
                 this.serializedProperties.length
               }
 
@@ -2322,7 +2406,7 @@
               this.zIndexArray = [],
               // 背景颜色，设置的时候请注意 alpha 属性
               this.backgroundColor = "255,255,255",
-              // 得到、设置场景是否可见，默认为：true
+              // 设置场景是否可见，默认为：true
               this.visible = !0,
               // 场景的透明度，默认为 0，即：完全透明。所以有时候即使设置了背景颜色却不起作用
               this.alpha = 0,
