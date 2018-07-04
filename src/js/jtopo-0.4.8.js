@@ -543,10 +543,10 @@
         /**
          * JTopo.util.getElementsBound
          *
-         * 获取（当前场景下）所有元素的宽高位置等信息
+         * 遍历场景中所有的元素，根据元素的位置信息，确定的所有元素最外层边界位置
          *
          * @param {Array} nodesArr - 节点数组
-         * @return {Object} - {
+         * @return {Object} eleBoundaryObj - {
          *   top: xx, right: xx, bottom: xx, left: xx, width: xx, height: xx, ..
          *   topNode: xx, rightNode: xx, ..
          * }
@@ -1638,7 +1638,6 @@
           window.$foreach = $foreach
       }(JTopo),
 
-      // TODO: 20180703
       // 舞台 stage 方法的具体实现（JTopo.Stage(canvas) 构造器函数，参数为一个 canvas 元素节点对象）
       function (JTopo) {
         // 返回鹰眼对象
@@ -1653,28 +1652,33 @@
             exportCanvas: document.createElement("canvas"),
 
             /**
-             *
-             * 返回一个图片的 data URL
+             * 返回鹰眼 canvas 图片的 data URL
              */
             getImage(width, height) {
-              // 获取舞台中元素的边界位置 boundary: {
+              // 类似于，有多个场景在一个舞台中，现在需要一个框将所有场景框住，求解该框在最小面积时的位置和宽高等信息，leftNode 为位于该框最左边的元素，其他类推
+              // 遍历舞台中所有的场景，根据场景的位置信息，确定的所有场景最外层边界位置 boundary: {
               //   left: xx, top: xx, right: xx, bottom: xx,
               //   leftNode: xx, topNode: xx, ..,
               //   width: xx, height: xx,
               // }
               const boundary = stage.getBound()
+
               // 宽度缩放比
               let scaleWidth = 1
               // 高度缩放比
               let scaleHeight = 1
 
+              // 创建的 canvas 的宽度
               this.exportCanvas.width = stage.canvas.width,
+                // 创建的 canvas 的高度
                 this.exportCanvas.height = stage.canvas.height,
                 null != width && null != height
                   ? (
                     this.exportCanvas.width = width,
                     this.exportCanvas.height = height,
+                      // 宽度缩放比
                     scaleWidth = width / boundary.width,
+                      // 高度缩放比
                       scaleHeight = height / boundary.height
                   )
                   : (
@@ -1682,11 +1686,12 @@
                     boundary.height > stage.canvas.height && (this.exportCanvas.height = boundary.height)
                   );
 
-              const ctx = this.exportCanvas.getContext("2d")
+              // 获取创建的 canvas 的上下文环境
+              const eagleEyeCanvasCtx = this.exportCanvas.getContext("2d")
 
               return stage.childs.length > 0 && (
-                ctx.save(),
-                ctx.clearRect(0, 0, this.exportCanvas.width, this.exportCanvas.height),
+                eagleEyeCanvasCtx.save(),
+                eagleEyeCanvasCtx.clearRect(0, 0, this.exportCanvas.width, this.exportCanvas.height),
                 stage.childs.forEach(function (scene) {
                   1 == scene.visible && (
                     scene.save(),
@@ -1696,17 +1701,18 @@
                     scene.translateY = 0,
                     scene.scaleX = 1,
                     scene.scaleY = 1,
-                    ctx.scale(scaleWidth, scaleHeight),
+                    // 按比例缩放鹰眼 canvas
+                    eagleEyeCanvasCtx.scale(scaleWidth, scaleHeight),
                   boundary.left < 0 && (scene.translateX = Math.abs(boundary.left)),
                   boundary.top < 0 && (
                     scene.translateY = Math.abs(boundary.top)),
                     scene.paintAll = !0,
-                    scene.repaint(ctx),
+                    scene.repaint(eagleEyeCanvasCtx),
                     scene.paintAll = !1,
                     scene.restore()
                   )
                 }),
-                ctx.restore()
+                eagleEyeCanvasCtx.restore()
               ),
                 this.exportCanvas.toDataURL("image/png")
             },
@@ -1720,7 +1726,6 @@
 
             /**
              * 设置鹰眼的宽高和鹰眼内 canvas 的宽高
-             *
              */
             setSize(w, h) {
               this.width = this.canvas.width = w
@@ -1732,7 +1737,7 @@
              *
              * @param {Number} w
              * @param {Number} h
-             *
+             * @return {null | Object} imgObj
              */
             getData(w, h) {
               // return { translateX: xx, translateY: xx }
@@ -1760,6 +1765,7 @@
                 ? this.setSize(w, h)
                 : this.setSize(container_w, container_h)
 
+              // 鹰眼中 canvas 的上下文环境
               var ctx = this.canvas.getContext("2d")
 
               // 绘制地图
@@ -1768,12 +1774,12 @@
                 // 清空鹰眼内 canvas 的内容
                 ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
-                stage.childs.forEach(function (a) {
-                  1 == a.visible && (
-                    a.save(),
-                      a.centerAndZoom(null, null, ctx),
-                      a.repaint(ctx, 'eagleEye'),
-                      a.restore()
+                stage.childs.forEach(function (scene) {
+                  1 == scene.visible && (
+                    scene.save(),
+                      scene.centerAndZoom(null, null, ctx),
+                      scene.repaint(ctx, 'eagleEye'),
+                      scene.restore()
                   )
                 })
 
@@ -1782,7 +1788,7 @@
 
                 var g = translateObj.translateX * (this.canvas.width / stage.canvas.width) * stage.childs[0].scaleX
                 var h = translateObj.translateY * (this.canvas.height / stage.canvas.height) * stage.childs[0].scaleY
-                // return { top:xx, right: xx, bottom: xx, left: xx, width: xx, height: xx }
+                // { top:xx, right: xx, bottom: xx, left: xx, width: xx, height: xx }
                 var i = stage.getBound()
                 var j = stage.canvas.width / stage.childs[0].scaleX / i.width
                 var k = stage.canvas.height / stage.childs[0].scaleY / i.height
@@ -1799,7 +1805,7 @@
                   ctx.fillRect(-g + 9, -h + 5, this.canvas.width - 18, this.canvas.height - 10),
                   ctx.restore();
 
-                //上面绘制小地图红色边框
+                // 上面绘制小地图红色边框
                 let imgData = null
 
                 try {
@@ -1846,6 +1852,7 @@
               let eX = eObj.x
               let eY = eObj.y
 
+              // 如果触发事件时鼠标的位置在鹰眼区域内
               if (
                 eX > stage.canvas.width - this.canvas.width
                 && eY > stage.canvas.height - this.canvas.height
@@ -1919,11 +1926,12 @@
             }, 500),
               document.onselectstart = function () {
                 return !0
-              }
-            ;
-            const b = d(e);
-            n.dispatchEventToScenes("mouseout", b),
-              n.dispatchEvent("mouseout", b),
+              };
+
+            const eObj = d(e)
+
+            n.dispatchEventToScenes("mouseout", eObj),
+              n.dispatchEvent("mouseout", eObj),
               n.needRepaint = 0 == n.animate ? !1 : !0
           }
 
@@ -1950,8 +1958,10 @@
 
           // mousemove 事件处理程序
           function mousemove(e) {
-            p && (window.clearTimeout(p),
-              p = null),
+            p && (
+              window.clearTimeout(p),
+              p = null
+            ),
               o = !1;
 
             const b = d(e);
@@ -2014,9 +2024,11 @@
                 ele.addEventListener("dblclick", dblclick),
                 JTopo.util.isFirefox
                   ? ele.addEventListener("DOMMouseScroll", mousewheel)
-                  : ele.addEventListener("mousewheel", mousewheel)), window.addEventListener && (window.addEventListener("keydown", function (e) {
-              n.dispatchEventToScenes("keydown", JTopo.util.cloneEvent(e)
-              );
+                  : ele.addEventListener("mousewheel", mousewheel)),
+
+            window.addEventListener && (
+              window.addEventListener("keydown", function (e) {
+              n.dispatchEventToScenes("keydown", JTopo.util.cloneEvent(e));
 
               const keyCode = e.keyCode
 
@@ -2197,9 +2209,11 @@
 
           const q = "click,dbclick,mousedown,mouseup,mouseover,mouseout,mousemove,mousedrag,mousewheel,touchstart,touchmove,touchend,keydown,keyup".split(","),
             r = this;
-          q.forEach(function (a) {
-            r[a] = function (b) {
-              null != b ? this.addEventListener(a, b) : this.dispatchEvent(a)
+          q.forEach(function (eName) {
+            r[eName] = function (cb) {
+              null != cb
+                ? this.addEventListener(eName, cb)
+                : this.dispatchEvent(eName)
             }
           }),
 
@@ -2221,72 +2235,78 @@
 
             // 执行一次绘制，如果 frames 设置为 0，可以手工调用此方法来通知 jtopo 进行一次重绘
             this.paint = function () {
-              null != this.canvas && (this.graphics.save(),
+              null != this.canvas && (
+                this.graphics.save(),
                 this.graphics.clearRect(0, 0, this.width, this.height),
-                this.childs.forEach(function (a) {
-                  1 == a.visible && a.repaint(n.graphics)
+                this.childs.forEach(function (scene) {
+                  1 == scene.visible && scene.repaint(n.graphics)
                 }),
               1 == this.eagleEye.visible && this.eagleEye.paint(this),
-                this.graphics.restore())
+                this.graphics.restore()
+              )
             },
 
             this.repaint = function () {
-              0 != this.frames && (this.frames < 0 && 0 == this.needRepaint || (this.paint(),
-              this.frames < 0 && (this.needRepaint = !1)))
+              0 != this.frames && (
+                this.frames < 0
+                && 0 == this.needRepaint
+                || (this.paint(), this.frames < 0 && (this.needRepaint = !1))
+              )
             },
 
             // zoom(scale): 缩放，scale 取值范围 [0-1], 实际上本操作是调用了舞台中所有 Scene 对象的 zoom 函数
-            this.zoom = function (a) {
-              this.childs.forEach(function (b) {
-                0 != b.visible && b.zoom(a)
+            this.zoom = function (scale) {
+              this.childs.forEach(function (scene) {
+                0 != scene.visible && scene.zoom(scale)
               })
             },
 
             // zoomOut(scale): 放大，scale 取值范围 [0-1]，调用 zoom 实现
-            this.zoomOut = function (a) {
-              this.childs.forEach(function (b) {
-                0 != b.visible && b.zoomOut(a)
+            this.zoomOut = function (scale) {
+              this.childs.forEach(function (scene) {
+                0 != scene.visible && scene.zoomOut(scale)
               })
             },
 
             // zoomIn(scale): 缩小，scale 取值范围 [0-1]，调用 zoom 实现
-            this.zoomIn = function (a) {
-              this.childs.forEach(function (b) {
-                0 != b.visible && b.zoomIn(a)
+            this.zoomIn = function (scale) {
+              this.childs.forEach(function (scene) {
+                0 != scene.visible && scene.zoomIn(scale)
               })
             },
 
             this.zoomReset = function () {
-              this.childs.forEach(function (b) {
-                0 != b.visible && b.zoomReset()
+              this.childs.forEach(function (scene) {
+                0 != scene.visible && scene.zoomReset()
               })
             },
 
             // centerAndZoom(scale): 缩放并居中显示所有元素
             this.centerAndZoom = function () {
-              this.childs.forEach(function (a) {
-                0 != a.visible && a.centerAndZoom()
+              this.childs.forEach(function (scene) {
+                0 != scene.visible && scene.centerAndZoom()
               })
             },
 
             // setCenter(x, y): 设置当前舞台的中心坐标（舞台平移）
-            this.setCenter = function (a, b) {
+            this.setCenter = function (x, y) {
               const c = this;
-              this.childs.forEach(function (d) {
-                let e = a - c.canvas.width / 2
-                  , f = b - c.canvas.height / 2;
-                d.translateX = -e,
-                  d.translateY = -f
+              this.childs.forEach(function (scene) {
+                let e = x - c.canvas.width / 2
+                  , f = y - c.canvas.height / 2;
+                scene.translateX = -e,
+                  scene.translateY = -f
               })
             },
 
-            // 获取舞台中元素的边界位置 boundary: {
+            // 类似于，有多个场景在一个舞台中，现在需要一个框将所有场景框住，求解该框在最小面积时的位置和宽高等信息，leftNode 为位于该框最左边的元素，其他类推
+            // 遍历舞台中所有的场景，根据场景的位置信息，确定的所有场景最外层边界位置 boundary: {
             //   left: xx, top: xx, right: xx, bottom: xx,
             //   leftNode: xx, topNode: xx, ..,
             //   width: xx, height: xx,
             // }
             this.getBound = function () {
-              const boundary = {
+              const allSceneBoundary = {
                 // left 为最大值
                 left: Number.MAX_VALUE,
                 // right 为最小值
@@ -2297,24 +2317,29 @@
                 bottom: Number.MIN_VALUE,
               }
 
-              return this.childs.forEach(function (a) {
-                const eleBoundary = a.getElementsBound()
+              return this.childs.forEach(function (scene) {
+                /**
+                 * this.getElementsBound = function () {
+                 *   return JTopo.util.getElementsBound(this.childs)
+                 * }
+                 */
+                const allEleBoundary = scene.getElementsBound()
 
-                eleBoundary.left < boundary.left && (boundary.left = eleBoundary.left,
-                  boundary.leftNode = eleBoundary.leftNode),
-                eleBoundary.top < boundary.top && (boundary.top = eleBoundary.top,
-                  boundary.topNode = eleBoundary.topNode),
-                eleBoundary.right > boundary.right && (boundary.right = eleBoundary.right,
-                  boundary.rightNode = eleBoundary.rightNode),
-                eleBoundary.bottom > boundary.bottom && (boundary.bottom = eleBoundary.bottom,
-                  boundary.bottomNode = eleBoundary.bottomNode)
+                allEleBoundary.left < allSceneBoundary.left && (allSceneBoundary.left = allEleBoundary.left,
+                  allSceneBoundary.leftNode = allEleBoundary.leftNode),
+                allEleBoundary.top < allSceneBoundary.top && (allSceneBoundary.top = allEleBoundary.top,
+                  allSceneBoundary.topNode = allEleBoundary.topNode),
+                allEleBoundary.right > allSceneBoundary.right && (allSceneBoundary.right = allEleBoundary.right,
+                  allSceneBoundary.rightNode = allEleBoundary.rightNode),
+                allEleBoundary.bottom > allSceneBoundary.bottom && (allSceneBoundary.bottom = allEleBoundary.bottom,
+                  allSceneBoundary.bottomNode = allEleBoundary.bottomNode)
               }),
-                boundary.width = boundary.right - boundary.left,
-                boundary.height = boundary.bottom - boundary.top,
-                boundary
+                allSceneBoundary.width = allSceneBoundary.right - allSceneBoundary.left,
+                allSceneBoundary.height = allSceneBoundary.bottom - allSceneBoundary.top,
+                allSceneBoundary
             },
 
-            // 把当前对象的属性序列化成 json 数据
+            // 把当前对象的属性序列化成 json 字符串
             this.toJson = function () {
               {
                 var b = this
@@ -2345,8 +2370,13 @@
 
             setTimeout(function () {
               n.mousewheel(function (a) {
-                const b = null == a.wheelDelta ? a.detail : a.wheelDelta;
-                null != this.wheelZoom && (b > 0 ? this.zoomIn(this.wheelZoom) : this.zoomOut(this.wheelZoom))
+                const b = null == a.wheelDelta ? a.detail : a.wheelDelta
+
+                null != this.wheelZoom && (
+                  b > 0
+                    ? this.zoomIn(this.wheelZoom)
+                    : this.zoomOut(this.wheelZoom)
+                )
               }),
                 n.paint()
             }, 300),
@@ -2385,20 +2415,21 @@
       // 场景 scene 方法的具体实现（JTopo.Scene(stage) 构造器函数，参数为 stage 舞台实例）
       function (a) {
         function b(c) {
-          function d(a, b, c, d) {
-            return function (e) {
-              e.beginPath(),
-                e.strokeStyle = "rgba(0, 0, 236, 0.5)",
-                e.fillStyle = "rgba(0, 0, 236, 0.1)",
-                e.rect(a, b, c, d),
-                e.fill(),
-                e.stroke(),
-                e.closePath()
+          function d(x, y, w, h) {
+            return function (ctx) {
+              ctx.beginPath(),
+                ctx.strokeStyle = "rgba(0, 0, 236, 0.5)",
+                ctx.fillStyle = "rgba(0, 0, 236, 0.1)",
+                ctx.rect(x, y, w, h),
+                ctx.fill(),
+                ctx.stroke(),
+                ctx.closePath()
             }
           }
 
-          var e = this;
-          JTopo.flag.curScene = this;
+          var e = this
+
+          JTopo.flag.curScene = this
 
           /********************scene属性定制************************************/
 
@@ -2410,7 +2441,7 @@
               this.zIndexMap = {},
               this.zIndexArray = [],
               // 背景颜色，设置的时候请注意 alpha 属性
-              this.backgroundColor = "255,255,255",
+              this.backgroundColor = "255, 255, 255",
               // 设置场景是否可见，默认为：true
               this.visible = !0,
               // 场景的透明度，默认为 0，即：完全透明。所以有时候即使设置了背景颜色却不起作用
@@ -2454,12 +2485,12 @@
               this.background = a
             },
 
-            this.addTo = function (a) {
-              this.stage !== a && null != a && (this.stage = a)
+            this.addTo = function (stage) {
+              this.stage !== stage && null != stage && (this.stage = stage)
             },
 
-          null != c && (c.add(this),
-
+          null != c && (
+            c.add(this),
             this.addTo(c)),
 
             // 显示
@@ -2472,83 +2503,108 @@
               this.visible = !1
             },
 
-            this.paint = function (a, mapTag) {
+            this.paint = function (ctx, mapTag) {
               if (0 != this.visible && null != this.stage) {
-                if (a.save(),
-                    this.paintBackgroud(a),
-                    a.restore(),
-                    a.save(),
-                    a.scale(this.scaleX, this.scaleY),
-                  1 == this.translate) {
-                  const b = this.getOffsetTranslate(a);
+                if (
+                  ctx.save(),
+                    this.paintBackgroud(ctx),
+                    ctx.restore(),
+                    ctx.save(),
+                    ctx.scale(this.scaleX, this.scaleY),
+                  1 == this.translate
+                ) {
+                  const b = this.getOffsetTranslate(ctx);
                   if (mapTag != 'eagleEye') {
-                    a.translate(b.translateX, b.translateY)
+                    ctx.translate(b.translateX, b.translateY)
                   }
-
                 }
-                this.paintChilds(a),
-                  a.restore(),
-                  a.save(),
-                  this.paintOperations(a, this.operations),
-                  a.restore()
+                this.paintChilds(ctx),
+                  ctx.restore(),
+                  ctx.save(),
+                  this.paintOperations(ctx, this.operations),
+                  ctx.restore()
               }
             },
 
-            this.repaint = function (a, mapTag) {
-              0 != this.visible && this.paint(a, mapTag)
+            this.repaint = function (ctx, mapTag) {
+              0 != this.visible && this.paint(ctx, mapTag)
             },
 
-            this.paintBackgroud = function (a) {
-              null != this.background ? a.drawImage(this.background, 0, 0, a.canvas.width, a.canvas.height) : (a.beginPath(),
-                a.fillStyle = "rgba(" + this.backgroundColor + "," + this.alpha + ")",
-                a.fillRect(0, 0, a.canvas.width, a.canvas.height),
-                a.closePath())
+            this.paintBackgroud = function (ctx) {
+              null != this.background
+                ? ctx.drawImage(this.background, 0, 0, ctx.canvas.width, ctx.canvas.height)
+                : (
+                  ctx.beginPath(),
+                    ctx.fillStyle = "rgba(" + this.backgroundColor + "," + this.alpha + ")",
+                    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height),
+                    ctx.closePath()
+                )
             },
 
             // 获取场景中可见并绘制出来的元素（超过 Canvas 边界）
             this.getDisplayedElements = function () {
-              for (var a = [], b = 0; b < this.zIndexArray.length; b++) {
-                const c = this.zIndexArray[b], d = this.zIndexMap[c];
-                let e = 0;
-                for (; e < d.length; e++) {
-                  const f = d[e];
-                  this.isVisiable(f) && a.push(f)
+              for (var displayedEleArr = [], i = 0; i < this.zIndexArray.length; i++) {
+                const c = this.zIndexArray[i]
+                const eleArr = this.zIndexMap[c]
+
+                let j = 0
+
+                for (; j < eleArr.length; j++) {
+                  const ele = eleArr[j]
+
+                  this.isVisiable(ele) && displayedEleArr.push(ele)
                 }
               }
-              return a
+              return displayedEleArr
             },
 
             // 获取场景中可见并绘制出来的 Node 对象（超过 Canvas 边界）
             this.getDisplayedNodes = function () {
-              for (var b = [], c = 0; c < this.childs.length; c++) {
-                const d = this.childs[c];
-                d instanceof a.Node && this.isVisiable(d) && b.push(d)
+              for (var displayedNodeArr = [], i = 0; i < this.childs.length; i++) {
+                const ele = this.childs[i]
+
+                ele instanceof JTopo.Node
+                && this.isVisiable(ele)
+                && displayedNodeArr.push(ele)
               }
-              return b
+              return displayedNodeArr
             },
 
-            this.paintChilds = function (b) {
-              for (let c = 0; c < this.zIndexArray.length; c++) {
-                const d = this.zIndexArray[c], e = this.zIndexMap[d];
-                let f = 0;
-                for (; f < e.length; f++) {
-                  const g = e[f];
-                  if (1 == this.paintAll || this.isVisiable(g)) {
-                    if (b.save(),
-                      1 == g.transformAble) {
-                      const h = g.getCenterLocation();
-                      b.translate(h.x, h.y),
-                      g.rotate && b.rotate(g.rotate),
-                        g.scaleX && g.scaleY ? b.scale(g.scaleX, g.scaleY) : g.scaleX ? b.scale(g.scaleX, 1) : g.scaleY && b.scale(1, g.scaleY)
+            this.paintChilds = function (ctx) {
+              for (let i = 0; i < this.zIndexArray.length; i++) {
+                const d = this.zIndexArray[i]
+                const eleArr = this.zIndexMap[d]
+
+                let j = 0
+
+                for (; j < eleArr.length; j++) {
+                  const ele = eleArr[j]
+
+                  if (1 == this.paintAll || this.isVisiable(ele)) {
+                    if (
+                      ctx.save(),
+                      1 == ele.transformAble
+                    ) {
+                      const h = ele.getCenterLocation()
+
+                      ctx.translate(h.x, h.y),
+                      ele.rotate && ctx.rotate(ele.rotate),
+                        ele.scaleX && ele.scaleY
+                          ? ctx.scale(ele.scaleX, ele.scaleY)
+                          : ele.scaleX ? ctx.scale(ele.scaleX, 1) : ele.scaleY && ctx.scale(1, ele.scaleY)
                     }
-                    1 == g.shadow && (b.shadowBlur = g.shadowBlur,
-                      b.shadowColor = g.shadowColor,
-                      b.shadowOffsetX = g.shadowOffsetX,
-                      b.shadowOffsetY = g.shadowOffsetY),
-                    g instanceof a.InteractiveElement && (g.selected && 1 == g.showSelected && g.paintSelected(b),
-                    1 == g.isMouseOver && g.paintMouseover(b)),
-                      g.paint(b),
-                      b.restore()
+                    1 == ele.shadow && (
+                      ctx.shadowBlur = ele.shadowBlur,
+                      ctx.shadowColor = ele.shadowColor,
+                      ctx.shadowOffsetX = ele.shadowOffsetX,
+                      ctx.shadowOffsetY = ele.shadowOffsetY
+                    ),
+                    ele instanceof JTopo.InteractiveElement && (
+                      ele.selected && 1 == ele.showSelected && ele.paintSelected(ctx),
+                      1 == ele.isMouseOver && ele.paintMouseover(ctx)
+                    ),
+                      ele.paint(ctx),
+                      ctx.restore()
                   }
                 }
               }
@@ -2568,18 +2624,18 @@
               return f
             },
 
-            this.isVisiable = function (b) {
-              if (1 != b.visible)
+            this.isVisiable = function (ele) {
+              if (1 != ele.visible)
                 return !1;
-              if (b instanceof a.Link)
+              if (ele instanceof a.Link)
                 return !0;
               const c = this.getOffsetTranslate()
-              ;let d = b.x + c.translateX
-                , e = b.y + c.translateY;
+              ;let d = ele.x + c.translateX
+                , e = ele.y + c.translateY;
               d *= this.scaleX,
                 e *= this.scaleY;
-              const f = d + b.width * this.scaleX
-                , g = e + b.height * this.scaleY;
+              const f = d + ele.width * this.scaleX
+                , g = e + ele.height * this.scaleY;
               return d > this.stage.canvas.width || e > this.stage.canvas.height || 0 > f || 0 > g ? !1 : !0
             },
 
@@ -3053,9 +3109,9 @@
             e
         }
 
-        b.prototype = new a.Element;
+        b.prototype = new JTopo.Element
 
-        var c = {};
+        var c = {}
 
         Object.defineProperties(b.prototype, {
           background: {
@@ -3064,8 +3120,10 @@
             },
             set: function (a) {
               if ("string" == typeof a) {
-                let b = c[a];
-                null == b && (b = new Image,
+                let b = c[a]
+
+                null == b && (
+                  b = new Image,
                     b.src = a,
                     b.onload = function () {
                       c[a] = b
@@ -3077,7 +3135,7 @@
             }
           }
         }),
-          a.Scene = b
+          JTopo.Scene = b
       }(JTopo),
 
       // displayElement 的具体实现,包含所有元素默认展示属性，挂载在 jTopo 上
