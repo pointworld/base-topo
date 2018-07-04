@@ -1720,6 +1720,7 @@
             // 创建 canvas 元素
             canvas: document.createElement("canvas"),
 
+            // 将获取到的鹰眼图片数据存储在 eagleImageDatas 属性中
             update() {
               this.eagleImageDatas = this.getData(stage)
             },
@@ -1740,6 +1741,7 @@
              * @return {null | Object} imgObj
              */
             getData(w, h) {
+              // 偏移量
               // return { translateX: xx, translateY: xx }
               function d(scene) {
                 const canvasW = scene.stage.canvas.width
@@ -1866,14 +1868,14 @@
                   ),
                   "mousedrag" == eName && stage.childs.length > 0
                 ) {
-                  const f = eObj.dx
-                  const g = eObj.dy
+                  const dx = eObj.dx
+                  const dy = eObj.dy
                   const h = stage.getBound()
                   const i = this.canvas.width / stage.childs[0].scaleX / h.width
                   const j = this.canvas.height / stage.childs[0].scaleY / h.height
 
-                  stage.childs[0].translateX = this.lastTranslateX - f / i,
-                    stage.childs[0].translateY = this.lastTranslateY - g / j
+                  stage.childs[0].translateX = this.lastTranslateX - dx / i,
+                    stage.childs[0].translateY = this.lastTranslateY - dy / j
                 }
               } else {
 
@@ -1937,21 +1939,21 @@
 
           // mousedown 事件处理程序
           function mousedown(e) {
-            const b = d(e);
+            const eObj = d(e)
 
             n.mouseDown = !0,
-              n.mouseDownX = b.x,
-              n.mouseDownY = b.y,
-              n.dispatchEventToScenes("mousedown", b),
-              n.dispatchEvent("mousedown", b)
+              n.mouseDownX = eObj.x,
+              n.mouseDownY = eObj.y,
+              n.dispatchEventToScenes("mousedown", eObj),
+              n.dispatchEvent("mousedown", eObj)
           }
 
           // mouseup 事件处理程序
           function mouseup(e) {
-            const b = d(e);
+            const eObj = d(e)
 
-            n.dispatchEventToScenes("mouseup", b),
-              n.dispatchEvent("mouseup", b),
+            n.dispatchEventToScenes("mouseup", eObj),
+              n.dispatchEvent("mouseup", eObj),
               n.mouseDown = !1,
               n.needRepaint = 0 == n.animate ? !1 : !0
           }
@@ -1964,67 +1966,79 @@
             ),
               o = !1;
 
-            const b = d(e);
+            const eObj = d(e)
 
-            n.mouseDown ? 0 == e.button && (b.dx = b.x - n.mouseDownX,
-              b.dy = b.y - n.mouseDownY,
-              n.dispatchEventToScenes("mousedrag", b),
-              n.dispatchEvent("mousedrag", b),
-            1 == n.eagleEye.visible && n.eagleEye.update()) : (n.dispatchEventToScenes("mousemove", b),
-              n.dispatchEvent("mousemove", b))
+            n.mouseDown
+              ? 0 == e.button && (
+                eObj.dx = eObj.x - n.mouseDownX,
+                  eObj.dy = eObj.y - n.mouseDownY,
+                  n.dispatchEventToScenes("mousedrag", eObj),
+                  n.dispatchEvent("mousedrag", eObj),
+                1 == n.eagleEye.visible && n.eagleEye.update()
+            )
+              : (
+                n.dispatchEventToScenes("mousemove", eObj),
+                n.dispatchEvent("mousemove", eObj)
+              )
           }
 
           // click 事件处理程序
           function click(e) {
-            const b = d(e);
-            n.dispatchEventToScenes("click", b),
-              n.dispatchEvent("click", b)
+            const eObj = d(e)
+
+            n.dispatchEventToScenes("click", eObj),
+              n.dispatchEvent("click", eObj)
           }
 
           // dbclick 事件处理程序
           function dblclick(e) {
-            const b = d(e);
-            n.dispatchEventToScenes("dbclick", b),
-              n.dispatchEvent("dbclick", b)
+            const eObj = d(e)
+
+            n.dispatchEventToScenes("dbclick", eObj),
+              n.dispatchEvent("dbclick", eObj)
           }
 
           // mousewheel 事件处理程序
           function mousewheel(e) {
-            const b = d(e);
-            n.dispatchEventToScenes("mousewheel", b),
-              n.dispatchEvent("mousewheel", b),
-            null != n.wheelZoom && (e.preventDefault ? e.preventDefault() : (e = e || window.event,
-              e.returnValue = !1),
+            const eObj = d(e)
+
+            n.dispatchEventToScenes("mousewheel", eObj),
+              n.dispatchEvent("mousewheel", eObj),
+            null != n.wheelZoom && (
+              e.preventDefault
+                ? e.preventDefault()
+                : (e = e || window.event, e.returnValue = !1),
+
             1 == n.eagleEye.visible && n.eagleEye.update())
           }
 
           // 添加事件
-          function m(ele) {
+          function eventInit(canvas) {
             JTopo.util.isIE || !window.addEventListener
               ? (
-                ele.onmouseout = mouseout,
-                ele.onmouseover = mouseover,
-                ele.onmousedown = mousedown,
-                ele.onmouseup = mouseup,
-                ele.onmousemove = mousemove,
-                ele.onclick = click,
-                ele.ondblclick = dblclick,
-                ele.onmousewheel = mousewheel,
-                ele.touchstart = mousedown,
-                ele.touchmove = mousemove,
-                ele.touchend = mouseup
+                canvas.onmouseout = mouseout,
+                canvas.onmouseover = mouseover,
+                canvas.onmousedown = mousedown,
+                canvas.onmouseup = mouseup,
+                canvas.onmousemove = mousemove,
+                canvas.onclick = click,
+                canvas.ondblclick = dblclick,
+                canvas.onmousewheel = mousewheel,
+                canvas.touchstart = mousedown,
+                canvas.touchmove = mousemove,
+                canvas.touchend = mouseup
               )
               : (
-                ele.addEventListener("mouseout", mouseout),
-                ele.addEventListener("mouseover", mouseover),
-                ele.addEventListener("mousedown", mousedown),
-                ele.addEventListener("mouseup", mouseup),
-                ele.addEventListener("mousemove", mousemove),
-                ele.addEventListener("click", click),
-                ele.addEventListener("dblclick", dblclick),
+                canvas.addEventListener("mouseout", mouseout),
+                canvas.addEventListener("mouseover", mouseover),
+                canvas.addEventListener("mousedown", mousedown),
+                canvas.addEventListener("mouseup", mouseup),
+                canvas.addEventListener("mousemove", mousemove),
+                canvas.addEventListener("click", click),
+                canvas.addEventListener("dblclick", dblclick),
                 JTopo.util.isFirefox
-                  ? ele.addEventListener("DOMMouseScroll", mousewheel)
-                  : ele.addEventListener("mousewheel", mousewheel)),
+                  ? canvas.addEventListener("DOMMouseScroll", mousewheel)
+                  : canvas.addEventListener("mousewheel", mousewheel)),
 
             window.addEventListener && (
               window.addEventListener("keydown", function (e) {
@@ -2059,7 +2073,7 @@
           // 舞台初始化
           this.initialize = function (canvas) {
             // 添加事件
-            m(canvas),
+            eventInit(canvas),
               // 对应的 Canvas 对象
               this.canvas = canvas,
               // canvas 上下文
@@ -2218,18 +2232,20 @@
           }),
 
             // 导出成 PNG 图片（在新打开的浏览器 Tab 页中）
-            this.saveImageInfo = function (a, b) {
-              const c = this.eagleEye.getImage(a, b)
-                , d = window.open("about:blank");
-              return d.document.write("<img src='" + c + "' alt='from canvas'/>"),
+            this.saveImageInfo = function (w, h) {
+              const dataUrl = this.eagleEye.getImage(w, h)
+              const newWindow = window.open("about:blank")
+
+              return newWindow.document.write("<img src='" + dataUrl + "' alt='from canvas'/>"),
                 this
             },
 
             // 导出成 PNG 图片（直接弹出另存为对话框或者用下载软件下载）
-            this.saveAsLocalImage = function (a, b) {
-              const c = this.eagleEye.getImage(a, b);
-              return c.replace("image/png", "image/octet-stream"),
-                window.location.href = c,
+            this.saveAsLocalImage = function (w, h) {
+              const dataUrl = this.eagleEye.getImage(w, h)
+
+              return dataUrl.replace("image/png", "image/octet-stream"),
+                window.location.href = dataUrl,
                 this
             },
 
@@ -2293,7 +2309,8 @@
               const c = this;
               this.childs.forEach(function (scene) {
                 let e = x - c.canvas.width / 2
-                  , f = y - c.canvas.height / 2;
+                let f = y - c.canvas.height / 2
+
                 scene.translateX = -e,
                   scene.translateY = -f
               })
@@ -2342,30 +2359,33 @@
             // 把当前对象的属性序列化成 json 字符串
             this.toJson = function () {
               {
-                var b = this
-                  , c = '{"version":"' + JTopo.version + '",';
+                var self = this
+                var jsonStr = '{"version":"' + JTopo.version + '",'
+
                 this.serializedProperties.length
               }
 
-              return this.serializedProperties.forEach(function (a) {
-                let d = b[a];
+              return this.serializedProperties.forEach(function (prop) {
+                let val = self[prop];
 
-                "string" == typeof d && (d = '"' + d + '"'),
-                  c += '"' + a + '":' + d + ","
+                "string" == typeof val && (val = '"' + val + '"'),
+                  jsonStr += '"' + prop + '":' + val + ","
               }),
 
-                c += '"childs":[',
+                jsonStr += '"childs":[',
                 this.childs.forEach(function (a) {
-                  c += a.toJson()
+                  jsonStr += a.toJson()
                 }),
-                c += "]",
-                c += "}"
+                jsonStr += "]",
+                jsonStr += "}"
             },
 
             function hahaha() {
-              0 == n.frames ? setTimeout(hahaha, 100) : n.frames < 0 ? (n.repaint(),
-                setTimeout(hahaha, 1e3 / -n.frames)) : (n.repaint(),
-                setTimeout(hahaha, 1e3 / n.frames))
+              0 == n.frames
+                ? setTimeout(hahaha, 100)
+                : n.frames < 0 ? (n.repaint(),
+                  setTimeout(hahaha, 1e3 / -n.frames)) : (n.repaint(),
+                  setTimeout(hahaha, 1e3 / n.frames))
             }(),
 
             setTimeout(function () {
@@ -2413,8 +2433,9 @@
       }(JTopo),
 
       // 场景 scene 方法的具体实现（JTopo.Scene(stage) 构造器函数，参数为 stage 舞台实例）
-      function (a) {
-        function b(c) {
+      function (JTopo) {
+        function Scene(c) {
+          // 返回一个绘制矩形的函数
           function d(x, y, w, h) {
             return function (ctx) {
               ctx.beginPath(),
@@ -2431,10 +2452,10 @@
 
           JTopo.flag.curScene = this
 
-          /********************scene属性定制************************************/
+          /******************** scene 属性定制************************************/
 
           this.initialize = function () {
-            b.prototype.initialize.apply(this, arguments),
+            Scene.prototype.initialize.apply(this, arguments),
               this.messageBus = new JTopo.util.MessageBus,
               this.elementType = "scene",
               this.childs = [],
@@ -2453,7 +2474,7 @@
               //   - drag: 该模式下不可以选择节点，只能拖拽整个画面
               //   - select: 可以框选多个节点、可以点击单个节点
               //   - edit: 在默认基础上增加了：选中节点时可以通过6个控制点来调整节点的宽、高
-              this.mode = a.SceneMode.normal,
+              this.mode = JTopo.SceneMode.normal,
               this.translate = !0,
               // 场景偏移量（水平方向），随鼠标拖拽变化
               this.translateX = 0,
@@ -2478,11 +2499,11 @@
           } ,
 
             this.initialize(),
-            this.setBackground = function (a) {
+            this.setBackground = function (url) {
               // 设置场景的背景图片
               //  - 与 backgroundColor 冲突，一旦设置了该属性，backgroundColor 属性将失效
               //  - 例如：scene.background = "./img/bg.png";
-              this.background = a
+              this.background = url
             },
 
             this.addTo = function (stage) {
@@ -2491,7 +2512,8 @@
 
           null != c && (
             c.add(this),
-            this.addTo(c)),
+            this.addTo(c)
+          ),
 
             // 显示
             this.show = function () {
@@ -2513,9 +2535,10 @@
                     ctx.scale(this.scaleX, this.scaleY),
                   1 == this.translate
                 ) {
-                  const b = this.getOffsetTranslate(ctx);
+                  const offsetTransObj = this.getOffsetTranslate(ctx)
+
                   if (mapTag != 'eagleEye') {
-                    ctx.translate(b.translateX, b.translateY)
+                    ctx.translate(offsetTransObj.translateX, offsetTransObj.translateY)
                   }
                 }
                 this.paintChilds(ctx),
@@ -2543,7 +2566,11 @@
 
             // 获取场景中可见并绘制出来的元素（超过 Canvas 边界）
             this.getDisplayedElements = function () {
-              for (var displayedEleArr = [], i = 0; i < this.zIndexArray.length; i++) {
+              for (
+                var displayedEleArr = [], i = 0;
+                i < this.zIndexArray.length;
+                i++
+              ) {
                 const c = this.zIndexArray[i]
                 const eleArr = this.zIndexMap[c]
 
@@ -2627,7 +2654,7 @@
             this.isVisiable = function (ele) {
               if (1 != ele.visible)
                 return !1;
-              if (ele instanceof a.Link)
+              if (ele instanceof JTopo.Link)
                 return !0;
               const c = this.getOffsetTranslate()
               ;let d = ele.x + c.translateX
@@ -2673,7 +2700,7 @@
                 let h = g.length - 1;
                 for (; h >= 0; h--) {
                   const i = g[h];
-                  if (i instanceof a.InteractiveElement && this.isVisiable(i) && i.isInBound(b, c))
+                  if (i instanceof JTopo.InteractiveElement && this.isVisiable(i) && i.isInBound(b, c))
                     return d = i
                 }
               }
@@ -2794,23 +2821,23 @@
                   this.mouseDownX = c.x,
                   this.mouseDownY = c.y,
                   this.mouseDownEvent = c,
-                this.mode == a.SceneMode.normal)
+                this.mode == JTopo.SceneMode.normal)
                 this.selectElement(c),
-                (null == this.currentElement || this.currentElement instanceof a.Link) && 1 == this.translate && (this.lastTranslateX = this.translateX,
+                (null == this.currentElement || this.currentElement instanceof JTopo.Link) && 1 == this.translate && (this.lastTranslateX = this.translateX,
                   this.lastTranslateY = this.translateY);
               else {
-                if (this.mode == a.SceneMode.drag && 1 == this.translate)
+                if (this.mode == JTopo.SceneMode.drag && 1 == this.translate)
                   return this.lastTranslateX = this.translateX,
                     void (this.lastTranslateY = this.translateY);
-                this.mode == a.SceneMode.select ? this.selectElement(c) : this.mode == a.SceneMode.edit && (this.selectElement(c),
-                (null == this.currentElement || this.currentElement instanceof a.Link) && 1 == this.translate && (this.lastTranslateX = this.translateX,
+                this.mode == JTopo.SceneMode.select ? this.selectElement(c) : this.mode == JTopo.SceneMode.edit && (this.selectElement(c),
+                (null == this.currentElement || this.currentElement instanceof JTopo.Link) && 1 == this.translate && (this.lastTranslateX = this.translateX,
                   this.lastTranslateY = this.translateY))
               }
               e.dispatchEvent("mousedown", c)
             },
 
             this.mouseupHandler = function (b) {
-              this.stage.cursor != a.MouseCursor.normal && (this.stage.cursor = a.MouseCursor.normal),
+              this.stage.cursor != JTopo.MouseCursor.normal && (this.stage.cursor = JTopo.MouseCursor.normal),
                 e.clearOperations();
               const c = this.toSceneEvent(b);
               null != this.currentElement && (c.target = e.currentElement,
@@ -2834,25 +2861,25 @@
             this.mousedragHandler = function (b) {
               const c = this.toSceneEvent(b);
 
-              this.mode == a.SceneMode.normal ?
-                null == this.currentElement || this.currentElement instanceof a.Link ?
-                  1 == this.translate && (this.stage.cursor = a.MouseCursor.closed_hand,
+              this.mode == JTopo.SceneMode.normal ?
+                null == this.currentElement || this.currentElement instanceof JTopo.Link ?
+                  1 == this.translate && (this.stage.cursor = JTopo.MouseCursor.closed_hand,
                     this.translateX = this.lastTranslateX + c.dx,
                     this.translateY = this.lastTranslateY + c.dy)
                   :
                   this.dragElements(c) :
-                this.mode == a.SceneMode.drag ?
-                  1 == this.translate && (this.stage.cursor = a.MouseCursor.closed_hand,
+                this.mode == JTopo.SceneMode.drag ?
+                  1 == this.translate && (this.stage.cursor = JTopo.MouseCursor.closed_hand,
                     this.translateX = this.lastTranslateX + c.dx,
                     this.translateY = this.lastTranslateY + c.dy)
                   :
-                  this.mode == a.SceneMode.select ?
+                  this.mode == JTopo.SceneMode.select ?
                     null != this.currentElement ? 1 == this.currentElement.dragable && this.dragElements(c)
                       :
                       1 == this.areaSelect && this.areaSelectHandle(c)
                     :
-                    this.mode == a.SceneMode.edit && (null == this.currentElement || this.currentElement instanceof a.Link ?
-                    1 == this.translate && (this.stage.cursor = a.MouseCursor.closed_hand,
+                    this.mode == JTopo.SceneMode.edit && (null == this.currentElement || this.currentElement instanceof JTopo.Link ?
+                    1 == this.translate && (this.stage.cursor = JTopo.MouseCursor.closed_hand,
                       this.translateX = this.lastTranslateX + c.dx,
                       this.translateY = this.lastTranslateY + c.dy)
                     :
@@ -2895,9 +2922,9 @@
                 y: b.y
               };
               const c = this.toSceneEvent(b);
-              if (this.mode == a.SceneMode.drag)
-                return void (this.stage.cursor = a.MouseCursor.open_hand);
-              this.mode == a.SceneMode.normal ? this.stage.cursor = a.MouseCursor.normal : this.mode == a.SceneMode.select && (this.stage.cursor = a.MouseCursor.normal);
+              if (this.mode == JTopo.SceneMode.drag)
+                return void (this.stage.cursor = JTopo.MouseCursor.open_hand);
+              this.mode == JTopo.SceneMode.normal ? this.stage.cursor = JTopo.MouseCursor.normal : this.mode == JTopo.SceneMode.select && (this.stage.cursor = JTopo.MouseCursor.normal);
               const d = e.getElementByXY(c.x, c.y);
               null != d ? (e.mouseOverelement && e.mouseOverelement !== d && (c.target = d,
                 e.mouseOverelement.mouseoutHandler(c)),
@@ -3109,11 +3136,11 @@
             e
         }
 
-        b.prototype = new JTopo.Element
+        Scene.prototype = new JTopo.Element
 
         var c = {}
 
-        Object.defineProperties(b.prototype, {
+        Object.defineProperties(Scene.prototype, {
           background: {
             get: function () {
               return this._background
@@ -3135,7 +3162,7 @@
             }
           }
         }),
-          JTopo.Scene = b
+          JTopo.Scene = Scene
       }(JTopo),
 
       // displayElement 的具体实现,包含所有元素默认展示属性，挂载在 jTopo 上
