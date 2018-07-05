@@ -591,7 +591,7 @@
             // document.body.scrollLeft 元素在水平方向上滚动了多远
             // document.body.clientLeft 元素周围边框的厚度，如果不指定一个边框或者不定位该元素，值为 0
             e.pageX = e.clientX + document.body.scrollLeft - document.body.clientLeft,
-            e.pageY = e.clientY + document.body.scrollTop - document.body.clientTop
+              e.pageY = e.clientY + document.body.scrollTop - document.body.clientTop
           ),
             e
         }
@@ -690,9 +690,9 @@
             // 重复执行 b 次
             i != b && (
               fn(b),
-              setTimeout(function () {
-                wrapper(++i)
-              }, t)
+                setTimeout(function () {
+                  wrapper(++i)
+                }, t)
             )
           }
 
@@ -1196,10 +1196,10 @@
           // 如果两条线的斜率相等或为同时正无穷大或同时为负无穷大，那么该两条线不会相交，返回 null
           return lineObj1.k == lineObj2.k ? null : (
             1 / 0 == lineObj1.k || lineObj1.k == -1 / 0 ? (x = lineObj1.x1,
-            y = lineObj2(lineObj1.x1)) : 1 / 0 == lineObj2.k || lineObj2.k == -1 / 0 ? (x = lineObj2.x1,
-            y = lineObj1(lineObj2.x1)) : (x = (lineObj2.b - lineObj1.b) / (lineObj1.k - lineObj2.k),
-            y = lineObj1(x)),
-            0 == isPointInLineSeg(x, y, lineObj1) ? null : 0 == isPointInLineSeg(x, y, lineObj2) ? null : {x, y}
+              y = lineObj2(lineObj1.x1)) : 1 / 0 == lineObj2.k || lineObj2.k == -1 / 0 ? (x = lineObj2.x1,
+              y = lineObj1(lineObj2.x1)) : (x = (lineObj2.b - lineObj1.b) / (lineObj1.k - lineObj2.k),
+              y = lineObj1(x)),
+              0 == isPointInLineSeg(x, y, lineObj1) ? null : 0 == isPointInLineSeg(x, y, lineObj2) ? null : {x, y}
           )
         }
 
@@ -1675,9 +1675,9 @@
                 null != width && null != height
                   ? (
                     this.exportCanvas.width = width,
-                    this.exportCanvas.height = height,
+                      this.exportCanvas.height = height,
                       // 宽度缩放比
-                    scaleWidth = width / boundary.width,
+                      scaleWidth = width / boundary.width,
                       // 高度缩放比
                       scaleHeight = height / boundary.height
                   )
@@ -1691,28 +1691,28 @@
 
               return stage.childs.length > 0 && (
                 eagleEyeCanvasCtx.save(),
-                eagleEyeCanvasCtx.clearRect(0, 0, this.exportCanvas.width, this.exportCanvas.height),
-                stage.childs.forEach(function (scene) {
-                  1 == scene.visible && (
-                    scene.save(),
-                      // 场景偏移量（水平方向），随鼠标拖拽变化
-                    scene.translateX = 0,
-                      // 场景偏移量（垂直方向），随鼠标拖拽变化
-                    scene.translateY = 0,
-                    scene.scaleX = 1,
-                    scene.scaleY = 1,
-                    // 按比例缩放鹰眼 canvas
-                    eagleEyeCanvasCtx.scale(scaleWidth, scaleHeight),
-                  boundary.left < 0 && (scene.translateX = Math.abs(boundary.left)),
-                  boundary.top < 0 && (
-                    scene.translateY = Math.abs(boundary.top)),
-                    scene.paintAll = !0,
-                    scene.repaint(eagleEyeCanvasCtx),
-                    scene.paintAll = !1,
-                    scene.restore()
-                  )
-                }),
-                eagleEyeCanvasCtx.restore()
+                  eagleEyeCanvasCtx.clearRect(0, 0, this.exportCanvas.width, this.exportCanvas.height),
+                  stage.childs.forEach(function (scene) {
+                    1 == scene.visible && (
+                      scene.save(),
+                        // 场景偏移量（水平方向），随鼠标拖拽变化
+                        scene.translateX = 0,
+                        // 场景偏移量（垂直方向），随鼠标拖拽变化
+                        scene.translateY = 0,
+                        scene.scaleX = 1,
+                        scene.scaleY = 1,
+                        // 按比例缩放鹰眼 canvas
+                        eagleEyeCanvasCtx.scale(scaleWidth, scaleHeight),
+                      boundary.left < 0 && (scene.translateX = Math.abs(boundary.left)),
+                      boundary.top < 0 && (
+                        scene.translateY = Math.abs(boundary.top)),
+                        scene.paintAll = !0,
+                        scene.repaint(eagleEyeCanvasCtx),
+                        scene.paintAll = !1,
+                        scene.restore()
+                    )
+                  }),
+                  eagleEyeCanvasCtx.restore()
               ),
                 this.exportCanvas.toDataURL("image/png")
             },
@@ -1864,7 +1864,7 @@
                     eY = eObj.y - this.canvas.height,
                   "mousedown" == eName && (
                     this.lastTranslateX = stage.childs[0].translateX,
-                    this.lastTranslateY = stage.childs[0].translateY
+                      this.lastTranslateY = stage.childs[0].translateY
                   ),
                   "mousedrag" == eName && stage.childs.length > 0
                 ) {
@@ -1962,7 +1962,7 @@
           function mousemove(e) {
             p && (
               window.clearTimeout(p),
-              p = null
+                p = null
             ),
               o = !1;
 
@@ -1970,15 +1970,15 @@
 
             n.mouseDown
               ? 0 == e.button && (
-                eObj.dx = eObj.x - n.mouseDownX,
-                  eObj.dy = eObj.y - n.mouseDownY,
-                  n.dispatchEventToScenes("mousedrag", eObj),
-                  n.dispatchEvent("mousedrag", eObj),
-                1 == n.eagleEye.visible && n.eagleEye.update()
+              eObj.dx = eObj.x - n.mouseDownX,
+                eObj.dy = eObj.y - n.mouseDownY,
+                n.dispatchEventToScenes("mousedrag", eObj),
+                n.dispatchEvent("mousedrag", eObj),
+              1 == n.eagleEye.visible && n.eagleEye.update()
             )
               : (
                 n.dispatchEventToScenes("mousemove", eObj),
-                n.dispatchEvent("mousemove", eObj)
+                  n.dispatchEvent("mousemove", eObj)
               )
           }
 
@@ -2009,7 +2009,7 @@
                 ? e.preventDefault()
                 : (e = e || window.event, e.returnValue = !1),
 
-            1 == n.eagleEye.visible && n.eagleEye.update())
+              1 == n.eagleEye.visible && n.eagleEye.update())
           }
 
           // 添加事件
@@ -2017,53 +2017,53 @@
             JTopo.util.isIE || !window.addEventListener
               ? (
                 canvas.onmouseout = mouseout,
-                canvas.onmouseover = mouseover,
-                canvas.onmousedown = mousedown,
-                canvas.onmouseup = mouseup,
-                canvas.onmousemove = mousemove,
-                canvas.onclick = click,
-                canvas.ondblclick = dblclick,
-                canvas.onmousewheel = mousewheel,
-                canvas.touchstart = mousedown,
-                canvas.touchmove = mousemove,
-                canvas.touchend = mouseup
+                  canvas.onmouseover = mouseover,
+                  canvas.onmousedown = mousedown,
+                  canvas.onmouseup = mouseup,
+                  canvas.onmousemove = mousemove,
+                  canvas.onclick = click,
+                  canvas.ondblclick = dblclick,
+                  canvas.onmousewheel = mousewheel,
+                  canvas.touchstart = mousedown,
+                  canvas.touchmove = mousemove,
+                  canvas.touchend = mouseup
               )
               : (
                 canvas.addEventListener("mouseout", mouseout),
-                canvas.addEventListener("mouseover", mouseover),
-                canvas.addEventListener("mousedown", mousedown),
-                canvas.addEventListener("mouseup", mouseup),
-                canvas.addEventListener("mousemove", mousemove),
-                canvas.addEventListener("click", click),
-                canvas.addEventListener("dblclick", dblclick),
-                JTopo.util.isFirefox
-                  ? canvas.addEventListener("DOMMouseScroll", mousewheel)
-                  : canvas.addEventListener("mousewheel", mousewheel)),
+                  canvas.addEventListener("mouseover", mouseover),
+                  canvas.addEventListener("mousedown", mousedown),
+                  canvas.addEventListener("mouseup", mouseup),
+                  canvas.addEventListener("mousemove", mousemove),
+                  canvas.addEventListener("click", click),
+                  canvas.addEventListener("dblclick", dblclick),
+                  JTopo.util.isFirefox
+                    ? canvas.addEventListener("DOMMouseScroll", mousewheel)
+                    : canvas.addEventListener("mousewheel", mousewheel)),
 
             window.addEventListener && (
               window.addEventListener("keydown", function (e) {
-              n.dispatchEventToScenes("keydown", JTopo.util.cloneEvent(e));
-
-              const keyCode = e.keyCode
-
-              ;(37 == keyCode || 38 == keyCode || 39 == keyCode || 40 == keyCode) && (
-                e.preventDefault
-                  ? e.preventDefault()
-                  : (e = e || window.event, e.returnValue = !1)
-              )
-            }, !0),
-
-              window.addEventListener("keyup", function (e) {
-                n.dispatchEventToScenes("keyup", JTopo.util.cloneEvent(e))
+                n.dispatchEventToScenes("keydown", JTopo.util.cloneEvent(e));
 
                 const keyCode = e.keyCode
 
-                (37 == keyCode || 38 == keyCode || 39 == keyCode || 40 == keyCode) && (
+                ;(37 == keyCode || 38 == keyCode || 39 == keyCode || 40 == keyCode) && (
                   e.preventDefault
                     ? e.preventDefault()
                     : (e = e || window.event, e.returnValue = !1)
                 )
-              }, !0))
+              }, !0),
+
+                window.addEventListener("keyup", function (e) {
+                  n.dispatchEventToScenes("keyup", JTopo.util.cloneEvent(e))
+
+                  const keyCode = e.keyCode
+
+                  (37 == keyCode || 38 == keyCode || 39 == keyCode || 40 == keyCode) && (
+                    e.preventDefault
+                      ? e.preventDefault()
+                      : (e = e || window.event, e.returnValue = !1)
+                  )
+                }, !0))
           }
 
           JTopo.stage = this
@@ -2107,7 +2107,7 @@
               //   - drag: 该模式下不可以选择节点，只能拖拽整个画面
               //   - select: 可以框选多个节点、可以点击单个节点
               //   - edit: 在默认基础上增加了：选中节点时可以通过6个控制点来调整节点的宽、高
-            this.mode = ''
+              this.mode = ''
           },
 
           null != c && this.initialize(c)
@@ -2253,12 +2253,12 @@
             this.paint = function () {
               null != this.canvas && (
                 this.graphics.save(),
-                this.graphics.clearRect(0, 0, this.width, this.height),
-                this.childs.forEach(function (scene) {
-                  1 == scene.visible && scene.repaint(n.graphics)
-                }),
-              1 == this.eagleEye.visible && this.eagleEye.paint(this),
-                this.graphics.restore()
+                  this.graphics.clearRect(0, 0, this.width, this.height),
+                  this.childs.forEach(function (scene) {
+                    1 == scene.visible && scene.repaint(n.graphics)
+                  }),
+                1 == this.eagleEye.visible && this.eagleEye.paint(this),
+                  this.graphics.restore()
               )
             },
 
@@ -2512,7 +2512,7 @@
 
           null != c && (
             c.add(this),
-            this.addTo(c)
+              this.addTo(c)
           ),
 
             // 显示
@@ -2622,9 +2622,9 @@
                     }
                     1 == ele.shadow && (
                       ctx.shadowBlur = ele.shadowBlur,
-                      ctx.shadowColor = ele.shadowColor,
-                      ctx.shadowOffsetX = ele.shadowOffsetX,
-                      ctx.shadowOffsetY = ele.shadowOffsetY
+                        ctx.shadowColor = ele.shadowColor,
+                        ctx.shadowOffsetX = ele.shadowOffsetX,
+                        ctx.shadowOffsetY = ele.shadowOffsetY
                     ),
                     ele instanceof JTopo.InteractiveElement && (
                       ele.selected && 1 == ele.showSelected && ele.paintSelected(ctx),
@@ -3189,11 +3189,11 @@
               this.scaleX = 1,
               // 元素纵向缩放
               this.scaleY = 1
-              // 元素描边颜色
-              this.strokeColor = "22, 124, 255",
+            // 元素描边颜色
+            this.strokeColor = "22, 124, 255",
               // 元素边框颜色
               this.borderColor = "22, 124, 255",
-                // 元素填充颜色
+              // 元素填充颜色
               this.fillColor = "255, 255, 255",
               // 元素是否有阴影
               this.shadow = !1,
@@ -3595,126 +3595,130 @@
       }(JTopo),
 
       // node 的具体实现（包括 textNode 和 linkNode、CircleNode、AnimateNode）
-      function (a) {
+      function (JTopo) {
         // new b -
-        function b(c) {
-          this.initialize = function (c) {
-            b.prototype.initialize.apply(this, arguments),
-              // 节点元素类型
-              this.elementType = "node",
-              // 节点元素显示的优先级，范围 [10-999]，10 以下保留占用
-              this.zIndex = a.zIndex_Node,
-              // 设置节点的名字（显示文本）
-              this.text = c,
-              this.nodeFn = null,
-              this.textBreakNumber = 5;
+        function b(a) {
+          this.initialize = function (text) {
+            b.prototype.initialize.apply(this, arguments)
+            // 节点元素类型
+            this.elementType = "node"
+            // 节点元素显示的优先级，范围 [10-999]，10 以下保留占用
+            this.zIndex = JTopo.zIndex_Node
+            // 设置节点的名字（显示文本）
+            this.text = text
+            this.nodeFn = null
+            this.textBreakNumber = 5
 
             // 节点文字行高
-            this.textLineHeight = 15;
+            this.textLineHeight = 15
             // 节点文字透明度
-            this.textAlpah = 1;
+            this.textAlpah = 1
             // 节点字体
-            this.font = "12px Consolas",
-              // 节点字体颜色
-              this.fontColor = "85, 85, 85",
-              // 节点边框宽度
-              this.borderWidth = 0,
-              // 节点边框宽度
-              this.borderColor = "255, 255, 255",
-              // 节点边框圆角
-              this.borderRadius = null,
-              // 告警颜色
-              this.alarmColor = "255, 0, 0";
-            this.fillAlarmNode = [255, 0, 0];
-            this.nodeOriginColor = null;
+            this.font = "12px Consolas"
+            // 节点字体颜色
+            this.fontColor = "85, 85, 85"
+            // 节点边框宽度
+            this.borderWidth = 0
+            // 节点边框颜色
+            this.borderColor = "255, 255, 255"
+            // 节点边框圆角
+            this.borderRadius = null
+            // 告警颜色
+            this.alarmColor = "255, 0, 0"
+            this.fillAlarmNode = [255, 0, 0]
+            this.nodeOriginColor = null
             // false
-            this.showAlarmText = false;
+            this.showAlarmText = false
             // true 则保持改变后的颜色不变
-            this.keepChangeColor = false;
+            this.keepChangeColor = false
             // 设置节点是否可以拖动
-            this.dragable = !0,
-              // 节点文字位置
-              this.textPosition = "Bottom_Center",
-              // 节点文字位置偏移
-              this.textOffsetX = 0,
-              this.textOffsetY = 0,
-              this.transformAble = !0,
-              this.inLinks = null,
-              this.outLinks = null;
+            this.dragable = !0
+            // 节点文字位置
+            this.textPosition = "Bottom_Center"
+            // 节点文字位置偏移
+            this.textOffsetX = 0
+            this.textOffsetY = 0
+            this.transformAble = !0
+            this.inLinks = null
+            this.outLinks = null
             // 线性渐变
-            this.linearGradient = null;
-            this.colorStop = null;
+            this.linearGradient = null
+            this.colorStop = null
             // 告警图片图片宽高
-            this.smallAlarmImage_w = 20;
-            this.smallAlarmImage_h = 20;
+            this.smallAlarmImage_w = 20
+            this.smallAlarmImage_h = 20
             // 告警图片位置
-            this.smallAlarmImage_x = null;
-            this.smallAlarmImage_y = null;
+            this.smallAlarmImage_x = null
+            this.smallAlarmImage_y = null
             // 是否开启告警图片变色
-            this.smallAlarmImageTag = false;
+            this.smallAlarmImageTag = false
             // 告警图片对象
-            this.smallAlarmImageObj = null;
+            this.smallAlarmImageObj = null
             // 告警变色图片对象
-            this.smallAlarmImageChangeObj = null;
+            this.smallAlarmImageChangeObj = null
             // 告警变色图片最初的颜色
-            this.smallImageOriginColor = [255, 0, 0];
+            this.smallImageOriginColor = [255, 0, 0]
             // 告警图片需要变换的颜色
-            this.smallImageChangeColor = null;
+            this.smallImageChangeColor = null
             // 节点绘制回调
-            this.paintCallback = null;
+            this.paintCallback = null
             // 节点绘制前回调
-            this.beforePaintCallback = null;
+            this.beforePaintCallback = null
 
-            const d = "text,font,fontColor,textPosition,textOffsetX,textOffsetY,borderRadius".split(",");
+            const d = "text,font,fontColor,textPosition,textOffsetX,textOffsetY,borderRadius".split(",")
             this.serializedProperties = this.serializedProperties.concat(d)
           },
-            this.initialize(c),
+            this.initialize(Node),
 
             // 节点绘制方法
-            this.paint = function (a) {
-              this.beforePaintCallback && this.beforePaintCallback(a)
+            this.paint = function (ctx) {
+              this.beforePaintCallback && this.beforePaintCallback(ctx)
 
               if (this.image) {
-                const b = a.globalAlpha
-                a.globalAlpha = this.alpha
+                const globalAlpha = ctx.globalAlpha
+                ctx.globalAlpha = this.alpha
 
                 if (typeof this.image != 'string') {
+
                   if (this.keepChangeColor) {
-                    a.drawImage(this.image.alarm, -this.width / 2, -this.height / 2, this.width, this.height)
+                    ctx.drawImage(this.image.alarm, -this.width / 2, -this.height / 2, this.width, this.height)
                   } else {
+
                     if (null != this.image.alarm && null != this.alarm) {
-                      a.drawImage(this.image.alarm, -this.width / 2, -this.height / 2, this.width, this.height)
+
+                      ctx.drawImage(this.image.alarm, -this.width / 2, -this.height / 2, this.width, this.height)
                     } else {
-                      a.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height)
+
+                      ctx.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height)
                     }
                   }
                 }
-                a.globalAlpha = b;
+                ctx.globalAlpha = globalAlpha
               } else {
-                a.beginPath(),
-                  a.fillStyle = "rgba(" + this.fillColor + "," + this.alpha + ")",
-                  null == this.borderRadius || 0 == this.borderRadius ? a.rect(-this.width / 2, -this.height / 2, this.width, this.height) : a.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width, this.height, this.borderRadius),
-                  a.fill();
+                ctx.beginPath(),
+                  ctx.fillStyle = "rgba(" + this.fillColor + "," + this.alpha + ")",
+                  null == this.borderRadius || 0 == this.borderRadius ? ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height) : ctx.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width, this.height, this.borderRadius),
+                  ctx.fill();
               }
               if (this.linearGradient) {
                 const kVal = this.kVal;
-                const grd = a.createLinearGradient(this.linearGradient[0], this.linearGradient[1], this.linearGradient[2] * kVal, this.linearGradient[3]);
+                const grd = ctx.createLinearGradient(this.linearGradient[0], this.linearGradient[1], this.linearGradient[2] * kVal, this.linearGradient[3]);
                 for (let grdCount = 0; grdCount < this.colorStop.length / 2; grdCount++) {
                   grd.addColorStop(this.colorStop[grdCount * 2], this.colorStop[grdCount * 2 + 1]);
                 }
-                a.fillStyle = grd;
-                null == this.borderRadius || 0 == this.borderRadius ? a.rect(-this.width / 2, -this.height / 2, this.width * kVal, this.height) : a.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width * kVal, this.height, kVal < 0.03 ? 0 : this.borderRadius);
-                a.fill();
+                ctx.fillStyle = grd;
+                null == this.borderRadius || 0 == this.borderRadius ? ctx.rect(-this.width / 2, -this.height / 2, this.width * kVal, this.height) : ctx.JTopoRoundRect(-this.width / 2, -this.height / 2, this.width * kVal, this.height, kVal < 0.03 ? 0 : this.borderRadius);
+                ctx.fill();
 
               }
-              a.closePath();
+              ctx.closePath();
 
-              this.paintText(a),
-                this.paintBorder(a),
-                this.paintCtrl(a),
-                this.paintAlarmText(a),
-                this.paintAlarmImage(a),
-              this.paintCallback && this.paintCallback(a);
+              this.paintText(ctx),
+                this.paintBorder(ctx),
+                this.paintCtrl(ctx),
+                this.paintAlarmText(ctx),
+                this.paintAlarmImage(ctx),
+              this.paintCallback && this.paintCallback(ctx);
             },
 
             // 节点告警文字显示方法
@@ -3964,19 +3968,19 @@
                 null == e
                   ? (
                     e = new Image,
-                    e.src = b,
-                    e.onload = function () {
-                      j[b] = e,
-                      1 == c && d.setSize(e.width, e.height);
-                      //告警色,指定色
-                      const f = JTopo.util.getImageAlarm(e, null, d.fillAlarmNode, d.nodeOriginColor)
+                      e.src = b,
+                      e.onload = function () {
+                        j[b] = e,
+                        1 == c && d.setSize(e.width, e.height);
+                        //告警色,指定色
+                        const f = JTopo.util.getImageAlarm(e, null, d.fillAlarmNode, d.nodeOriginColor)
 
-                      f && (e.alarm = f),
-                        d.image = e
-                  }
+                        f && (e.alarm = f),
+                          d.image = e
+                      }
                   )
                   : (c && this.setSize(e.width, e.height),
-                  this.image = e)
+                    this.image = e)
               } else {
                 debugger
                 this.image = b,
@@ -4014,12 +4018,12 @@
         }
 
         // new c -
-        function c() {
-          c.prototype.initialize.apply(this, arguments)
+        function Node() {
+          Node.prototype.initialize.apply(this, arguments)
         }
 
         // d - TextNode
-        function d(a) {
+        function TextNode(a) {
           this.initialize(),
             this.text = a,
             this.elementType = "TextNode",
@@ -4048,7 +4052,7 @@
         }
 
         // e - LinkNode
-        function e(a, b, c) {
+        function LinkNode(a, b, c) {
           this.initialize(),
 
             this.text = a,
@@ -4147,7 +4151,7 @@
         }
 
         // f - CircleNode
-        function f(a) {
+        function CircleNode(a) {
           this.initialize(arguments),
 
             this._radius = 20,
@@ -4252,7 +4256,7 @@
 
         // i - AnimateNode
         // 可能参数：图片地址，行，列，时间间隔，行偏移量
-        function i() {
+        function AnimateNode() {
           let a = null;
           return a = arguments.length <= 3 ? new g(arguments[0], arguments[1], arguments[2]) : new h(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]),
             a.stop = function () {
@@ -4266,13 +4270,14 @@
             a
         }
 
-        var j = {};
+        var j = {}
+
         b.prototype = new JTopo.EditableElement,
-          c.prototype = new b,
-          d.prototype = new c,
-          e.prototype = new d,
-          f.prototype = new c,
-          Object.defineProperties(f.prototype, {
+          Node.prototype = new b,
+          TextNode.prototype = new Node,
+          LinkNode.prototype = new TextNode,
+          CircleNode.prototype = new Node,
+          Object.defineProperties(CircleNode.prototype, {
             radius: {
               get: function () {
                 return this._radius
@@ -4304,14 +4309,14 @@
               }
             }
           }),
-          g.prototype = new c,
-          h.prototype = new c,
-          i.prototype = new c,
-          JTopo.Node = c,
-          JTopo.TextNode = d,
-          JTopo.LinkNode = e,
-          JTopo.CircleNode = f,
-          JTopo.AnimateNode = i
+          g.prototype = new Node,
+          h.prototype = new Node,
+          AnimateNode.prototype = new Node,
+          JTopo.Node = Node,
+          JTopo.TextNode = TextNode,
+          JTopo.LinkNode = LinkNode,
+          JTopo.CircleNode = CircleNode,
+          JTopo.AnimateNode = AnimateNode
       }(JTopo),
 
       // link 的具体实现
@@ -6305,7 +6310,7 @@
               return d ? (
                 window.clearInterval(d),
                 e && e.publish("stop"),
-                this
+                  this
               ) : this
             },
             start: function () {
@@ -6845,8 +6850,8 @@
           this instanceof JTopo.Stage
             ? (e = this.childs, f = f.concat(e))
             : this instanceof JTopo.Scene ? e = [this] : f = this, e.forEach(function (a) {
-              f = f.concat(a.childs)
-            });
+            f = f.concat(a.childs)
+          });
 
           let g = null
 
